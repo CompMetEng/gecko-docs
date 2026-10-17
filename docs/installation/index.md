@@ -13,7 +13,7 @@ and analyze the same ecModels: pick whichever fits your existing workflow.
 A computer running macOS, Windows or Linux, with an internet connection to
 reach [KEGG](https://www.genome.jp/kegg/), [UniProt](https://www.uniprot.org/),
 [PubChem](https://pubchem.ncbi.nlm.nih.gov/) and
-[GitHub](https://github.com/SysBioChalmers/GECKO/). Data from these sources
+[GitHub](https://github.com/CompMetEng/GECKO/). Data from these sources
 can also be downloaded or reconstructed manually elsewhere, but downloading
 it directly through GECKO functions is the most convenient route.
 
@@ -32,7 +32,7 @@ model, regardless of whether it belongs to a model organism.
   ([MathWorks](https://mathworks.com/products/matlab.html)). No additional
   MathWorks toolboxes are required.
 - **RAVEN toolbox** version 2.9.2 or later
-  ([repository](https://github.com/SysBioChalmers/RAVEN)), which provides
+  ([repository](https://github.com/CompMetEng/RAVEN)), which provides
   the reconstruction functions GECKO builds on, and some of the functions
   used to simulate and analyze ecModels.
 :::
@@ -40,10 +40,10 @@ model, regardless of whether it belongs to a model organism.
 :sync: python
 
 - **Python** 3.11 or above.
-- **geckopy** ([repository](https://github.com/SysBioChalmers/geckopy)),
+- **geckopy** ([repository](https://github.com/CompMetEng/geckopy)),
   built on [cobrapy](https://github.com/opencobra/cobrapy) for the
   constraint-based modeling layer and
-  [raven-toolbox](https://github.com/SysBioChalmers/raven-toolbox) (the
+  [raven-toolbox](https://github.com/CompMetEng/raven-toolbox) (the
   Python port of RAVEN) for model-manipulation primitives and ecModel YAML
   I/O. Installing geckopy pulls in both dependencies automatically.
 :::
@@ -59,12 +59,12 @@ Both toolboxes also need a linear-programming solver (see
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
-Installation instructions are on the
-[RAVEN Wiki](https://github.com/SysBioChalmers/RAVEN/wiki/Installation): the
-repository is downloaded via `git clone`, as a ZIP archive from GitHub, or
+Installation instructions are in the
+[RAVEN documentation](https://raven-docs.readthedocs.io/en/latest/installation/raven.html):
+the repository is downloaded via `git clone`, as a ZIP archive from GitHub, or
 installed as a MATLAB Add-On. Instructions for installing the recommended
-solver Gurobi are on the
-[RAVEN wiki (solvers)](https://github.com/SysBioChalmers/RAVEN/wiki/Installation#solvers).
+solver Gurobi are in the same page, under
+[Choosing and configuring a solver](https://raven-docs.readthedocs.io/en/latest/installation/raven.html#choosing-and-configuring-a-solver).
 
 After finishing installation, run the checks in MATLAB:
 
@@ -92,16 +92,15 @@ The latest GECKO release installs as a
 [MATLAB Add-On](https://mathworks.com/help/matlab/matlab_env/get-add-ons.html):
 Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox".
 
-The [GECKO wiki](https://github.com/SysBioChalmers/GECKO/wiki/Installation-and-upgrade)
-recommends cloning the repository with `git` instead, since it makes
+Cloning the repository with `git` is recommended instead, since it makes
 upgrading a `git pull` rather than a full reinstall:
 
 ```bash
-git clone --depth=1 https://github.com/SysBioChalmers/GECKO
+git clone --depth=1 https://github.com/CompMetEng/GECKO
 ```
 
 or download a ZIP archive from the
-[GitHub releases page](https://github.com/SysBioChalmers/GECKO/releases) and
+[GitHub releases page](https://github.com/CompMetEng/GECKO/releases) and
 extract it to a location with read and write access.
 
 After cloning or extracting, navigate to the GECKO folder in MATLAB and
@@ -149,8 +148,8 @@ GitHub instead:
 
 ```bash
 pip install \
-    git+https://github.com/SysBioChalmers/raven-toolbox.git@develop \
-    git+https://github.com/SysBioChalmers/geckopy.git@develop
+    git+https://github.com/CompMetEng/raven-toolbox.git@develop \
+    git+https://github.com/CompMetEng/geckopy.git@develop
 ```
 
 Verify the install:

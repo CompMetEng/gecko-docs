@@ -21,8 +21,8 @@ gecko-docs/
 ├── .gitmodules              # GECKO + geckopy submodule definitions
 ├── requirements-sphinx.txt  # Python build dependencies
 ├── README.md                # This file
-├── GECKO/                   # submodule: SysBioChalmers/GECKO    (MATLAB source)
-├── geckopy/                  # submodule: SysBioChalmers/geckopy  (Python source)
+├── GECKO/                   # submodule: CompMetEng/GECKO        (MATLAB source)
+├── geckopy/                  # submodule: CompMetEng/geckopy      (Python source)
 ├── scripts/
 │   ├── api_index.py             # shared MATLAB/Python source-collection helpers
 │   ├── gen_api_pages_sphinx.py  # generates docs/api/ and docs/matlab-vs-python.md
@@ -83,8 +83,8 @@ which is validated against the live source at build time.
 Sources are git submodules pinned to each project's tracked development
 branch (see `.gitmodules`):
 
-- `GECKO/`   — [SysBioChalmers/GECKO](https://github.com/SysBioChalmers/GECKO) (MATLAB)
-- `geckopy/` — [SysBioChalmers/geckopy](https://github.com/SysBioChalmers/geckopy) (Python)
+- `GECKO/`   — [CompMetEng/GECKO](https://github.com/CompMetEng/GECKO) (MATLAB)
+- `geckopy/` — [CompMetEng/geckopy](https://github.com/CompMetEng/geckopy) (Python)
 
 To refresh the reference against the latest upstream code:
 
@@ -100,6 +100,6 @@ daily schedule.)
 ## License and attribution
 
 The GECKO source code is released under the MIT license at
-https://github.com/SysBioChalmers/GECKO. The scientific content summarized
+https://github.com/CompMetEng/GECKO. The scientific content summarized
 in these pages is the work of the original authors; see
 [Citations](docs/references.md) for the papers to cite.

@@ -24,8 +24,8 @@ PyPI.
 
 ```bash
 pip install \
-    git+https://github.com/SysBioChalmers/raven-toolbox.git@develop \
-    git+https://github.com/SysBioChalmers/geckopy.git@develop
+    git+https://github.com/CompMetEng/raven-toolbox.git@develop \
+    git+https://github.com/CompMetEng/geckopy.git@develop
 ```
 
 Tracks the `develop` branch of both packages, ahead of the latest PyPI
@@ -38,7 +38,7 @@ Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox".
 :::{tab-item} MATLAB (git)
 
 ```bash
-git clone --depth=1 https://github.com/SysBioChalmers/GECKO
+git clone --depth=1 https://github.com/CompMetEng/GECKO
 ```
 
 Then run `GECKOInstaller.install` in MATLAB.
@@ -156,9 +156,9 @@ have used this protocol.
 ## Source code
 
 GECKO is publicly available under the MIT license at
-<https://github.com/SysBioChalmers/GECKO>, archived at
+<https://github.com/CompMetEng/GECKO>, archived at
 <https://doi.org/10.5281/zenodo.7699818>. geckopy, the Python port, is at
-<https://github.com/SysBioChalmers/geckopy>.
+<https://github.com/CompMetEng/geckopy>.
 
 ## Getting help
 
@@ -167,8 +167,8 @@ concerns; ask a usage question in either repository's Discussions.
 
 | | Issues | Discussions |
 |---|---|---|
-| GECKO (MATLAB) | [github.com/SysBioChalmers/GECKO/issues](https://github.com/SysBioChalmers/GECKO/issues) | [github.com/SysBioChalmers/GECKO/discussions](https://github.com/SysBioChalmers/GECKO/discussions) |
-| geckopy (Python) | [github.com/SysBioChalmers/geckopy/issues](https://github.com/SysBioChalmers/geckopy/issues) | [github.com/SysBioChalmers/geckopy/discussions](https://github.com/SysBioChalmers/geckopy/discussions) |
+| GECKO (MATLAB) | [github.com/CompMetEng/GECKO/issues](https://github.com/CompMetEng/GECKO/issues) | [github.com/CompMetEng/GECKO/discussions](https://github.com/CompMetEng/GECKO/discussions) |
+| geckopy (Python) | [github.com/CompMetEng/geckopy/issues](https://github.com/CompMetEng/geckopy/issues) | [github.com/CompMetEng/geckopy/discussions](https://github.com/CompMetEng/geckopy/discussions) |
 
 ```{toctree}
 :hidden:
