@@ -66,13 +66,13 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GECKO (MATLAB) on GitHub",
-            "url": "https://github.com/SysBioChalmers/GECKO",
+            "url": "https://github.com/CompMetEng/GECKO",
             "icon": "fa-brands fa-github",
             "type": "fontawesome",
         },
         {
             "name": "geckopy (Python) on GitHub",
-            "url": "https://github.com/SysBioChalmers/geckopy",
+            "url": "https://github.com/CompMetEng/geckopy",
             "icon": "fa-brands fa-github",
             "type": "fontawesome",
         },

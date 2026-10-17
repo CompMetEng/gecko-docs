@@ -32,7 +32,7 @@
 ## Code and data availability
 
 The source code of the GECKO toolbox is publicly available under the MIT license
-at [https://github.com/SysBioChalmers/GECKO/](https://github.com/SysBioChalmers/GECKO/),
+at [https://github.com/CompMetEng/GECKO/](https://github.com/CompMetEng/GECKO/),
 also archived at
 [https://doi.org/10.5281/zenodo.7699818](https://doi.org/10.5281/zenodo.7699818).
 All limited data used in the tutorials are distributed as part of the code.

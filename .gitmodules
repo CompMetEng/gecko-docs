@@ -1,10 +1,10 @@
 [submodule "geckopy"]
 	path = geckopy
-	url = https://github.com/SysBioChalmers/geckopy.git
+	url = https://github.com/CompMetEng/geckopy.git
 	branch = develop
 	shallow = true
 [submodule "GECKO"]
 	path = GECKO
-	url = https://github.com/SysBioChalmers/GECKO.git
-	branch = develop4
+	url = https://github.com/CompMetEng/GECKO.git
+	branch = develop
 	shallow = true
