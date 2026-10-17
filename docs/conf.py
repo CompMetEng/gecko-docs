@@ -9,7 +9,7 @@ should behave the same way for a reader moving between them.
 from __future__ import annotations
 
 project = "GECKO"
-copyright = "SysBioChalmers"
+copyright = "CompMetEng"
 author = "Chen, Gustafsson, Tafur Rangel et al."
 
 extensions = [
