@@ -1,4 +1,4 @@
-# Enzyme usage and bottlenecks
+﻿# Enzyme usage and bottlenecks
 
 A full ecModel simulation reports something a conventional GEM cannot: how
 much of each enzyme a flux distribution actually uses, and which enzyme
@@ -30,7 +30,7 @@ An enzyme's usage can be read two ways from a solved model:
 - **Capacity usage**, absolute usage divided by that reaction's upper bound,
   the fraction of the enzyme's available supply the solution actually uses.
   That upper bound is not necessarily the concentration recorded in
-  `ecModel.ec.concs`; it can be a flexibilized value (see [Relaxing
+  `ec.concs`; it can be a flexibilized value (see [Relaxing
   overconstrained proteomics](relaxing-constraints.md)).
 
 Enzyme usage is most informative when the total protein pool constraint is
@@ -79,7 +79,7 @@ print(report.top_abs_usage.head(10))
 limited to a top-N count), and `totalUsageFlux` / `total_usage_flux` (the
 protein pool exchange's current upper bound, used as the denominator for
 the percentage column). An ecModel without individual concentrations in
-`ecModel.ec.concs` will typically show an empty `highCapUsage` /
+`ec.concs` will typically show an empty `highCapUsage` /
 `high_cap_usage` table: every enzyme draws from the shared protein pool
 through a usage reaction with the generous default upper bound of 1000
 mg/gDCW, so capacity usage rarely comes close to that bound. Once

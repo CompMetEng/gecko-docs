@@ -15,21 +15,20 @@ bounded to a realistic value, so growth is not yet meaningfully limited.
 | `applyCustomKcats` | `apply_custom_kcats` | apply manually curated kcat values |
 | `getKcatAcrossIsozymes` | `fill_kcats_from_isozymes` | fill missing isozyme kcats with the mean of their isozymes |
 | `getStandardKcat` | `assign_standard_kcat` | assign a fallback kcat to reactions with no gene association |
-| `assignKcatValues` | `apply_kcat_list` | populate `ecModel.ec.kcat` from a kcat list |
-| `applyKcatConstraints` | `apply_kcat_constraints` | apply `ecModel.ec.kcat` to the model's stoichiometry |
+| `assignKcatValues` | `apply_kcat_list` | populate `ec.kcat` from a kcat list |
+| `applyKcatConstraints` | `apply_kcat_constraints` | apply `ec.kcat` to the model's stoichiometry |
 | `setProtPoolSize` / `calculateFfactor` | `set_prot_pool_size` / `calculate_f_factor` | constrain the protein pool exchange reaction |
 
-:::{note} Functions that populate `ecModel.ec.kcat` run in any order
+:::{note} Functions that populate `ec.kcat` run in any order
 `assignKcatValues`/`apply_kcat_list`, `applyCustomKcats`/`apply_custom_kcats`
 and the other functions below can run in any order. Unless stated
 otherwise, each overwrites existing values and documents the source in
-`ecModel.ec.source`, for example `brenda` or `custom`.
+`ec.source`, for example `brenda` or `custom`.
 :::
 
 ## Apply a merged kcat list
 
-Integrate a `kcatList` from any previous step, populating
-`ecModel.ec.kcat`. Here the merged list from
+Integrate a `kcatList` from any previous step, populating `ec.kcat`. Here the merged list from
 [Gathering kcats](gathering-kcats.md#merge-dlkcat-and-brenda-structures)
 is used:
 
@@ -56,8 +55,8 @@ apply_kcat_list(ec_model, kcat_list_merged)
 ::::
 
 :::{note} Example output
-`ecModel.ec.kcat` is populated with the selected values, and
-`ecModel.ec.source` records where each is derived from.
+`ec.kcat` is populated with the selected values, and `ec.source` records
+where each is derived from.
 :::
 
 ## Provide custom kcat values
@@ -106,7 +105,7 @@ returned as a `notMatch` list.
 When a kcat is not defined for every isozymatic variant of a reaction, the
 variant lacking a kcat gets no protein cost and is preferred over variants
 that do have one, since it looks free in the optimization. Substituting
-missing values in `ecModel.ec.kcat` with the mean kcat of their isozymes
+missing values in `ec.kcat` with the mean kcat of their isozymes
 avoids this:
 
 ::::{tab-set}
@@ -130,32 +129,34 @@ fill_kcats_from_isozymes(ec_model)
 `fill_kcats_from_isozymes` also calls `apply_kcat_constraints` for the
 reactions it filled, so `ec_model.S` reflects the new values immediately;
 pass `apply=False` to only update `ec_model.ec.kcat` and defer applying the
-constraints, matching the MATLAB behavior below.
+constraints, matching the MATLAB behavior.
+
+On a light ecModel (`ec_model.ec.gecko_light == True`),
+`fill_kcats_from_isozymes` raises `NotImplementedError`.
 :::
 ::::
 
 This step does not apply to light ecModels, where only the most efficient
-isozyme is considered. In Python, calling `fill_kcats_from_isozymes` on a
-light ecModel (`ec_model.ec.gecko_light == True`) raises
-`NotImplementedError`, matching this MATLAB restriction.
+isozyme is considered; `getKcatAcrossIsozymes` raises an error on a light
+ecModel (Python: `fill_kcats_from_isozymes` raises `NotImplementedError`).
 
 :::{note} Example output
-`ecModel.ec.kcat` is updated so every isozymic reaction has a value, with
-`ecModel.ec.source` for those reactions reading `isozymes`. In MATLAB,
-`ecModel.S` is unaffected until the constraints are applied below; in
-Python, `ec_model.S` is already updated for the affected reactions, since
-`fill_kcats_from_isozymes` applies the constraints by default (see above).
+`ec.kcat` is updated so every isozymic reaction has a value, with
+`ec.source` for those reactions reading `isozymes`. In MATLAB, the
+stoichiometric coefficients are unaffected until the constraints are applied
+below; in Python, they are already updated for the affected reactions, since
+`fill_kcats_from_isozymes` applies the constraints by default.
 :::
 
 ## Assign a standard kcat value (optional)
 
-Reactions without genes associated in the starting GEM (empty entries in
-`model.grRules`) cannot carry enzyme constraints, for lack of enzyme data.
+Reactions without genes associated in the starting GEM (empty gene-reaction
+rules) cannot carry enzyme constraints, for lack of enzyme data.
 For such reactions, excluding exchange, spontaneous, transport and
 pseudo-reactions, a standard kcat and a standard pseudo-enzyme
 (`prot_standard`) constrain catalytic capacity instead. The standard kcat
 is the mean of kcat values for reactions in the same subsystem, or the mean
-of every kcat in `ecModel.ec.kcat` if no subsystem is defined. The standard
+of every kcat in `ec.kcat` if no subsystem is defined. The standard
 molecular weight is the median across every protein in the organism, and a
 `usage_prot_standard` reaction is added.
 
@@ -187,14 +188,15 @@ the standard kcat are logged rather than returned.
 ::::
 
 :::{note} Example output
-In the `full_ecModel` tutorial, `ecModel.ec` gains a `standard`
-pseudo-enzyme of MW 44,898 Da, and reactions in `rxnsMissingGPR` and
-`rxnsNoKcat` receive the standard kcat value of 12.3 s^-1.
+In the `full_ecModel` tutorial, `ec` gains a `standard` pseudo-enzyme of MW
+44,898 Da, and reactions without a gene association, together with
+reactions whose kcat was zero or `NaN`, receive the standard kcat value of
+12.3 s^-1.
 :::
 
 ## Apply the enzyme constraints
 
-With `ecModel.ec.kcat` populated from the sources above, apply the enzyme
+With `ec.kcat` populated from the sources above, apply the enzyme
 constraints:
 
 ::::{tab-set}
@@ -216,9 +218,10 @@ apply_kcat_constraints(ec_model)
 :::
 ::::
 
-This modifies the S-matrix (`ecModel.S` / the cobra reaction
-stoichiometries in Python) to directly include the protein cost, based on
-the kcat values from `ecModel.ec.kcat`, the MWs from `ecModel.ec.mw` and,
+This modifies the stoichiometric coefficients of the ecModel (the S-matrix
+in MATLAB, the cobra reaction stoichiometries in Python) to directly
+include the protein cost, based on the kcat values from `ec.kcat`, the MWs
+from `ec.mw` and,
 if applied, the enzyme complex stoichiometry from
 `applyComplexData`/`apply_complex_data`
 (see [Building an empty ecModel](building-ec-model.md#apply-enzyme-complex-stoichiometry-optional)).
@@ -228,7 +231,7 @@ and complex data.
 
 :::{note} Example output
 Every stoichiometric coefficient added or changed above is applied to
-`ecModel.S`. The coefficient of an enzyme pseudo-metabolite is:
+the ecModel. The coefficient of an enzyme pseudo-metabolite is:
 
 $$ \frac{MW}{k_{cat} \times 3600} \times (\text{complex stoichiometry}) $$
 
@@ -308,16 +311,16 @@ plausible value; see
 :::
 
 :::{note} Example output
-With $P_{tot}$ = 0.5, f = 0.5 and sigma = 0.5, the `ecModel.lb` entry for
+With $P_{tot}$ = 0.5, f = 0.5 and sigma = 0.5, the lower bound of
 `prot_pool_exchange` becomes -125 mg/gDCW under the GECKO 3.0 negative-flux
 convention (positive under the current GECKO 4 forward convention; see the
 tip in [Building an empty ecModel](building-ec-model.md#box-1-extension-of-a-conventional-gem)).
 :::
 
-## The ecModel.ec structure
+## The ec structure
 
 Enzyme-related information lives in `ecModel.ec` (MATLAB) or `ec_model.ec`
-(Python, an `EcData` instance). Field names match between languages except
+(Python, an `EcData` instance), written `ec` in this Guide. Field names match between languages except
 for `rxnEnzMat`/`rxn_enz_mat`. The structure is similar for full and light
 ecModels but differs in how the reaction-related fields are populated: in
 full ecModels the whole model is expanded, each isozyme gets a separate
@@ -328,20 +331,20 @@ reactions have several entities represented in the structure.
 | Field | Data type | Size | Description |
 |-------|-----------|------|-------------|
 | `rxns` | string array (Python: `list[str]`) | m | Reaction identifiers gathered from the ecModel, after expansion and making irreversible. |
-| `rxnEnzMat` (Python: `rxn_enz_mat`) | matrix (Python: sparse `scipy.sparse.csr_matrix`) | m x n | Comparable to `rxnGeneMat`, but Enz refers to `ecModel.ec.enzymes`. Positive integers give the number of enzyme subunits annotated to each reaction. |
+| `rxnEnzMat` (Python: `rxn_enz_mat`) | matrix (Python: sparse `scipy.sparse.csr_matrix`) | m x n | Comparable to the model's reaction-gene matrix, but Enz refers to `ec.enzymes`. Positive integers give the number of enzyme subunits annotated to each reaction. |
 | `kcat` | float vector (Python: `numpy.ndarray`) | m | One value per reaction-enzyme (complex) combination, in s^-1, gathered from various sources; `0` means no kcat assigned yet. |
 | `source` | string array (Python: `list[str]`) | m | Where the kcat came from, for example `dlkcat`, `brenda`, `standard` or `custom`. |
 | `notes` | string array (Python: `list[str]`) | m | Free-text notes the user adds. |
 | `eccodes` | string array (Python: `list[str]`) | m | EC numbers gathered from the ecModel and/or UniProt/KEGG, used only for fuzzy kcat matching. |
-| `genes` | string array (Python: `list[str]`) | n | Gene identifiers, corresponding to `ecModel.genes`, matching the columns in `rxnEnzMat`. |
+| `genes` | string array (Python: `list[str]`) | n | Gene identifiers, corresponding to the genes of the ecModel, matching the columns in `rxnEnzMat` (Python: `rxn_enz_mat`). |
 | `enzymes` | string array (Python: `list[str]`) | n | UniProt protein identifiers derived from the matching entries in `genes`. |
 | `mw` | float vector (Python: `numpy.ndarray`) | n | Molecular weight for each enzyme, in Dalton; unknown is `NaN`. |
 | `sequence` | string array (Python: `list[str]`) | n | Amino acid sequence for each enzyme. |
 | `concs` | float vector (Python: `numpy.ndarray`) | n | Measured concentration of each enzyme in mg/gDCW; unmeasured is `NaN`. |
 
-geckopy adds two convenience properties not present as MATLAB fields:
-`ec_model.ec.n_rxns` and `ec_model.ec.n_enzymes` (the m and n sizes above),
-and a `gecko_light: bool` flag recording which layout the model uses.
+In Python, `ec.n_rxns` and `ec.n_enzymes` return the m and n sizes above,
+and `ec.gecko_light` is a boolean recording which layout the model uses;
+MATLAB has no fields with these names.
 
 ## See also
 

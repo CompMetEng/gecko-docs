@@ -22,6 +22,11 @@ RAVEN, and geckopy (Python), built on cobrapy. Function names differ only
 mechanically between the two (`camelCase` vs. `snake_case`); see
 [MATLAB ↔ Python](../matlab-vs-python.md) for the full name mapping, and
 [API reference](../api/index.md) for every function's signature.
+
+Text outside a MATLAB/Python tab reads the same whichever language is
+selected. Where it must refer to the model's enzyme data, `ec.kcat` stands
+for `ecModel.ec.kcat` in MATLAB and `ec_model.ec.kcat` in Python; field names
+are identical in both languages except `rxnEnzMat` (Python: `rxn_enz_mat`).
 :::
 
 ## Pages

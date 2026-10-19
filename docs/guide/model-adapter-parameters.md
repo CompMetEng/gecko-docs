@@ -20,7 +20,7 @@ adapter centrally override a kcat-matching function's aggregation choice.
 | `c_source` | `c_source` | `r_1714` | Reaction identifier for the glucose exchange reaction (or other preferred carbon source). |
 | `complex.taxonomicID` | `complex.taxonomic_id` | `559292` | Taxonomic identifier as available from the [Complex Portal](https://www.ebi.ac.uk/complexportal/home). |
 | `convGEM` | `conv_gem` | `fullfile(obj.params.path, 'models', 'yeast-GEM.xml')` (MATLAB) / `"models/yeast-GEM.yml"` (Python) | Path to the starting conventional GEM file. |
-| `enzyme_comp` | `enzyme_comp` | `cytoplasm` | Compartment name in which added enzymes are located; must match `ecModel.compNames`. |
+| `enzyme_comp` | `enzyme_comp` | `cytoplasm` | Compartment name in which added enzymes are located; must match one of the ecModel's compartment names. |
 | `f` | `f` | `0.5` | Fraction of enzymes in the ecModel relative to all proteins (g enzyme/g protein). `calculateFfactor()` (Python: `calculate_f_factor`) computes it from a proteomics dataset. |
 | `gR_exp` | `gr_exp` | `0.41` | Reference (experimentally observed) maximum growth rate in h^-1, the default tuning target in [Growth-rate tuning](growth-rate-tuning.md#sensitivity-tuning-of-kcat-values). |
 | `kegg.geneID` | `kegg.gene_id` | `kegg` | The gene identifier or database link from KEGG that corresponds to the ecModel genes; for human-GEM this is `Ensembl`. |

@@ -85,6 +85,23 @@ The flexibilized levels show up as changed constraints on the affected
 `usage_prot` reactions. `ecModel.ec.concs` itself is left unchanged and still
 reflects the measured values from `fillEnzConcs`; only the bounds of
 selected `usage_prot` reactions move.
+
+Progress log for the `full_ecModel` tutorial (abridged):
+
+```
+Protein P37299 LB adjusted. Grow: 0.0097884
+Protein Q03028 LB adjusted. Grow: 0.012172
+Protein P24521 LB adjusted. Grow: 0.012897
+Protein P00128 LB adjusted. Grow: 0.013333
+[...]
+Protein P32473 LB adjusted. Grow: 0.088025
+Protein P07285 LB adjusted. Grow: 0.088895
+Protein P12695 LB adjusted. Grow: 0.088899
+Protein P36148 LB adjusted. Grow: 0.0889
+No (more) limiting enzymes have been found. Attempting to increase protein pool exchange...
+Protein pool exchange was also not limiting. Inability to reach growth rate is not related to
+enzyme constraints. Maximum growth rate is 0.0889.
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -123,24 +140,9 @@ continue to draw from the overall protein pool.
 ### Example output
 
 Flexibilization is not always enough on its own to reach the target growth
-rate. Its progress log reports each adjusted protein and the growth rate
-after that adjustment (abridged):
-
-```
-Protein P37299 LB adjusted. Grow: 0.0097884
-Protein Q03028 LB adjusted. Grow: 0.012172
-Protein P24521 LB adjusted. Grow: 0.012897
-Protein P00128 LB adjusted. Grow: 0.013333
-[...]
-Protein P32473 LB adjusted. Grow: 0.088025
-Protein P07285 LB adjusted. Grow: 0.088895
-Protein P12695 LB adjusted. Grow: 0.088899
-Protein P36148 LB adjusted. Grow: 0.0889
-No (more) limiting enzymes have been found. Attempt to increase protein
-pool exchange...
-Protein pool exchange was also not limiting. Inability to reach growth
-rate is not related to enzyme constraints. Maximum growth rate is 0.0889.
-```
+rate. In the tutorial example, relaxing individual enzymes raises the
+maximum growth rate to about 0.0889 /h, and relaxing the protein pool
+exchange does not raise it further.
 
 When even relaxing the protein pool exchange itself does not close the gap,
 the shortfall is not caused by the enzyme constraints. Applying the same

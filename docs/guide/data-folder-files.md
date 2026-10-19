@@ -15,9 +15,9 @@ assumes.
 | `kegg.tsv` | KEGG information for the organism: UniProt protein ID, gene, KEGG gene ID, EC number, MW, pathway and sequence. Downloaded by `loadDatabases` (Python: `geckopy kegg-download`). | [Getting started](getting-started.md), [Gathering kcats](gathering-kcats.md) |
 | `paxDB.tsv` | Protein abundance data used to compute the f factor (the mass fraction of proteins accounted for in the ecModel). Retrieved from [pax-db.org](https://pax-db.org). Without it, f defaults to 0.5. | [Applying kcats](applying-kcats.md) |
 | `proteomics.tsv` | Measured protein levels (mg protein/gDCW) from one or more experiments: UniProt identifiers in the first column, protein levels from individual replicates in each subsequent column. | [Proteomics integration](proteomics-integration.md) |
-| `smilesDB.tsv` | SMILES for metabolites in `ecModel.mets`, generated when `findMetSmiles` (Python: `find_met_smiles`) queries PubChem. | [Gathering kcats](gathering-kcats.md) |
+| `smilesDB.tsv` | SMILES for the metabolites of the ecModel, generated when `findMetSmiles` (Python: `find_met_smiles`) queries PubChem. | [Gathering kcats](gathering-kcats.md) |
 | `uniprot.tsv` | UniProt data for the organism: protein identifier, gene identifier, EC number, MW and sequence. Downloaded by `loadDatabases` (Python: `geckopy uniprot-download`). | [Getting started](getting-started.md), [Building an empty ecModel](building-ec-model.md) |
-| `uniprotConversion.tsv` | Conversion table needed when no UniProt field carries genes in the same format as `ecModel.genes`. First column is `ecModel.genes`, second is the UniProt identifier. Constructed by the user. | [Getting started](getting-started.md) |
+| `uniprotConversion.tsv` | Conversion table needed when no UniProt field carries genes in the same format as the ecModel's gene identifiers. First column is the ecModel's gene identifiers, second is the UniProt identifier. Constructed by the user. | [Getting started](getting-started.md) |
 
 ## See also
 

@@ -179,8 +179,8 @@ ecModel projects and to download UniProt/KEGG data.
 Both MATLAB and Python use the same underlying solvers: MATLAB through RAVEN
 and the COBRA Toolbox, Python through cobrapy.
 
-:::{tip} Avoid the RAVEN default solver
-RAVEN's own default solver, GLPK, is not recommended for GECKO: ecModels
+:::{tip} Avoid GLPK
+GLPK, the default solver of RAVEN, is not recommended for GECKO: ecModels
 are larger and more numerically demanding than the conventional GEMs GLPK
 is adequate for. Configure Gurobi or SoPlex before working with an ecModel
 of genome scale.
@@ -192,9 +192,10 @@ DLKcat runs in a Docker container. Installation instructions are at
 [docs.docker.com/get-started/get-docker](https://docs.docker.com/get-started/get-docker/).
 
 :::{tip} Running DLKcat without Docker
-If installing Docker Desktop is difficult, the `src/dlkcat-gecko/` folder
-contains the Python scripts and data needed to run DLKcat directly from the
-`DLKcat.tsv` output of `writeDLKcatInput`.
+If installing Docker Desktop is difficult, the `src/dlkcat-gecko/` folder of
+the GECKO repository contains the Python scripts and data needed to run
+DLKcat directly from the `DLKcat.tsv` output of `writeDLKcatInput` (Python:
+`write_dlkcat_input`).
 :::
 
 ## Tutorial code

@@ -187,15 +187,6 @@ UniProt match. If it contains many genes, for example more than ten,
 reconsider whether a different UniProt taxonomy or proteome identifier
 (see [Getting started](getting-started.md#querying-uniprot-and-kegg)) fits
 better.
-
-**GECKO 4: a KEGG fallback for genes UniProt cannot match.** Not part of
-the original protocol: when a KEGG database is also loaded, `makeEcModel`
-now consults it for genes that UniProt could not match, before giving up
-on them. `ec.enzymes` receives the UniProt accession carried on the
-matching KEGG row, or the bare KEGG gene id if that row has no accession
-of its own (flagged in a separate warning, since a bare KEGG id is not a
-standard UniProt accession). This can shrink `noUniprot` without any
-adapter changes.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -217,9 +208,8 @@ ec_model = make_ec_model(model, adapter, gecko_light=True)
 UniProt data loads automatically from `params.path / "data" /
 "uniprot.tsv"`. Pass a pre-loaded `uniprot_db=` to use a different file or
 to avoid re-reading it across multiple calls. Pass a pre-loaded `kegg_db=`
-for the same KEGG fallback described in the GECKO 4 note above; `None`
-(the default) skips it, matching MATLAB's behavior when no KEGG database
-is loaded.
+for the KEGG fallback described below; `None` (the default) skips it,
+matching MATLAB's behavior when no KEGG database is loaded.
 
 **Genes without a UniProt match.** `make_ec_model` returns only the built
 `EcModel`, not a second `noUniprot`-style list. Unmatched genes are logged
@@ -229,19 +219,29 @@ a reason to reconsider the UniProt taxonomy or proteome identifier.
 :::
 ::::
 
+**GECKO 4: a KEGG fallback for genes UniProt cannot match.** Not part of
+the original protocol: when a KEGG database is also loaded, the build
+(`makeEcModel`; Python: `make_ec_model`) consults it for genes that UniProt
+could not match, before giving up on them. `ec.enzymes` receives the
+UniProt accession carried on the matching KEGG row, or the bare KEGG gene id
+if that row has no accession of its own (flagged in a separate warning,
+since a bare KEGG id is not a standard UniProt accession). This can shrink
+the list of genes without a UniProt match without any adapter changes.
+
 The result is an empty ecModel either way: the model structure changes to
 allow enzyme constraints (see
-[the ecModel.ec structure](applying-kcats.md#the-ecmodelec-structure)), but
-no constraints are applied yet.
+[the ec structure](applying-kcats.md#the-ec-structure)), but no constraints
+are applied yet.
 
 ## Apply enzyme complex stoichiometry (optional)
 
 Building the ecModel assigns single-subunit stoichiometry to every enzyme
-complex in `ecModel.ec.rxnEnzMat`. In reality subunit copy numbers vary.
-GECKO can add this information from the
+complex in `ec.rxnEnzMat` (Python: `ec.rxn_enz_mat`). In reality subunit
+copy numbers vary. GECKO can add this information from the
 [Complex Portal](https://www.ebi.ac.uk/complexportal/complex/organisms),
-using the taxonomic identifier in `obj.params.complex.taxonomicID`; the
-Complex Portal covers only a limited set of taxonomic identifiers.
+using the taxonomic identifier in the model adapter parameter
+`complex.taxonomicID` (Python: `complex.taxonomic_id`); the Complex Portal
+covers only a limited set of taxonomic identifiers.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -255,7 +255,14 @@ complexInfo = getComplexData();
 
 `getComplexData` takes no input parameters; the required parameters come
 from the default model adapter, a pattern shared by several other GECKO
-functions.
+functions. `foundComplex` and `proposedComplex` list the complexes with a
+full match and the proposed complexes.
+
+MATLAB prints the number of full and proposed matches:
+
+```
+A total of 206 complex have full match, and 17 proposed.
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -267,7 +274,11 @@ apply_complex_data(ec_model, path=params.path / "data" / "ComplexPortal.json")
 ```
 
 `apply_complex_data` mutates `ec_model` in place; there are no
-`foundComplex`/`proposedComplex` return values yet. To (re)download the
+`foundComplex`/`proposedComplex` return values yet. Proposed complexes are
+logged as warnings, and the number of full and proposed matches is logged
+at INFO level as `apply_complex_data: N full match(es), M proposed.`. The
+keyword argument `min_match_to_propose` (default 0.75) sets the minimum
+fraction of matching genes for a partial match to be proposed. To (re)download the
 Complex Portal data first, use `get_complex_data`, which takes the adapter
 explicitly, since Python functions generally take the adapter or its
 parameters as an argument rather than reading a global default:
@@ -280,23 +291,18 @@ get_complex_data(adapter)
 :::
 ::::
 
-`applyComplexData` integrates complex data for a reaction only when its
-ecModel gene association fully (100%) matches a Complex Portal complex. If
-no full match exists, `proposedComplex` suggests complexes with a partial
-match: either at least 75% of the reaction's ecModel genes match a Complex
-Portal complex, or a Complex Portal complex contains more subunits than the
-genes associated with the reaction. Inspect `proposedComplex` and consider
-whether curating the ecModel gene association is appropriate; this may
-need further literature study.
+Complex data is integrated for a reaction only when its ecModel gene
+association fully (100%) matches a Complex Portal complex. If no full match
+exists, complexes with a partial match are proposed (MATLAB: in
+`proposedComplex`; Python: in the log): either at least 75% of the
+reaction's ecModel genes match a Complex Portal complex, or a Complex Portal
+complex contains more subunits than the genes associated with the reaction.
+Inspect the proposed complexes and consider whether curating the ecModel
+gene association is appropriate; this may need further literature study.
 
 :::{note} Example output
-In the `full_ecModel` tutorial, applying Complex Portal data reports:
-
-```
-A total of 206 complex have full match, and 17 proposed.
-```
-
-One proposed match: reaction `r_0505_EXP_2` could match complex CPX-1293,
+In the `full_ecModel` tutorial, applying Complex Portal data finds 206
+complexes with a full match and 17 proposed complexes. One proposed match: reaction `r_0505_EXP_2` could match complex CPX-1293,
 the mitochondrial 2-oxoglutarate dehydrogenase complex. In the ecModel this
 reaction is annotated with proteins P20967 (KGD1, subunit E1), P19262
 (KGD2, subunit E2) and P09624 (LPD1, subunit E3), while CPX-1293 also
@@ -319,7 +325,7 @@ information from other databases or the literature.
 ## Save the ecModel
 
 The ecModel can be saved at any point in the procedure. Only YAML retains
-the full `ecModel.ec` fields, so use it whenever the ecModel needs to be
+the full `ec` fields, so use it whenever the ecModel needs to be
 modified further.
 
 ::::{tab-set}
@@ -395,12 +401,12 @@ full ecModel expensive to simulate.
 |---|---|:---:|:---:|
 | 1 | Remove gene associations from pseudo-reactions (name contains `pseudoreaction`, or listed in `data/pseudoRxns.tsv`) | ✅ | ✅ |
 | 2 | Invert irreversible reactions that carry only negative flux (lower bound < 0, upper bound = 0) | ✅ | ✅ |
-| 3 | Build the `ecModel.rev` reversibility vector from the bound vectors | ✅ | ✅ |
+| 3 | Determine which reactions are reversible from their bounds (MATLAB stores this as the ecModel field `rev`; geckopy has no separate reversibility vector) | ✅ | ✅ |
 | 4 | Split reversible reactions into forward and reverse copies (`_REV` suffix on the reverse copy; exchange reactions keep their original, still-reversible form) | ✅ | ✅ |
-| 5 | Split isozyme-catalyzed reactions (`or` in `ecModel.grRules`) into one reaction per isozyme (`_EXP_1`, `_EXP_2`, …) | ✅ | -- |
-| 6 | Build an empty `ecModel.ec` structure (Python: `ec_model.ec`, an `EcData` instance) | ✅ | ✅ |
-| 7 | Add enzyme MW and sequence to `ecModel.ec`, from UniProt via the model adapter | ✅ | ✅ |
-| 8 | Record reaction-enzyme associations in `ecModel.ec.rxnEnzMat` (Python: `ec_model.ec.rxn_enz_mat`) | ✅ | ✅ |
+| 5 | Split isozyme-catalyzed reactions (`or` in the gene-reaction rule) into one reaction per isozyme (`_EXP_1`, `_EXP_2`, …) | ✅ | -- |
+| 6 | Build an empty `ec` structure (Python: an `EcData` instance) | ✅ | ✅ |
+| 7 | Add enzyme MW and sequence to `ec`, from UniProt via the model adapter | ✅ | ✅ |
+| 8 | Record reaction-enzyme associations in `ec.rxnEnzMat` (Python: `ec.rxn_enz_mat`) | ✅ | ✅ |
 | 9 | Add each enzyme as a `prot_<uniprot ID>` pseudo-metabolite | ✅ | -- |
 | 10 | Add the protein pool pseudo-metabolite | ✅ | ✅ |
 | 11 | Add `usage_prot_<uniprot ID>` reactions for each enzyme pseudo-metabolite | ✅ | -- |
@@ -413,8 +419,8 @@ ecModels keep the original identifiers throughout, since this step is
 skipped. Step 9's example: *S. cerevisiae* enolase gene YHR174W, UniProt
 identifier P00925, appears as pseudo-metabolite `prot_P00925`. Step 11's
 identifiers are `usage_` followed by the enzyme metabolite identifier, for
-example `usage_prot_P00925`. See [the ecModel.ec
-structure](applying-kcats.md#the-ecmodelec-structure) for what step 6
+example `usage_prot_P00925`. See [the ec
+structure](applying-kcats.md#the-ec-structure) for what step 6
 populates later, and [GECKO light vs. full
 ecModels](gecko-light.md) for why the four full-only steps matter.
 :::
@@ -429,10 +435,11 @@ GECKO has already flipped both to the more intuitive *forward* direction
 [PR #419](https://github.com/SysBioChalmers/GECKO/pull/419)): `usage_prot_*`
 consumes `prot_pool` to produce `prot_<enzyme>`, and `prot_pool_exchange`
 supplies `prot_pool` in the first place. Every dependent function was
-updated to match: `setProtPoolSize`, `addNewRxnsToEC`, `getStandardKcat`,
-`constrainEnzConcs`, `flexibilizeEnzConcs`, `updateProtPool`,
-`getConcControlCoeffs`, `getSubsetEcModel`, `getEnzymeUsage`,
-`reportEnzymeUsage` and `sensitivityTuning`. geckopy implements this same
+updated to match (MATLAB function names): `setProtPoolSize`,
+`addNewRxnsToEC`, `getStandardKcat`, `constrainEnzConcs`,
+`flexibilizeEnzConcs`, `updateProtPool`, `getConcControlCoeffs`,
+`getSubsetEcModel`, `getEnzymeUsage`, `reportEnzymeUsage` and
+`sensitivityTuning`. geckopy implements this same
 forward convention throughout, since it targets current GECKO rather than
 the GECKO 3.0 protocol. This changes which bound relaxes a constraint and
 which objective coefficient minimizes usage; see the worked example in

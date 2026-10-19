@@ -17,7 +17,7 @@ ecModels](gecko-light.md).
 | MATLAB | Python | |
 |---|---|---|
 | `loadProtData` | `load_prot_data` | read `proteomics.tsv` into a proteomics data structure |
-| `fillEnzConcs` | `fill_enz_concs` | populate `ecModel.ec.concs` with the measured concentrations |
+| `fillEnzConcs` | `fill_enz_concs` | populate `ec.concs` with the measured concentrations |
 | `constrainEnzConcs` | `constrain_enz_concs` | apply those concentrations as bounds on `usage_prot_*` reactions |
 | `calculateFfactor` + `setProtPoolSize` | `calculate_f_factor` + `set_prot_pool_size` | recompute the protein pool constraint for the remaining, unmeasured enzymes |
 | `loadFluxData` | `load_flux_data` | read `fluxData.tsv` (exchange fluxes and growth rate for the same experiment) |
@@ -51,7 +51,7 @@ ecModels.
 :::
 
 Integration follows four steps, the same shape as integrating $k_{cat}$
-values: load the proteomics data, populate `ecModel.ec.concs` with the
+values: load the proteomics data, populate `ec.concs` with the
 relevant concentrations, apply those concentrations as bounds on the
 matching `usage_prot_*` reactions, and stop drawing the constrained enzymes
 from the protein pool. Load the data first:
@@ -98,13 +98,13 @@ fill_enz_concs(ec_model, prot_data, data_col=0)
 :::
 ::::
 
-Introduce the concentrations as bounds on the model:
+Introduce the concentrations as bounds on the model. Each `usage_prot_*`
+reaction with a measured concentration receives that concentration as its
+upper bound:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
-
-Written to `ecModel.lb`, GECKO's negative-flux `usage_prot_*` convention:
 
 ```matlab
 ecModel = constrainEnzConcs(ecModel);
@@ -112,9 +112,6 @@ ecModel = constrainEnzConcs(ecModel);
 :::
 :::{tab-item} 🐍 Python
 :sync: python
-
-Written to the upper bound of each `usage_prot_*` reaction, geckopy's
-forward convention:
 
 ```python
 from geckopy import constrain_enz_concs
@@ -137,7 +134,7 @@ Enzymes now constrained by a measured concentration should stop drawing from
 the protein pool pseudo-metabolite. Because a proteomics experiment may
 reflect a physiology different from the default assumption, recompute the
 pool size from a sample-specific total protein content (for example 0.5
-g/gDCW) instead of the adapter's default `Ptot`:
+g/gDCW) instead of the adapter's default `Ptot` (Python: `p_tot`):
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -256,13 +253,8 @@ be made more flexible, covered on the next page.
 
 Applying strict measured exchange fluxes and a strict measured growth rate
 to a proteomics-constrained ecModel can be considerably more restrictive
-than the enzyme constraints alone:
-
-```
-Growth rate that is reached: 0.004578 /hour
-```
-
-against an intended 0.1 /hour. Applying the same flux constraints to the
+than the enzyme constraints alone: in one example, the growth rate reached
+is 0.004578 /hour, against an intended 0.1 /hour. Applying the same flux constraints to the
 conventional GEM (no enzyme constraints at all) distinguishes the two
 possible causes: if the conventional GEM still falls short of 0.1 /hour, the
 exchange flux data, not the enzyme constraints, are the bottleneck.

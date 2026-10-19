@@ -1,10 +1,9 @@
 # Simulation and analysis
 
 Both light and full ecModels share a conventional GEM's underlying
-structure, an S-matrix with vectors of lower and upper bounds (in Python, an
-ordinary `cobra.Model`), so any method that works on a conventional GEM also
-works on an ecModel, in both languages, regardless of whether it is a light
-or full one. This page covers the simulation and analysis tasks specific to
+structure, an S-matrix with vectors of lower and upper bounds, so any method
+that works on a conventional GEM also works on an ecModel, in both languages,
+regardless of whether it is a light or full one. This page covers the simulation and analysis tasks specific to
 ecModels; ordinary FBA, media, and solver setup are covered in
 [Getting started](getting-started.md) and apply unchanged. An ecModel is
 also usable in other constraint-based toolboxes; SBML is the most portable
@@ -52,6 +51,8 @@ from geckopy import set_prot_pool_size
 
 set_prot_pool_size(ec_model_inf, p_tot=math.inf)
 ```
+
+An `EcModel` is a `cobra.Model`, so cobrapy's methods apply to it directly.
 :::
 ::::
 
@@ -208,11 +209,9 @@ that correspondence without raising an error.
 
 A major benefit of an ecModel over a conventional GEM is a smaller solution
 space, which flux variability analysis (FVA) makes visible directly. FVA
-works the same way on an ecModel as on any other constraint-based model; in
-MATLAB, `getAllowedBounds` runs plain FVA on the ecModel's own reaction set,
-but for comparing against a conventional GEM's own FVA result, mapping
-straight to the conventional model's reaction ids with `ecFVA` is more
-convenient.
+works the same way on an ecModel as on any other constraint-based model. To
+compare against a conventional GEM's own FVA result, `ecFVA` (Python:
+`ec_fva`) maps the ranges straight to the conventional model's reaction ids.
 
 Apply the same exchange flux constraints to three models with a shared basis
 for comparison: an ecModel with proteomics integrated (see [Proteomics
@@ -234,6 +233,9 @@ maxFlux = minFlux;
 [minFlux(:,2), maxFlux(:,2)] = ecFVA(ecModel, model);
 [minFlux(:,3), maxFlux(:,3)] = ecFVA(ecModelProt, model);
 ```
+
+`getAllowedBounds` runs plain FVA on the ecModel's own reaction set, without
+mapping to the conventional model's reaction ids.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -256,16 +258,14 @@ fva_prot = ec_fva(ec_model_prot, model)
 `ec_fva` returns a DataFrame indexed by the conventional model's reaction
 ids, with `min_flux` / `max_flux` columns, so there is no need to
 pre-allocate a matrix as in MATLAB.
-:::
-::::
 
-:::{warning} Performance
-With the default open-source solver (GLPK), `ec_fva` at yeast-GEM scale
-(around 4,000 canonical reactions times 3 models times 2 LPs each) can take
-well over an hour. Configure a faster solver first
+**Performance.** With the default open-source solver (GLPK), `ec_fva` at
+yeast-GEM scale (around 4,000 canonical reactions times 3 models times 2 LPs
+each) can take well over an hour. Configure a faster solver first
 (`ec_model.solver = "gurobi"`, license permitting) before running this at
 genome scale, or expect a long run.
 :::
+::::
 
 ### Example output
 
@@ -335,7 +335,7 @@ enzyme constraints happen to be near their limit.
 [raven-docs' convergence
 study](https://github.com/edkerk/raven-docs/blob/main/docs/parameter-tuning/studies/sampling-convergence-calibration.md)
 measured both methods on a conventional (non-enzyme-constrained) GEM, not
-an ecModel, and its results argue against treating `method="chrr"` as a
+an ecModel, and its results argue against treating CHRR as a
 default rather than for it. At genome scale on yeast-GEM, ACHR's default
 settings are clearly unconverged (median Gelman-Rubin R-hat 1.17 across
 four chains, two in three reactions failing even the loose 1.1 threshold).
@@ -425,11 +425,11 @@ rate on their own, and combine when applied together, for example comparing
 maximum growth rates between an unconstrained context-specific GEM, a
 generic ecModel, and a context-specific ecModel derived from it:
 
-```
-Growth rate in HT29-GEM:      149.97  /hour
-Growth rate in ecHuman-GEM:     0.122 /hour
-Growth rate in ecHT29-GEM:      0.086 /hour
-```
+| Model | Maximum growth rate (/hour) |
+|---|---|
+| HT29-GEM (context-specific, unconstrained) | 149.97 |
+| ecHuman-GEM (generic ecModel) | 0.122 |
+| ecHT29-GEM (context-specific ecModel) | 0.086 |
 
 The unconstrained context-specific model's growth rate (149.97 /h) is not
 biologically meaningful on its own, since carbon uptake is unconstrained

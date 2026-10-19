@@ -43,7 +43,7 @@ smaller models, such as yeast or *E. coli*, full is usually fine.
 
 | | Full | Light |
 |---|---|---|
-| Isozyme expansion | reactions split, one copy per isozyme (`_EXP_<N>` suffix in Python, similarly in MATLAB) | reactions stay singular |
+| Isozyme expansion | reactions split, one copy per isozyme (`_EXP_<N>` suffix) | reactions stay singular |
 | Per-enzyme pseudo-metabolite `prot_<id>` | yes | no |
 | Per-enzyme usage reaction `usage_prot_<id>` | yes | no |
 | Shared protein pool | yes | yes, and it is the only enzyme constraint present |
@@ -82,6 +82,20 @@ The comparison below builds a light and a full ecModel of yeast-GEM,
 populated with kcat values from BRENDA fuzzy matching only, and runs FBA
 with growth maximized on each:
 
+| | Light | Full |
+|---|---|---|
+| ecModel reconstruction (s) | 39 | 41 |
+| FBA (s) | 0.57 | 0.89 |
+| Mapping fluxes (s) | 0.103 | 0.161 |
+| Growth rate that is reached (/hour) | 0.0252 | 0.0252 |
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+The `plotlightVSfull` script of the `full_ecModel` tutorial prints this
+comparison:
+
 ```
 Comparison of duration light vs. full ecModel
 ecModel reconstruction: 95% (39 vs 41 seconds)
@@ -89,6 +103,8 @@ FBA: 64% (0.57 vs 0.89 seconds)
 Mapping fluxes: 64% (0.103 vs 0.161 seconds)
 Growth rate that is reached: 0.0252 vs 0.0252
 ```
+:::
+::::
 
 Reconstruction time does not differ much between the two, because both
 require the same time-consuming BRENDA fuzzy matching step. FBA and flux

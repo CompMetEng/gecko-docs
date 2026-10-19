@@ -114,6 +114,12 @@ sol = solveLP(ecModel);
 bioRxnIdx = getIndexes(ecModel, params.bioRxn, 'rxns');
 fprintf('Growth rate: %f /hour\n', sol.x(bioRxnIdx))
 ```
+
+Output in the `full_ecModel` tutorial:
+
+```
+Growth rate: 0.107203 /hour
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -131,17 +137,12 @@ since `sol.fluxes` is a pandas Series indexed by reaction id.
 ::::
 
 :::{note} Example output
-The growth rate right after applying enzyme constraints, in the
-`full_ecModel` tutorial:
-
-```
-Growth rate: 0.107203 /hour
-```
-
-Because nutrient uptake is not limiting, this is the maximum the ecModel
-can reach. Being substantially below 0.41 h^-1, the experimentally observed
-maximum growth rate of this organism (`params.gR_exp`/`params.gr_exp`),
-indicates the model needs tuning.
+In the `full_ecModel` tutorial, the growth rate right after applying enzyme
+constraints is about 0.107 h^-1. Because nutrient uptake is not limiting,
+this is the maximum the ecModel can reach. Being substantially below
+0.41 h^-1, the experimentally observed maximum growth rate of this organism
+(`params.gR_exp` in MATLAB, `params.gr_exp` in Python), indicates the model
+needs tuning.
 :::
 
 Three reasons can leave the predicted growth rate below the experimental
@@ -167,6 +168,12 @@ sol = solveLP(model);
 bioRxnIdx = getIndexes(model, params.bioRxn, 'rxns');
 fprintf('Growth rate: %f /hour\n', sol.x(bioRxnIdx))
 ```
+
+Output in the `full_ecModel` tutorial:
+
+```
+Growth rate: 19.718033 /hour
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -189,16 +196,11 @@ resolved before reconstructing an ecModel from it.
 
 :::{note} Example output
 Without a constraint on carbon uptake, the conventional GEM in the
-`full_ecModel` tutorial reaches:
-
-```
-Growth rate: 19.718033 /hour
-```
-
-This is not biologically realistic on its own, given the unconstrained
-carbon uptake, but it confirms that the conventional GEM's stoichiometry
-can reach 0.41 h^-1, so the shortfall above comes from the enzyme
-constraints, not the network.
+`full_ecModel` tutorial reaches a growth rate of about 19.7 h^-1. This is
+not biologically realistic on its own, given the unconstrained carbon
+uptake, but it confirms that the conventional GEM's stoichiometry can reach
+0.41 h^-1, so the shortfall above comes from the enzyme constraints, not
+the network.
 :::
 
 ## Too tight protein pool constraint
@@ -216,7 +218,7 @@ constraint entirely, releasing every enzyme constraint at once:
 :sync: matlab
 
 ```matlab
-ecModel = setParam(ecModel, 'lb', 'prot_pool_exchange', -1000);
+ecModel = setParam(ecModel, 'ub', 'prot_pool_exchange', 1000);
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -232,20 +234,15 @@ upper bound back to geckopy's wide-open default (1000).
 :::
 ::::
 
-:::{tip} GECKO 4: relaxing and minimizing prot_pool_exchange already got simpler
-The GECKO 3.0 protocol's negative-flux convention is why relaxing
-`prot_pool_exchange` means lowering its *lower* bound to -1,000 (MATLAB,
-above) and why minimizing its usage means *maximizing* with coefficient
-`+1` rather than minimizing (MATLAB, below): those code blocks are
-unchanged since the Nature Protocols publication. Current GECKO has
-already moved to the forward convention
-([PR #419](https://github.com/SysBioChalmers/GECKO/pull/419); see
-[Building an empty ecModel](building-ec-model.md#box-1-extension-of-a-conventional-gem))
-and geckopy targets that current behavior, per the Python tabs in this
-section, where both become the ordinary operation: relaxing raises the
-*upper* bound, and minimizing usage is an actual minimize, no sign trick
-required. `flexibilizeEnzConcs` internally made the same switch; it now
-minimizes the pool with `obj=-1`, since `solveLP` maximizes.
+:::{tip} GECKO 4: direction of prot_pool_exchange
+In GECKO 4 and geckopy, `prot_pool_exchange` is a forward reaction that
+produces `prot_pool`, with a lower bound of 0 and an upper bound of 1,000
+by default (see
+[Building an empty ecModel](building-ec-model.md#box-1-extension-of-a-conventional-gem)).
+Relaxing the protein pool therefore raises its upper bound, and minimizing
+its usage is an ordinary minimization. The GECKO 3.0 protocol used the
+opposite (negative-flux) direction, where relaxing lowered the lower bound
+to -1,000 and minimizing usage required maximizing with coefficient `1`.
 :::
 
 With neither a protein pool nor a nutrient constraint, predict the lowest
@@ -258,15 +255,20 @@ rate:
 
 ```matlab
 ecModel = setParam(ecModel, 'lb', 'r_4041', 0.41);
-ecModel = setParam(ecModel, 'obj', 'prot_pool_exchange', 1);
+ecModel = setParam(ecModel, 'obj', 'prot_pool_exchange', -1);
 sol = solveLP(ecModel);
 protPoolIdx = strcmp(ecModel.rxns, 'prot_pool_exchange');
-fprintf('Protein pool usage is: %.0f mg/gDCW\n', abs(sol.x(protPoolIdx)))
+fprintf('Protein pool usage is: %.0f mg/gDCW\n', sol.x(protPoolIdx))
 ```
 
-**Objective coefficient sign.** Because of the direction of the exchange
-reaction described in the tip above, minimization of protein pool usage is
-implied by using `1` (not `-1`) as the objective coefficient here.
+**Objective coefficient sign.** `solveLP` maximizes the objective, so the
+coefficient `-1` minimizes the flux through `prot_pool_exchange`.
+
+Output in the `full_ecModel` tutorial:
+
+```
+Protein pool usage is: 446 mg/gDCW
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -295,7 +297,7 @@ constraint used to find it:
 :sync: matlab
 
 ```matlab
-ecModel = setParam(ecModel, 'lb', protPoolIdx, sol.x(protPoolIdx));
+ecModel = setParam(ecModel, 'ub', protPoolIdx, sol.x(protPoolIdx));
 ecModel = setParam(ecModel, 'lb', 'r_4041', 0);
 ecModel = setParam(ecModel, 'obj', 'r_4041', 1);
 ```
@@ -319,15 +321,11 @@ reactions instead is the more biologically meaningful option, covered
 next.
 
 :::{note} Example output
-Setting `prot_pool_exchange` to -1,000 mg/gDCW implies the whole cell is
-100% protein. While unrealistic, this often avoids overconstraining. In
-the `full_ecModel` tutorial:
-
-```
-Protein pool usage is: 446 mg/gDCW
-```
-
-With f = 0.5, this implies the cell would consist of 89.2% protein.
+Setting the upper bound of `prot_pool_exchange` to 1,000 mg/gDCW implies
+the whole cell is 100% protein. While unrealistic, this often avoids
+overconstraining. In the `full_ecModel` tutorial, the predicted protein
+pool usage is 446 mg/gDCW. With f = 0.5, this implies the cell would
+consist of 89.2% protein.
 Assuming full enzyme saturation, a more realistic (lower) sigma would push
 the simulated total protein content above 100%, which is why simply
 releasing the protein pool constraint is not the recommended fix.
@@ -357,6 +355,23 @@ ecModel = setProtPoolSize(ecModel);
 [ecModel, tunedKcats] = sensitivityTuning(ecModel);
 struct2table(tunedKcats)
 ```
+
+`sensitivityTuning` returns the updated ecModel and the `tunedKcats`
+structure, and with `verbose` at its default (`true`) prints the growth
+rate of each iteration. It also handles light ecModels. Output for the
+`full_ecModel` tutorial:
+
+```
+Iteration 1: Growth: 0.11421
+Iteration 2: Growth: 0.18016
+Iteration 3: Growth: 0.23412
+Iteration 4: Growth: 0.27495
+Iteration 5: Growth: 0.30635
+Iteration 6: Growth: 0.33961
+Iteration 7: Growth: 0.3718
+Iteration 8: Growth: 0.39141
+Iteration 9: Growth: 0.41193
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -372,14 +387,15 @@ tuning_result = sensitivity_tuning(ec_model)
 model, and returns a `TunedKcatsResult` with a `.rxns` field (and the
 previous/tuned values); with no explicit growth-rate argument it targets
 `params.gr_exp` from the adapter. It is not available for light ecModels
-(raises `NotImplementedError` if `ec_model.ec.gecko_light` is `True`). GECKO
-MATLAB's earlier Bayesian ABC-SMC variant, introduced in GECKO MATLAB 3.3.0
-as `bayesianSensitivityTuning`, has been replaced by a CMA-ES-based module
-(`cmaesKcatTuning`, with `screenKcatLeverage`, `selectTunableMask` and
-`reviewKcatAssignment`); geckopy has a matching `cmaes_kcat_tuning` module.
-See [Tuning against experimental data](tuning-against-experimental-data.md).
+(raises `NotImplementedError` if `ec_model.ec.gecko_light` is `True`). With
+`verbose=True` (the default) it logs the growth rate of each iteration at
+`INFO` level through the `logging` module.
 :::
 ::::
+
+Both toolboxes also provide a CMA-ES-based kcat tuning module
+(`cmaesKcatTuning` in MATLAB, `cmaes_kcat_tuning` in Python), described in
+[Tuning against experimental data](tuning-against-experimental-data.md).
 
 The `tunedKcats`/`tuning_result` output documents which kcat values were
 changed, with their previous value and the catalyzed reaction. Inspect it
@@ -402,30 +418,19 @@ itself is at fault:
 :::
 
 :::{note} Example output
-Iterative tuning raises the growth rate toward 0.41 h^-1 in the
-`full_ecModel` tutorial:
+In the `full_ecModel` tutorial, iterative tuning raises the growth rate
+from 0.114 h^-1 in the first iteration to 0.412 h^-1 in the ninth, above
+the target of 0.41 h^-1.
 
-```
-Iteration 1: Growth: 0.11421
-Iteration 2: Growth: 0.18016
-Iteration 3: Growth: 0.23412
-Iteration 4: Growth: 0.27495
-Iteration 5: Growth: 0.30635
-Iteration 6: Growth: 0.33961
-Iteration 7: Growth: 0.3718
-Iteration 8: Growth: 0.39141
-Iteration 9: Growth: 0.41193
-```
-
-The selected `ecModel.ec.kcat` entries appear in `tunedKcats` (see
-[Example sensitivityTuning output](#example-sensitivitytuning-output)
-below). `ecModel.ec.source` still names the original source, so
-transferring the changes into `data/customKcats.tsv` (see
+The selected `ec.kcat` entries appear in the tuned kcat output (see
+[Example tuned kcat output](#example-tuned-kcat-output) below).
+`ec.source` still names the original source, so transferring the changes
+into `data/customKcats.tsv` (see
 [Applying kcats](applying-kcats.md#provide-custom-kcat-values)) keeps
 them documented.
 :::
 
-### Example sensitivityTuning output
+### Example tuned kcat output
 
 | rxns | rxnNames | enzymes | oldKcat | newKcat | source |
 |------|----------|---------|---------|---------|--------|
@@ -516,7 +521,7 @@ print(conv_kcat)
 ::::
 
 The converted kcat is 5.34, close to the value of 5 reached by
-`sensitivityTuning`. Replace the value in the ecModel with the new
+the tuning. Replace the value in the ecModel with the new
 literature value, either documenting it in `customKcats.tsv` (see
 [Applying kcats](applying-kcats.md#provide-custom-kcat-values)) or applying
 it directly:
@@ -587,7 +592,7 @@ save_ec_model(ec_model, "ecYeastGEM.yml", adapter=adapter)
 These operations work on both conventional GEMs and ecModels, in both
 languages (RAVEN toolbox functions in MATLAB, cobrapy idioms in Python).
 
-Set the upper bound of a reaction (see `ecModel.rxns`) to ten:
+Set the upper bound of a reaction to ten:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -755,7 +760,7 @@ print(sol.fluxes[exchange_ids][sol.fluxes[exchange_ids] != 0])
 ::::
 
 Export the results to a spreadsheet (this file does not carry content from
-the `ecModel.ec` structure, but is convenient for quickly finding reaction
+the `ec` structure, but is convenient for quickly finding reaction
 identifiers):
 
 ::::{tab-set}

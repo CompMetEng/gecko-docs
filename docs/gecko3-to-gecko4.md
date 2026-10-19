@@ -7,6 +7,10 @@ GECKO 3.0, the version described in the published Nature Protocols pipeline
 an existing GECKO 3 workflow, or stay on GECKO 3 using the instructions at
 the bottom of this page.
 
+This page covers the MATLAB toolbox, so the function names below are
+GECKO's. geckopy targets GECKO 4 and has no GECKO 3 release; its first
+release ported the GECKO 3.2.5 functions.
+
 :::{admonition} If you read nothing else: the protein reaction direction flipped
 :class: important
 
