@@ -1,5 +1,7 @@
 # ecModel YAML format
 
+<!-- docs-site: concept-page -->
+
 This page defines the YAML format GECKO and geckopy use to save and load
 ecModels. It is reference material, not a task: both toolboxes read and
 write the same file, so there is no MATLAB-vs-Python distinction to draw
