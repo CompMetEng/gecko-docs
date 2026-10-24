@@ -1,42 +1,38 @@
-/* ===== GECKO brand palette (green) =====================================
-   Sourced from GECKO.png -- a flat single-tone gecko icon + wordmark,
-   RGB(67,104,75). Shades below are HSL adjustments of that exact color
-   (same hue), not eyeballed. Carried over from the MkDocs build's
-   docs/stylesheets/extra.css. */
+/* ===== PROJECT COLOURS: the only block that differs between sites ======
+   Take the brand colour from the logo. The primary colour is the brand colour
+   itself (tab and border colour); the accent is used for links and the language
+   badge, and is the same as the primary colour when the brand colour is dark
+   enough for text. The dark value keeps a contrast ratio
+   of at least 4.5:1 on the dark page background. The theme reads the
+   --pst-color-* variables as plain colours (for example
+   `border: .125rem solid var(--pst-color-primary)`), so a list of numbers
+   makes every rule that uses them invalid. */
 html[data-theme="light"] {
-  --gecko-green:       #43684B;
-  --gecko-green-dark:  #273D2C;
-  --gecko-green-light: #5F936A;
-  --gecko-accent:      #2D6E3B;
-  /* pydata-sphinx-theme reads these as plain CSS colors (e.g. `border: .125rem
-     solid var(--pst-color-primary)`), not as an rgb()-triplet to compose --
-     a bare "67, 104, 75" here makes every rule that uses it invalid, which is
-     what silently dropped the tab-content border (see below) in the first
-     place. Real color values only. */
+  --site-accent: #2D6E3B;
+  --site-accent-bg: rgba(67,104,75, .12);
   --pst-color-primary: #43684B;
   --pst-color-link: #2D6E3B;
 }
 html[data-theme="dark"] {
-  --gecko-green:       #5F936A;
-  --gecko-accent:      #87d398;
+  --site-accent: #87d398;
+  --site-accent-bg: rgba(67,104,75, .12);
   --pst-color-primary: #5F936A;
   --pst-color-link: #87d398;
 }
 
 /* ===== Inline links: visible as links in body text ===================== */
-/* pydata-sphinx-theme's default gives body links a colour change but no
-   underline, so they read as normal prose unless a reader is specifically
-   scanning for them. External-reference icons already carry their own cue,
-   so they are excluded. */
+/* The theme gives body links a colour change but no underline. External
+   references carry their own icon, so they are excluded. */
 .bd-article a:not(.reference.external) {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-/* ===== Home page: a real "# GECKO" H1 keeps the document structure valid
-   (and helps a screen reader / search engine), but the logo image beneath it
-   already carries the visible title -- "gecko" is the id Sphinx slugifies
-   that exact heading text to, and is unique site-wide. ==================== */
+/* ===== Home page title ================================================
+   The page keeps a real H1 for the document structure, search engines and
+   screen readers. The logo beneath it carries the visible title. Sphinx
+   slugifies the heading "# GECKO" to the section id "gecko", which is
+   unique in the site. */
 #gecko > h1 {
   position: absolute;
   width: 1px; height: 1px;
@@ -47,10 +43,9 @@ html[data-theme="dark"] {
   border: 0;
 }
 
-/* ===== Tables: fit the article column instead of forcing a horizontal
-   scrollbar. table-layout:auto sizes a table from its content's preferred
-   width with no upper bound; capping it at the container's width makes long
-   cells wrap instead of pushing the table wider than the page. ============ */
+/* ===== Tables: fit the article column ================================= */
+/* table-layout:auto has no upper bound on the width; a fixed layout capped at
+   the container makes long cells wrap. */
 .bd-article table {
   table-layout: fixed;
   width: 100%;
@@ -60,54 +55,49 @@ html[data-theme="dark"] {
 .bd-article table th {
   overflow-wrap: break-word;
 }
-/* Sphinx wraps inline code in a single white-space:nowrap span, which is
-   right in prose but lets one long identifier list force a table cell wide.
-   Table cells are the one place breaking a code token mid-word is better
-   than the cell (and the whole table) overflowing. */
+/* Sphinx wraps inline code in a nowrap span. In table cells a long identifier
+   list would widen the table, so there a code token may break. */
 .bd-article table code .pre {
   white-space: normal;
   overflow-wrap: break-word;
 }
 
 /* ===== Home page hero ================================================= */
-.gd-hero { text-align: center; padding: 1.5rem 0 1rem; }
-/* Logo and badge share a row, bottom edges level; wraps to stacked/centered
-   on narrow viewports instead of squeezing side by side. */
-.gd-hero-top {
+.site-hero { text-align: center; padding: 1.5rem 0 1rem; }
+/* align-items:flex-end puts the badge's bottom edge on the logo's bottom
+   edge, whatever the rendered height of the logo is. */
+.site-logo-row {
   display: flex;
   align-items: flex-end;
   justify-content: center;
   flex-wrap: wrap;
   gap: .6rem;
-  margin-bottom: .9rem;
+  margin-bottom: .8rem;
 }
-.gd-hero img.gd-hero-logo {
-  max-width: 380px; width: 100%; height: auto;
-  /* pydata-sphinx-theme gives content images a white backing (right for a
-     transparent screenshot on a dark background, wrong for this logo,
-     which is already transparent and reads fine on either theme). */
-  background-color: transparent !important;
-}
-.gd-tag {
-  /* margin: 0, not just an absent margin-bottom: the theme's own paragraph
-     spacing (`.bd-article p`) outranks a bare `.gd-tag` margin-bottom that
-     isn't set at all, and any bottom margin here would shift the badge up
-     off the logo's bottom edge in the flex row below (.gd-hero-top,
-     align-items: flex-end). */
+.site-tag {
   display: inline-block; font-size: .7rem; font-weight: 700;
   letter-spacing: .07em; text-transform: uppercase;
-  color: var(--gecko-green);
-  background: rgba(67,104,75,.12);
+  color: var(--site-accent);
+  background: var(--site-accent-bg);
   border-radius: 20px; padding: .2rem .75rem;
+  /* margin 0: the theme's paragraph spacing would lift the badge off the
+     bottom edge of the logo. */
   margin: 0;
 }
-.gd-tagline {
+.site-tagline {
   font-size: .95rem; color: var(--pst-color-text-muted);
-  max-width: 560px; margin: 0 auto .9rem; line-height: 1.65;
+  max-width: 560px; margin: 0 auto; line-height: 1.65;
 }
 
-/* ===== MATLAB / Python tab-set ========================================
-   No custom rule for .sd-tab-content: pydata-sphinx-theme's own stylesheet
-   already borders it in --pst-color-primary (the invalid-format bug above
-   was what made that look like it needed restoring). Same tab-set styling
-   as raven-docs, which doesn't touch this either. */
+/* ===== Home page logo: one image per colour scheme ==================== */
+.site-logo-light, .site-logo-dark {
+  max-width: 340px;
+  width: 100%;
+  height: auto;
+  /* The theme gives content images a white backing. The logos are
+     transparent and read on either background. */
+  background-color: transparent !important;
+}
+.site-logo-dark { display: none; }
+html[data-theme="dark"] .site-logo-light { display: none; }
+html[data-theme="dark"] .site-logo-dark { display: inline; }
