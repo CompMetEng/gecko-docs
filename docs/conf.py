@@ -56,6 +56,8 @@ html_title = "GECKO documentation"
 html_favicon = "_static/gecko-icon.png"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+# Remembers the language of the code tabs across pages, browser tabs and visits.
+html_js_files = ["language-sync.js"]
 # The source pages are generated MyST files, not something a reader can edit.
 html_show_sourcelink = False
 
