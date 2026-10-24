@@ -1,69 +1,41 @@
 """Shared index of the two toolboxes' public APIs, collected from submodule source.
 
-Both the API-reference generator (``gen_api_pages_sphinx.py``) and any future
-name checker need to know which functions actually exist in GECKO (MATLAB)
-and geckopy (Python). Collecting that in one place means the prose can be
-validated against exactly the same index the reference pages are built from,
-so a function name that no longer resolves cannot slip through in one while
-the other is regenerated.
+The API-reference generator (``gen_api_pages.py``), the linker
+(``autolink.py``) and the name checker (``check_names.py``) need to know which
+functions exist in the MATLAB toolbox and in the Python package. Collecting that
+in one place means the prose is validated against exactly the index the
+reference pages are built from, so a function name that no longer resolves
+cannot slip through in one while the other is regenerated.
 
-Collection is static in both languages: ``.m`` files are read as text and
-Python modules are parsed with ``ast``. Neither MATLAB nor an installed
-geckopy is required.
+Collection is static in both languages: ``.m`` files are read as text and Python
+modules are parsed with ``ast``. Neither MATLAB nor the installed Python package
+is required. The names, paths and categories come from ``project.yml``.
 """
 
 from __future__ import annotations
 
 import ast
-import os
 import re
+import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-# The submodules are the source of truth for a real build. For local work they
-# can be pointed elsewhere -- e.g. at a working checkout of either toolbox --
-# which is useful when a submodule cannot be moved to the tracked commit.
-GECKO = Path(os.environ.get("GECKO_DOCS_GECKO_SRC", ROOT / "GECKO" / "src"))
-PYPKG = Path(
-    os.environ.get(
-        "GECKO_DOCS_PYTHON_SRC", ROOT / "geckopy" / "src" / "geckopy"
-    )
-)
+import project as _project  # noqa: E402
 
-# GECKO src categories to document, in nav order: (folder, page title). GECKO
-# dropped the src/geckomat nesting level and split what used to be a single
-# "utilities" catch-all into several categories. Pruned to existing folders
-# at build time; "deprecated" (backward-compat aliases, e.g. selectKcatValue
-# for assignKcatValues) and "dlkcat-gecko" (the Python/Docker DLKcat runner,
-# not MATLAB) are intentionally excluded.
-MATLAB_CATEGORIES = [
-    ("change_model", "Build & edit ecModel"),
-    ("download_databases", "Download databases"),
-    ("enzyme_usage", "Enzyme usage"),
-    ("flux_analysis", "Flux analysis"),
-    ("gather_kcats", "Gather kcats"),
-    ("get_enzyme_data", "Enzyme & EC data"),
-    ("io", "Input / output"),
-    ("kcat_tuning", "kcat sensitivity tuning"),
-    ("limit_proteins", "Limit proteins"),
-    ("model_adapter", "Model adapter"),
-    ("utilities", "Utilities"),
-]
+PROJECT = _project.load()
+ROOT = _project.ROOT
 
-# Friendly titles for geckopy packages. ec_model is geckopy's counterpart to
-# change_model; adapter to model_adapter.
-PY_PACKAGE_TITLES = {
-    "ec_model": "Build & edit ecModel",
-    "gather_kcats": "Gather kcats",
-    "get_enzyme_data": "Enzyme & EC data",
-    "kcat_tuning": "kcat sensitivity tuning",
-    "limit_proteins": "Limit proteins",
-    "adapter": "Model adapter",
-    "utilities": "Utilities",
-    "databases": "Databases",
-    "_toplevel": "Top-level",
-}
+# The submodules are the source of truth for a real build. For local work the
+# environment variables DOCS_MATLAB_SRC and DOCS_PYTHON_SRC point at a working
+# checkout instead, which is useful when a submodule cannot be moved to the
+# tracked commit.
+MATLAB = PROJECT.matlab_src
+PYPKG = PROJECT.python_src
+# Top-level categories to document, in navigation order: (folder, page title).
+MATLAB_CATEGORIES = PROJECT.categories
+# Titles for the Python sub-packages.
+PY_PACKAGE_TITLES = PROJECT.package_titles
 
 
 def norm(name: str) -> str:
@@ -88,10 +60,11 @@ def cell(text: str) -> str:
 def is_matlab_function(path: Path) -> bool:
     """True if the .m file declares a function (i.e. not a plain script).
 
-    Read as utf-8-sig: some of GECKO's .m files carry a UTF-8 byte-order mark,
+    Read as utf-8-sig: some .m files carry a UTF-8 byte-order mark,
     and a leading U+FEFF is not whitespace to ``str.strip()``, so the opening
     ``function`` line would not be recognised and the file would be indexed as
-    a script -- dropping it from the API reference without any error.
+    a script -- dropping it from the API reference and from the name checker's
+    index without any error.
     """
     try:
         with path.open(encoding="utf-8-sig", errors="ignore") as fh:
@@ -108,10 +81,8 @@ def is_matlab_function(path: Path) -> bool:
 def is_matlab_classdef(path: Path) -> bool:
     """True if the .m file declares a class rather than a function or script.
 
-    GECKO's classdef files (``model_adapter/``) put their help comment
-    *before* the ``classdef`` line, the reverse of a function's help block,
-    which is why classdef needs its own detector and its own summary
-    extractor below rather than reusing :func:`is_matlab_function`.
+    A classdef file puts its help comment *before* the ``classdef`` line, the
+    reverse of a function, whose help follows the ``function`` line.
     """
     try:
         with path.open(encoding="utf-8-sig", errors="ignore") as fh:
@@ -125,90 +96,116 @@ def is_matlab_classdef(path: Path) -> bool:
     return False
 
 
-def matlab_classdef_summary(path: Path, fname: str) -> str:
-    """First descriptive line of a classdef's leading MATLAB help block."""
+def _strip_comment(line: str) -> str:
+    text = line.strip()[1:]
+    return text[1:] if text.startswith(" ") else text
+
+
+def matlab_classdef_help_block(path: Path) -> list[str]:
+    """Help lines of a classdef file: the comment block before ``classdef``."""
     try:
         with path.open(encoding="utf-8-sig", errors="ignore") as fh:
-            lines = fh.readlines()
+            lines = fh.read().splitlines()
     except OSError:
-        return ""
-
+        return []
+    i = 0
+    while i < len(lines) and not lines[i].strip():
+        i += 1
     help_lines: list[str] = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("%"):
-            help_lines.append(stripped.lstrip("%").strip())
-        elif stripped == "" and not help_lines:
-            continue
-        else:
-            break
+    while i < len(lines) and lines[i].strip().startswith("%"):
+        help_lines.append(_strip_comment(lines[i]))
+        i += 1
+    while help_lines and not help_lines[-1].strip():
+        help_lines.pop()
+    return help_lines
 
-    cleaned = [h for h in help_lines if h]
-    if not cleaned:
-        return ""
-    first = cleaned[0]
+
+def is_documented_matlab_object(path: Path) -> bool:
+    """A function, or a class that has a help block (an undocumented class is skipped)."""
+    if is_matlab_function(path):
+        return True
+    return is_matlab_classdef(path) and any(line.strip() for line in matlab_classdef_help_block(path))
+
+
+def matlab_help_block(path: Path) -> tuple[str, list[str]]:
+    """(signature, help lines) of a MATLAB function file.
+
+    The signature is the ``function`` line, with any ``...`` continuation
+    lines joined onto it. The help lines are the comment block that follows,
+    with the ``%`` and the one space after it removed, so the author's
+    indentation and blank lines are kept. A classdef file has no signature, and
+    its help block comes before the ``classdef`` line.
+    """
+    if is_matlab_classdef(path):
+        return "", matlab_classdef_help_block(path)
+    try:
+        with path.open(encoding="utf-8-sig", errors="ignore") as fh:
+            lines = fh.read().splitlines()
+    except OSError:
+        return "", []
+
+    i = 0
+    while i < len(lines) and not lines[i].strip().startswith("function"):
+        i += 1
+    if i == len(lines):
+        return "", []
+    signature = [lines[i].strip()]
+    while signature[-1].endswith("...") and i + 1 < len(lines):
+        i += 1
+        signature.append(lines[i].rstrip())
+    i += 1
+
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    help_lines: list[str] = []
+    while i < len(lines) and lines[i].strip().startswith("%"):
+        help_lines.append(_strip_comment(lines[i]))
+        i += 1
+    while help_lines and not help_lines[-1].strip():
+        help_lines.pop()
+    return "\n".join(signature), help_lines
+
+
+def matlab_summary_and_body(path: Path, fname: str) -> tuple[str, list[str]]:
+    """(summary, remaining help lines) of a MATLAB function.
+
+    The first help line is often just the function name, or the name followed
+    by the summary; the name is stripped, and a line holding nothing else
+    gives way to the next one.
+    """
+    _signature, help_lines = matlab_help_block(path)
+    nonblank = [n for n, line in enumerate(help_lines) if line.strip()]
+    if not nonblank:
+        return "", []
+    first_idx = nonblank[0]
+    first = help_lines[first_idx].strip()
     if first.lower().startswith(fname.lower()):
         rest = first[len(fname):].strip(" -:\t")
         if rest:
-            return rest
-        if len(cleaned) > 1:
-            return cleaned[1]
-        return ""
-    return first
+            return rest, help_lines[first_idx + 1:]
+        if len(nonblank) > 1:
+            return help_lines[nonblank[1]].strip(), help_lines[nonblank[1] + 1:]
+        return "", []
+    return first, help_lines[first_idx + 1:]
 
 
 def matlab_summary(path: Path, fname: str) -> str:
     """First descriptive line of a function's MATLAB help block."""
-    try:
-        with path.open(encoding="utf-8-sig", errors="ignore") as fh:
-            lines = fh.readlines()
-    except OSError:
-        return ""
-
-    help_lines: list[str] = []
-    started = False
-    for line in lines:
-        stripped = line.strip()
-        if not started:
-            if stripped.startswith("function"):
-                started = True
-            continue
-        if stripped.startswith("%"):
-            help_lines.append(stripped.lstrip("%").strip())
-        elif stripped == "" and not help_lines:
-            continue
-        else:
-            break
-
-    cleaned = [h for h in help_lines if h]
-    if not cleaned:
-        return ""
-    # The first help line is often just the function name; strip it.
-    first = cleaned[0]
-    if first.lower().startswith(fname.lower()):
-        rest = first[len(fname):].strip(" -:\t")
-        if rest:
-            return rest
-        if len(cleaned) > 1:
-            return cleaned[1]
-        return ""
-    return first
+    return matlab_summary_and_body(path, fname)[0]
 
 
 def collect_matlab() -> dict[str, list[dict]]:
-    """category -> sorted list of {name, summary} for documented functions
-    and classes."""
+    """category -> sorted list of {name, summary} for documented functions."""
     cats: dict[str, list[dict]] = {}
     for folder, _title in MATLAB_CATEGORIES:
         funcs: dict[str, str] = {}
-        base = GECKO / folder
+        base = MATLAB / folder
         for m in base.rglob("*.m"):
             if m.stem == "Contents":
                 continue
-            if is_matlab_function(m):
-                funcs.setdefault(m.stem, matlab_summary(m, m.stem))
-            elif is_matlab_classdef(m):
-                funcs.setdefault(m.stem, matlab_classdef_summary(m, m.stem))
+            if not is_documented_matlab_object(m):
+                continue
+            funcs.setdefault(m.stem, matlab_summary(m, m.stem))
         cats[folder] = [
             {"name": n, "summary": funcs[n]}
             for n in sorted(funcs, key=str.lower)
@@ -217,20 +214,18 @@ def collect_matlab() -> dict[str, list[dict]]:
 
 
 def collect_matlab_all() -> dict[str, str]:
-    """Every GECKO function or class name -> the category folder it lives in.
+    """Every function or class name of the MATLAB toolbox -> its category folder.
 
-    Unlike :func:`collect_matlab` this also walks the folders that are not
-    part of the documented category list, so a name checker recognises a
-    function that exists in the toolbox but has no reference page.
+    Unlike :func:`collect_matlab` this also walks the folders that are not part
+    of the documented category list, so the name checker recognises a function
+    that exists in the toolbox but has no reference page.
     """
     found: dict[str, str] = {}
-    for m in GECKO.rglob("*.m"):
-        rel = m.relative_to(GECKO)
-        if rel.parts[0] in {"dlkcat-gecko"}:
+    for m in MATLAB.rglob("*.m"):
+        rel = m.relative_to(MATLAB)
+        if rel.parts[0] in PROJECT.excluded_folders:
             continue
-        if m.stem == "Contents":
-            continue
-        if not (is_matlab_function(m) or is_matlab_classdef(m)):
+        if m.stem == "Contents" or not (is_matlab_function(m) or is_matlab_classdef(m)):
             continue
         found.setdefault(m.stem, rel.parts[0])
     return found
@@ -240,12 +235,21 @@ def collect_matlab_all() -> dict[str, str]:
 # Collect Python functions and classes                                        #
 # --------------------------------------------------------------------------- #
 def module_dotted(path: Path) -> str:
-    """geckopy/src/geckopy/ec_model/build.py -> geckopy.ec_model.build"""
+    """<package>/src/<name>/io/excel.py -> <name>.io.excel"""
     rel = path.relative_to(PYPKG.parent)  # relative to src/
     parts = list(rel.with_suffix("").parts)
     if parts[-1] == "__init__":
         parts = parts[:-1]
     return ".".join(parts)
+
+
+def is_deprecated_alias(summary: str) -> bool:
+    """True for a backward-compatibility alias, whose docstring starts "Deprecated".
+
+    The alias sits next to its replacement. It is left out of the reference, which
+    also keeps name matching from pairing a MATLAB function with the shim.
+    """
+    return summary.startswith("Deprecated")
 
 
 def py_summary(node: ast.AST) -> str:
@@ -257,8 +261,13 @@ def py_summary(node: ast.AST) -> str:
     return ""
 
 
-def collect_python() -> list[dict]:
-    """List of {name, ident, package, summary} for public top-level objects."""
+def collect_python(include_deprecated: bool = False) -> list[dict]:
+    """List of {name, ident, package, summary} for public top-level objects.
+
+    Deprecated aliases are left out unless ``include_deprecated`` is set. The
+    reference pages leave them out; the name checker keeps them, because a page
+    may name an alias on purpose.
+    """
     objects: list[dict] = []
     for py in PYPKG.rglob("*.py"):
         try:
@@ -273,18 +282,7 @@ def collect_python() -> list[dict]:
                 if node.name.startswith("_"):
                     continue
                 summary = py_summary(node)
-                # geckopy keeps a backward-compat alias for the original
-                # MATLAB name alongside its canonical replacement in the same
-                # module (e.g. get_ec_from_database next to
-                # fill_eccodes_from_database), each marked with a docstring
-                # starting "Deprecated alias for ...". MATLAB's own
-                # backward-compat aliases live in a separate excluded
-                # deprecated/ folder; Python's have no such physical
-                # separation, so they are excluded here by convention
-                # instead. Skipping them also keeps norm()-based matching
-                # from pairing a MATLAB name with the deprecated shim that
-                # happens to share its transliterated spelling.
-                if summary.startswith("Deprecated"):
+                if is_deprecated_alias(summary) and not include_deprecated:
                     continue
                 ident = f"{dotted}.{node.name}" if dotted else node.name
                 objects.append(

@@ -1,0 +1,9 @@
+# Names that look like functions but are not functions of either toolbox.
+#
+# check_names.py resolves every camelCase / snake_case identifier in the
+# hand-written pages against the toolbox sources. Anything listed here is exempt.
+# Keep the list short and grouped: each entry is a name that nothing can verify
+# for you, so an entry added carelessly re-opens the hole this check closes.
+
+# -- prose terms ------------------------------------------------------------
+camelCase

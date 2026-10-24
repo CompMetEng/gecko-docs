@@ -1,5 +1,7 @@
 # Introduction to ecModels
 
+<!-- docs-site: concept-page -->
+
 Genome-scale metabolic models (GEMs) let you explore metabolism
 mathematically, and have accelerated work in biotechnology, biomedicine and
 fundamental biology. A conventional GEM reconstructs all known metabolic

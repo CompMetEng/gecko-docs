@@ -1,5 +1,7 @@
 # Files in the data folder
 
+<!-- docs-site: concept-page -->
+
 Every file a project's `data` folder can hold, and where each one gets used
 or produced. File formats (TSV, JSON) are the same in both languages, so a
 `data` folder built with one toolbox can be reused with the other; see

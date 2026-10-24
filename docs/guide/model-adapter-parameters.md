@@ -1,5 +1,7 @@
 # Model adapter parameters
 
+<!-- docs-site: concept-page -->
+
 The core `obj.params` entries in the MATLAB model adapter, and the
 corresponding TOML key in the Python `model_adapter.toml` (dotted keys are
 `[section]` tables). Example values come from the `full_ecModel` tutorial;
