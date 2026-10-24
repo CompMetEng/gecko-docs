@@ -1,6 +1,6 @@
 # Hand-curated half of the MATLAB <-> Python function mapping.
 #
-# gen_api_pages_sphinx.py pairs functions automatically when the two names
+# gen_api_pages.py pairs functions automatically when the two names
 # normalise to the same string (loadEcModel <-> load_ec_model). That only
 # catches the mechanical cases: geckopy renamed part of the API, so some real
 # counterparts do not match by name and have to be recorded here.

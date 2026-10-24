@@ -1,18 +1,11 @@
-"""API reference generator for the Sphinx/pydata-sphinx-theme build.
+"""API reference generator.
 
-Run from ``docs/conf.py`` (Sphinx's ``setup()`` hook), before Sphinx reads the
-source tree.
-
-**No live rendering plugin.** MkDocs-material's version of this reference
-would defer per-function help text to live plugins: mkdocstrings' Python
-handler (griffe) and a separate mkdocstrings-matlab handler (tree-sitter).
-Neither has a drop-in Sphinx equivalent verified to work the same way -- the
-MATLAB one in particular is a bespoke handler with no direct autodoc-family
-counterpart. Rather than depend on an unverified third-party extension, this
-generator extracts the *full* help text itself (the collection layer already
-reads the source; ``api_index.py`` just discards everything past the first
-line) and writes fully static pages. No live directive, no package install,
-no MATLAB runtime.
+Runs from ``docs/conf.py`` (Sphinx's ``setup()`` hook), before Sphinx reads
+the source tree. It extracts the full help text of every function from the
+MATLAB and Python submodules (the collection layer is shared with
+``api_index.py``) and writes static pages: no live directive, no package
+install, no MATLAB runtime. Names, paths and categories come from
+``project.yml``.
 """
 
 from __future__ import annotations
@@ -24,101 +17,38 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import yaml
 
+from project import COBRAPY_URL  # noqa: E402
+
 from api_index import (  # noqa: E402
-    GECKO as MATLAB,
+    MATLAB,
     MATLAB_CATEGORIES,
+    PROJECT,
     PY_PACKAGE_TITLES,
     PYPKG,
     cell,
-    is_matlab_classdef,
-    is_matlab_function,
+    is_deprecated_alias,
+    is_documented_matlab_object,
+    matlab_help_block,
+    matlab_summary_and_body,
     module_dotted,
     norm,
     slug,
 )
 
 import ast
+import re
+import textwrap
 
 
 # --------------------------------------------------------------------------- #
 # Full-text collection (api_index.py's matlab_summary / py_summary keep only
 # the first line; these keep everything).                                    #
 # --------------------------------------------------------------------------- #
-def matlab_help(path: Path, fname: str) -> tuple[str, str]:
-    """(summary, full help text) for one MATLAB function."""
-    try:
-        lines = path.read_text(encoding="utf-8-sig", errors="ignore").splitlines()
-    except OSError:
-        return "", ""
-
-    help_lines: list[str] = []
-    started = False
-    for line in lines:
-        stripped = line.strip()
-        if not started:
-            if stripped.startswith("function"):
-                started = True
-            continue
-        if stripped.startswith("%"):
-            help_lines.append(stripped.lstrip("%").strip())
-        elif stripped == "" and not help_lines:
-            continue
-        else:
-            break
-
-    cleaned = [h for h in help_lines if h]
-    if not cleaned:
-        return "", ""
-    first = cleaned[0]
-    if first.lower().startswith(fname.lower()):
-        rest = first[len(fname):].strip(" -:\t")
-        if rest:
-            summary, body = rest, cleaned[1:]
-        elif len(cleaned) > 1:
-            summary, body = cleaned[1], cleaned[2:]
-        else:
-            summary, body = "", []
-    else:
-        summary = first
-        body = cleaned[1:]
-    return summary, "\n".join(body)
-
-
-def matlab_classdef_help(path: Path, fname: str) -> tuple[str, str]:
-    """(summary, full help text) for one MATLAB classdef, from its leading
-    comment block (before the ``classdef`` line), the reverse of a
-    function's trailing help block; see ``is_matlab_classdef``."""
-    try:
-        lines = path.read_text(encoding="utf-8-sig", errors="ignore").splitlines()
-    except OSError:
-        return "", ""
-
-    help_lines: list[str] = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("%"):
-            help_lines.append(stripped.lstrip("%").strip())
-        elif stripped == "" and not help_lines:
-            continue
-        else:
-            break
-
-    cleaned = [h for h in help_lines if h]
-    if not cleaned:
-        return "", ""
-    first = cleaned[0]
-    if first.lower().startswith(fname.lower()):
-        rest = first[len(fname):].strip(" -:\t")
-        if rest:
-            summary, body = rest, cleaned[1:]
-        elif len(cleaned) > 1:
-            summary, body = cleaned[1], cleaned[2:]
-        else:
-            summary, body = "", []
-    else:
-        summary = first
-        body = cleaned[1:]
-    return summary, "\n".join(body)
+def matlab_help(path: Path, fname: str) -> tuple[str, str, str]:
+    """(signature, summary, rest of the help text) for one MATLAB function."""
+    signature, _lines = matlab_help_block(path)
+    summary, body = matlab_summary_and_body(path, fname)
+    return signature, summary, "\n".join(body)
 
 
 def py_help(node: ast.AST) -> tuple[str, str]:
@@ -146,15 +76,13 @@ def collect_matlab_full() -> dict[str, list[dict]]:
         if not base.is_dir():
             continue
         for m in base.rglob("*.m"):
-            if m.stem == "Contents":
+            if m.stem == "Contents" or not is_documented_matlab_object(m):
                 continue
-            if is_matlab_function(m):
-                summary, body = matlab_help(m, m.stem)
-            elif is_matlab_classdef(m):
-                summary, body = matlab_classdef_help(m, m.stem)
-            else:
-                continue
-            funcs.setdefault(m.stem, {"name": m.stem, "summary": summary, "body": body, "path": m})
+            signature, summary, body = matlab_help(m, m.stem)
+            funcs.setdefault(
+                m.stem,
+                {"name": m.stem, "signature": signature, "summary": summary, "body": body, "path": m},
+            )
         cats[folder] = [funcs[n] for n in sorted(funcs, key=str.lower)]
     return cats
 
@@ -175,15 +103,10 @@ def collect_python_full() -> list[dict]:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 if node.name.startswith("_"):
                     continue
-                summary, rest = py_help(node)
-                # See the matching skip in api_index.py's collect_python():
-                # geckopy's backward-compat aliases for the original MATLAB
-                # names live inline next to their canonical replacements, not
-                # in a separate excluded folder as on the MATLAB side, and
-                # are marked with a "Deprecated alias for ..." docstring.
-                if summary.startswith("Deprecated"):
-                    continue
                 ident = f"{dotted}.{node.name}" if dotted else node.name
+                summary, rest = py_help(node)
+                if is_deprecated_alias(summary):
+                    continue
                 sig = ""
                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     sig = f"({ast.unparse(node.args)})" if hasattr(ast, "unparse") else ""
@@ -202,13 +125,90 @@ def collect_python_full() -> list[dict]:
 
 
 # --------------------------------------------------------------------------- #
+# Help-text rendering                                                         #
+# --------------------------------------------------------------------------- #
+# The MATLAB % help blocks and the structured Python docstrings both use
+# numpydoc section headers ("Parameters" over a dashed underline), so one
+# parser serves both. Parameter sections become definition lists, Examples a
+# code block, and anything else passes through as prose. Help text without any
+# section header is kept as the author laid it out: in a text block for MATLAB,
+# whose help is written for the command window, and as prose for Python.
+PARAM_SECTIONS = {
+    "Parameters", "Name-Value Arguments", "Other Parameters", "Returns",
+    "Yields", "Raises", "Attributes",
+}
+_SECTION_HEADER = re.compile(r"^([A-Z][A-Za-z -]+)\n(-{3,})$", re.M)
+_RST_ROLE = re.compile(r":(?:py:)?(?:func|class|meth|attr|mod|data|obj|exc):`~?([^`]+)`")
+
+
+def myst_inline(text: str) -> str:
+    """RST roles and double-backtick literals as MyST code spans."""
+    text = _RST_ROLE.sub(lambda m: f"`{m.group(1)}`", text)
+    return re.sub(r"``([^`]+)``", r"`\1`", text)
+
+
+def split_sections(doc: str) -> list[tuple[str | None, str]]:
+    parts: list[tuple[str | None, str]] = []
+    pos, title = 0, None
+    for m in _SECTION_HEADER.finditer(doc):
+        if len(m.group(2)) < len(m.group(1).strip()) - 1:
+            continue  # a dashed line too short to underline this title
+        parts.append((title, doc[pos:m.start()]))
+        title, pos = m.group(1).strip(), m.end()
+    parts.append((title, doc[pos:]))
+    return parts
+
+
+def param_entries(body: str) -> list[tuple[str, str, str]]:
+    entries: list[list] = []
+    for line in body.strip("\n").splitlines():
+        if line and not line[0].isspace():
+            name, _, typ = line.partition(" : ")
+            entries.append([name.strip(), typ.strip(), []])
+        elif entries:
+            entries[-1][2].append(line)
+    return [(n, t, textwrap.dedent("\n".join(d)).strip()) for n, t, d in entries]
+
+
+def render_help(doc: str, lang: str) -> list[str]:
+    """Markdown lines for a help text's body (everything after the summary)."""
+    doc = textwrap.dedent(doc).strip("\n")
+    if not doc.strip():
+        return []
+    sections = split_sections(doc)
+    if all(title is None for title, _ in sections):
+        if lang == "matlab":
+            return ["```text", doc, "```", ""]
+        return [myst_inline(doc), ""]
+    out: list[str] = []
+    for title, body in sections:
+        body = textwrap.dedent(body).strip("\n")
+        if title is None:
+            if body.strip():
+                out += [myst_inline(body), ""]
+            continue
+        out += [f":::{{rubric}} {title}", ":::", ""]
+        if title in PARAM_SECTIONS:
+            for name, typ, desc in param_entries(body):
+                term = f"`{name}`" + (f" : *{typ}*" if typ else "")
+                lines = myst_inline(desc).splitlines() or [""]
+                out += [term, f": {lines[0]}"] + [f"  {line}" if line else "" for line in lines[1:]] + [""]
+        elif title == "Examples":
+            fence = "pycon" if ">>>" in body else lang
+            out += [f"```{fence}", body, "```", ""]
+        else:
+            out += [myst_inline(body), ""]
+    return out
+
+
+# --------------------------------------------------------------------------- #
 # Page rendering                                                              #
 # --------------------------------------------------------------------------- #
 def render_matlab_page(title: str, folder: str, funcs: list[dict]) -> str:
-    out = [f"# {title}", "", f"MATLAB functions in `GECKO/src/{folder}` of the GECKO toolbox.", "",
+    out = [f"# {title}", "", f"MATLAB functions in `{PROJECT.matlab_rel}/{folder}` of the {PROJECT.matlab_name} toolbox.", "",
            "## Functions", "", "| Function | Summary |", "|---|---|"]
     for f in funcs:
-        out.append(f"| [`{f['name']}`](#{slug(f['name'])}) | {cell(f['summary'])} |")
+        out.append(f"| [`{f['name']}`](#{slug(f['name'])}) | {cell(myst_inline(f['summary']))} |")
     out += ["", "## Reference", ""]
     for f in funcs:
         # A cross-document markdown link with a #fragment resolves against
@@ -216,18 +216,19 @@ def render_matlab_page(title: str, folder: str, funcs: list[dict]) -> str:
         # must auto-slug to exactly `slug(name)` -- true here since it is a
         # bare MATLAB identifier, nothing an explicit target would improve.
         out += [f"### {f['name']}", ""]
+        if f["signature"]:
+            out += ["```matlab", f["signature"], "```", ""]
         if f["summary"]:
-            out += [f["summary"], ""]
-        if f["body"]:
-            out += ["```text", f["body"], "```", ""]
+            out += [myst_inline(f["summary"]), ""]
+        out += render_help(f["body"], "matlab")
     return "\n".join(out) + "\n"
 
 
 def render_python_page(title: str, dotted: str, objs: list[dict]) -> str:
-    out = [f"# {title} (Python)", "", f"`geckopy` objects in `{dotted}`.", "",
+    out = [f"# {title} (Python)", "", f"`{PROJECT.python_name}` objects in `{dotted}`.", "",
            "## Functions", "", "| Function | Summary |", "|---|---|"]
     for o in objs:
-        out.append(f"| [`{o['name']}`](#{slug(o['name'])}) | {cell(o['summary'])} |")
+        out.append(f"| [`{o['name']}`](#{slug(o['name'])}) | {cell(myst_inline(o['summary']))} |")
     out += ["", "## Reference", ""]
     for o in objs:
         # The heading is the bare name, not name+signature: a cross-document
@@ -239,15 +240,14 @@ def render_python_page(title: str, dotted: str, objs: list[dict]) -> str:
         if o["signature"]:
             out += [f"`{o['name']}{o['signature']}`", ""]
         if o["summary"]:
-            out += [o["summary"], ""]
-        if o["body"]:
-            out += ["```text", o["body"], "```", ""]
+            out += [myst_inline(o["summary"]), ""]
+        out += render_help(o["body"], "python")
     return "\n".join(out) + "\n"
 
 
 def render_group_index(title: str, intro: str, links: list[tuple[str, str]]) -> str:
     stems = [href.rsplit(".", 1)[0] for _title, href in links]
-    out = ["---", "icon: material/folder-open", "---", "", f"# {title}", "", intro, "",
+    out = [f"# {title}", "", intro, "",
            "```{toctree}", ":hidden:"]
     out += stems
     out += ["```", ""]
@@ -277,7 +277,9 @@ def generate(docs_root: Path) -> None:
         )
         matlab_links.append((title, f"{folder}.md"))
     (api_dir / "matlab" / "index.md").write_text(
-        render_group_index("MATLAB API (GECKO)", "GECKO's MATLAB functions, by category.", matlab_links),
+        render_group_index(
+            f"MATLAB API ({PROJECT.matlab_name})", f"{PROJECT.matlab_name}'s MATLAB functions, by category.", matlab_links
+        ),
         encoding="utf-8",
     )
 
@@ -288,42 +290,39 @@ def generate(docs_root: Path) -> None:
     for package in sorted(by_package, key=lambda p: (p == "_toplevel", PY_PACKAGE_TITLES.get(p, p).lower())):
         objs = sorted(by_package[package], key=lambda o: o["name"].lower())
         title = PY_PACKAGE_TITLES.get(package, package)
-        dotted = "geckopy" if package == "_toplevel" else f"geckopy.{package}"
+        dotted = PROJECT.python_package if package == "_toplevel" else f"{PROJECT.python_package}.{package}"
         (api_dir / "python" / f"{package}.md").write_text(
             render_python_page(title, dotted, objs), encoding="utf-8"
         )
         python_links.append((title, f"{package}.md"))
     (api_dir / "python" / "index.md").write_text(
         render_group_index(
-            "Python API (geckopy)", "geckopy's packages, by category.", python_links
+            f"Python API ({PROJECT.python_name})", f"{PROJECT.python_name}'s packages, by category.", python_links
         ),
         encoding="utf-8",
     )
 
-    # --- matlab-vs-python.md: static write, generated at build time.
-    # NOTE for Guide-page authors (docs/stage*.md etc.): where a Guide page
-    # points a reader at a cobrapy function instead of a geckopy one (see the
-    # "Box 2" callouts), link to this page rather than duplicating the
-    # mapping in prose -- this generator, not the Guide, owns that table.
+    # --- matlab-vs-python.md
     matlab_all = {f["name"]: folder for folder, _t in MATLAB_CATEGORIES for f in matlab.get(folder, [])}
     py_by_name = {obj["name"]: obj for obj in python_objs}
     curated = yaml.safe_load((Path(__file__).resolve().parent / "curated_pairs.yml").read_text(encoding="utf-8"))
 
+    M, P = PROJECT.matlab_name, PROJECT.python_name
     unresolved: list[str] = []
     for m_name, p_name in curated["aliases"].items():
         if m_name not in matlab_all:
-            unresolved.append(f"aliases: GECKO function '{m_name}' is not on the tracked branch")
+            unresolved.append(f"aliases: {M} function '{m_name}' is not on the tracked branch")
         if p_name not in py_by_name:
-            unresolved.append(f"aliases: geckopy function '{p_name}' (for {m_name}) does not exist")
+            unresolved.append(f"aliases: {P} function '{p_name}' (for {m_name}) does not exist")
     for section in ("cobrapy", "not_ported"):
         for m_name in curated[section]:
             if m_name not in matlab_all:
-                unresolved.append(f"{section}: GECKO function '{m_name}' is not on the tracked branch")
+                unresolved.append(f"{section}: {M} function '{m_name}' is not on the tracked branch")
     if unresolved:
         listed = "\n  - ".join(unresolved)
-        raise SystemExit(f"gen_api_pages_sphinx: scripts/curated_pairs.yml is out of date:\n  - {listed}")
+        raise SystemExit(f"gen_api_pages: scripts/curated_pairs.yml is out of date:\n  - {listed}")
 
-    cobrapy_docs_url = "https://cobrapy.readthedocs.io/en/latest/autoapi/cobra/index.html"
+    cobrapy_docs_url = COBRAPY_URL
 
     # Each row: (matlab name, matlab folder, python-column markdown, summary text).
     rows: list[tuple[str, str, str, str]] = []
@@ -357,25 +356,29 @@ def generate(docs_root: Path) -> None:
         seen_matlab.add(m_name)
         n_cobrapy += 1
 
+    badge_note = (
+        f"and marked with a {{bdg-link-secondary}}`cobrapy <{cobrapy_docs_url}>` badge where cobrapy "
+        f"covers the function instead of {P}. "
+        if PROJECT.cobrapy else ""
+    )
+    cobrapy_count = f", {n_cobrapy} covered by cobrapy instead of {P}" if PROJECT.cobrapy else ""
     lines = [
         "# MATLAB vs Python", "",
-        "GECKO ships as a MATLAB toolbox and as the Python package **geckopy**. "
+        f"{M} ships as a MATLAB toolbox and as the Python package **{P}**. "
         "This page is generated from the source of both toolboxes at build time. "
         "Pairs are found automatically where the names match, completed from a "
-        "curated list where they do not, and marked with a "
-        f"{{bdg-link-secondary}}`cobrapy <{cobrapy_docs_url}>` badge where cobrapy "
-        "covers the function instead of geckopy. Every name is verified to exist.",
+        f"curated list where they do not, {badge_note}"
+        "Every name is verified to exist.",
         "", "## Paired functions", "",
-        f"**{len(rows)}** GECKO functions listed: {n_auto} matched automatically, "
-        f"{n_curated} from a curated list, {n_cobrapy} covered by cobrapy instead of "
-        "geckopy.",
-        "", "| GECKO (MATLAB) | geckopy (Python) | Summary |", "|---|---|---|",
+        f"**{len(rows)}** {M} functions listed: {n_auto} matched automatically, "
+        f"{n_curated} from a curated list{cobrapy_count}.",
+        "", f"| {M} (MATLAB) | {P} (Python) | Summary |", "|---|---|---|",
     ]
     for m_name, m_folder, p_cell, text in sorted(rows, key=lambda r: r[0].lower()):
         m_link = f"[`{m_name}`](api/matlab/{m_folder}.md#{slug(m_name)})"
         lines.append(f"| {m_link} | {p_cell} | {cell(text)} |")
 
-    lines += ["", "## Deliberately not ported", "", "| GECKO (MATLAB) | Why not |", "|---|---|"]
+    lines += ["", "## Deliberately not ported", "", f"| {M} (MATLAB) | Why not |", "|---|---|"]
     for m_name, reason in sorted(curated["not_ported"].items(), key=lambda kv: kv[0].lower()):
         folder = matlab_all[m_name]
         m_link = f"[`{m_name}`](api/matlab/{folder}.md#{slug(m_name)})"
@@ -385,7 +388,7 @@ def generate(docs_root: Path) -> None:
     unmapped = sorted((n for n in matlab_all if n not in accounted), key=str.lower)
     if unmapped:
         lines += ["", "## Not yet mapped", "",
-                  f"**{len(unmapped)}** GECKO functions are not yet recorded here.", ""]
+                  f"**{len(unmapped)}** {M} functions are not yet recorded here.", ""]
         for chunk_start in range(0, len(unmapped), 6):
             row = unmapped[chunk_start:chunk_start + 6]
             lines.append(", ".join(f"`{n}`" for n in row) + ("," if chunk_start + 6 < len(unmapped) else ""))
