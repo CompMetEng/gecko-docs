@@ -58,10 +58,10 @@ One documentation site for **GECKO**, the MATLAB toolbox, and **geckopy**, its P
 
 - **Unresolved names.** `scripts/check_names.py` reports 121 distinct names on the guide pages that are neither a top-level function or class of the toolboxes nor in `scripts/known_names.txt`. Most are keyword arguments, struct fields, YAML keys and variables of the examples; four (`cap_usage`, `from_folder`, `shadow_price`, `upper_bound`) are methods or properties. Someone who knows the pages has to sort them, and allow-list the ones that are not functions, before the check can block CI.
 - **Link check.** `docs-build.yml` does not fail on the link check yet; the state of the external links was not known when the check was added.
-- **Logos.** `docs/_static/gecko-logo-white.png` was made from `gecko-logo.png` by making every pixel white and keeping the alpha channel, the way `gecko-icon-white.png` was made from the green icon. A designer may want to replace it. The unused `gecko-icon-color.png` and `gecko-icon-white.png` of the former `docs/assets` folder were removed and are in the history.
 - **Guide page sections.** Most guide pages have no "What can go wrong" section and no function table; `scripts/check_site.py` reports this as a warning.
 
 ## 8. Decisions log
 
 - 2026-10-24: the site follows the `docs-site` standard. `requirements-sphinx.txt` is `requirements.txt` and `gen_api_pages_sphinx.py` is `gen_api_pages.py`. The brand colours are `#43684B` for tabs and borders and `#2D6E3B` for links, with `#5F936A` and `#87d398` in dark mode, set as `--pst-color-primary`, `--pst-color-link` and `--site-accent`. Logos and the favicon are in `docs/_static` only, with a white logo for dark mode. The API pages use the numpydoc rendering and show signatures.
 - 2026-10-24: Read the Docs and CI build with `-W`. The submodule update opens a pull request instead of pushing to `main`.
+- 2026-10-24: `docs/_static/gecko-logo-white.png`, the logo for dark mode, was made from `gecko-logo.png` by making every pixel white and keeping the alpha channel, the way `gecko-icon-white.png` was made. The maintainer accepted it. The unused `gecko-icon-color.png` and `gecko-icon-white.png` of the former `docs/assets` folder were removed and are in the history.
