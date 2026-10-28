@@ -4,7 +4,13 @@
     {
       "name": "gecko-docs",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "mkdocs", "serve", "-a", "127.0.0.1:8765"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--directory",
+        "docs/_build/html"
+      ],
       "port": 8765
     }
   ]

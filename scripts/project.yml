@@ -1,0 +1,45 @@
+# Settings of this documentation site that the scripts in this folder read.
+# Nothing else in scripts/ names the project.
+cobrapy: true
+matlab:
+  name: GECKO
+  path: GECKO/src
+  categories:
+  - folder: change_model
+    title: Build & edit ecModel
+  - folder: download_databases
+    title: Download databases
+  - folder: enzyme_usage
+    title: Enzyme usage
+  - folder: flux_analysis
+    title: Flux analysis
+  - folder: gather_kcats
+    title: Gather kcats
+  - folder: get_enzyme_data
+    title: Enzyme & EC data
+  - folder: io
+    title: Input / output
+  - folder: kcat_tuning
+    title: kcat sensitivity tuning
+  - folder: limit_proteins
+    title: Limit proteins
+  - folder: model_adapter
+    title: Model adapter
+  - folder: utilities
+    title: Utilities
+  excluded_folders:
+  - dlkcat-gecko
+python:
+  name: geckopy
+  package: geckopy
+  path: geckopy/src/geckopy
+  package_titles:
+    ec_model: Build & edit ecModel
+    gather_kcats: Gather kcats
+    get_enzyme_data: Enzyme & EC data
+    kcat_tuning: kcat sensitivity tuning
+    limit_proteins: Limit proteins
+    adapter: Model adapter
+    utilities: Utilities
+    databases: Databases
+    _toplevel: Top-level

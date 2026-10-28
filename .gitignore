@@ -167,7 +167,7 @@ venv.bak/
 # mkdocs documentation
 /site
 
-# Sphinx build: generated at build time by scripts/gen_api_pages_sphinx.py,
+# Sphinx build: generated at build time by scripts/gen_api_pages.py,
 # never checked in.
 docs/api/matlab/*.md
 docs/api/python/*.md
@@ -222,3 +222,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local Claude Code settings of one person
+.claude/settings.local.json

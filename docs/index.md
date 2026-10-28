@@ -1,11 +1,12 @@
 # GECKO
 
-<div class="gd-hero">
-  <div class="gd-hero-top">
-    <img class="gd-hero-logo" src="_static/gecko-logo.png" alt="GECKO">
-    <p class="gd-tag">MATLAB &amp; Python</p>
+<div class="site-hero">
+  <div class="site-logo-row">
+    <img class="site-logo-light" src="_static/gecko-logo.png" alt="GECKO">
+    <img class="site-logo-dark" src="_static/gecko-logo-white.png" alt="GECKO">
+    <p class="site-tag">MATLAB &amp; Python</p>
   </div>
-  <p class="gd-tagline">Reconstruction, simulation and analysis of enzyme-constrained metabolic models (ecModels): a MATLAB toolbox built on RAVEN, and geckopy, a Python port built on cobrapy.</p>
+  <p class="site-tagline">Reconstruction, simulation and analysis of enzyme-constrained metabolic models (ecModels): a MATLAB toolbox built on RAVEN, and geckopy, a Python port built on cobrapy.</p>
 </div>
 
 ## Install
