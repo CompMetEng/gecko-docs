@@ -2,7 +2,7 @@
 
 The guide has one page per job, with MATLAB and Python side by side. [Introduction to ecModels](introduction.md) describes the ecModel concept, [Getting started](getting-started.md) scaffolds a project, and the following pages follow the order of the work from a conventional GEM to an analysed ecModel. Each page is also readable by itself.
 
-:::{admonition} GECKO 4.0.0b1
+:::{admonition} GECKO 4 pre-release
 :class: important
 This guide documents GECKO 4, a pre-release. The pages follow the structure of the published GECKO 3.0 Nature Protocols pipeline and describe GECKO 4. [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md) lists the changes against that protocol and describes how to stay on GECKO 3 for a workflow that depends on its behaviour.
 :::

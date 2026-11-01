@@ -81,7 +81,7 @@ The metaData section and the first metabolite of `ecYeastGEM.yml` in the `full_e
 ```yaml
   - description: Enzyme-constrained model of yeastGEM_develop
   - gecko_format: "4"
-  - generator: GECKO 4.0.0b1
+  - generator: GECKO <version>
 ```
 
 The key `geckopy_version` of earlier geckopy releases is not written, and both save functions remove an existing one. `readYAMLmodel` reads `gecko_format`, `generator` and `description` into `ecModel.annotation`, where `description` becomes `annotation.note`. geckopy keeps `metaData` in `ec_model.notes["metaData"]`.

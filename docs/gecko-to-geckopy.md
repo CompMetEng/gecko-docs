@@ -8,8 +8,8 @@ GECKO (MATLAB) and geckopy (Python) build and analyse enzyme-constrained models 
 
 ## Implementations
 
-- **GECKO** is built on the RAVEN toolbox and the COBRA Toolbox. An ecModel is a RAVEN struct with the field `ec`. The version in `version.txt` is 4.0.0b1.
-- **geckopy** is built on [cobrapy](https://cobrapy.readthedocs.io/en/latest/) and [raven-toolbox](https://github.com/CompMetEng/raven-toolbox). An ecModel is an `EcModel`, a subclass of `cobra.Model`, with the attribute `ec`. The version in `pyproject.toml` is 4.0.0b1.
+- **GECKO** is built on the RAVEN toolbox and the COBRA Toolbox. An ecModel is a RAVEN struct with the field `ec`. The release number is in `version.txt`.
+- **geckopy** is built on [cobrapy](https://cobrapy.readthedocs.io/en/latest/) and [raven-toolbox](https://github.com/CompMetEng/raven-toolbox). An ecModel is an `EcModel`, a subclass of `cobra.Model`, with the attribute `ec`. The release number is in `pyproject.toml`.
 - **Project and model files** are shared. Both read the project from `model_adapter.toml` and write `gecko_format` to the saved model (see [Project format 4](gecko4-project-format.md)).
 
 ## Corresponding objects

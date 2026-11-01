@@ -18,7 +18,7 @@
 pip install --pre geckopy
 ```
 
-`--pre` is required: the latest releases on PyPI, geckopy 4.0.0b1 and raven-toolbox 3.0.0b1, are pre-releases. Without `--pre`, pip installs geckopy 2.0.2, an earlier and unrelated package of the same name.
+`--pre` is required: the GECKO 4 releases of geckopy and the releases of raven-toolbox that it depends on are pre-releases. Without `--pre`, pip installs geckopy 2.0.2, an earlier and unrelated package of the same name.
 :::
 :::{tab-item} Python (Git)
 
@@ -36,11 +36,11 @@ Installs the `develop` branch of both packages, which is ahead of the latest PyP
 git clone --depth=1 https://github.com/CompMetEng/GECKO
 ```
 
-Then run `GECKOInstaller.install` in MATLAB. The clone is the `develop` branch; `--branch 4.0.0b1` selects the tag of the GECKO 4 pre-release.
+Then run `GECKOInstaller.install` in MATLAB. The clone is the `develop` branch; `--branch <tag>` selects a release tag listed on the [tags page](https://github.com/CompMetEng/GECKO/tags).
 :::
 :::{tab-item} MATLAB (Add-Ons)
 
-Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox". The Add-On installs a GitHub release; the latest, v3.2.5, is GECKO 3 (see [GECKO 3 to GECKO 4](gecko3-to-gecko4.md#staying-on-gecko-3)). GECKO 4.0.0b1 is a pre-release, installed with git or from a ZIP archive.
+Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox". The Add-On installs a GitHub release; the latest, v3.2.5, is GECKO 3 (see [GECKO 3 to GECKO 4](gecko3-to-gecko4.md#staying-on-gecko-3)). GECKO 4 is a pre-release, installed with git or from a ZIP archive.
 :::
 ::::
 
