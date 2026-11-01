@@ -1,76 +1,90 @@
-# GECKO 3 → GECKO 4
+# GECKO 3 to GECKO 4
 
-GECKO 4 continues development on the `develop4` branch, the line this site
-tracks, and introduces changes that are not backward-compatible with
-GECKO 3.0, the version described in the published Nature Protocols pipeline
-(see [Citations](references.md)). Review the changes below before upgrading
-an existing GECKO 3 workflow, or stay on GECKO 3 using the instructions at
-the bottom of this page.
+GECKO 4 keeps the ecModel structure of GECKO 3 (`ecModel.ec`, the `MW/kcat` coefficient) and changes the direction of the protein reactions, how a project is configured, and how kcats are gathered and assigned. GECKO 3.0 is the version described in the published Nature Protocols pipeline (see [Citations](references.md)). The sections below follow the risk of a wrong result for a GECKO 3 script or project. geckopy implements the GECKO 4 behaviour described here.
 
-This page covers the MATLAB toolbox, so the function names below are
-GECKO's. geckopy targets GECKO 4 and has no GECKO 3 release; its first
-release ported the GECKO 3.2.5 functions.
-
-:::{admonition} If you read nothing else: the protein reaction direction flipped
+:::{admonition} Changes that pass without an error
 :class: important
 
-[PR #419](https://github.com/SysBioChalmers/GECKO/pull/419) reversed the
-direction of the protein pool and enzyme usage reactions: they now run
-**forward** instead of **reverse**. A script written against GECKO 3 that
-reads or sets bounds on `prot_pool_exchange` or `usage_prot_*` reactions
-keeps running under GECKO 4 without raising an error, but returns a
-different, still plausible-looking result, because the sign convention on
-those bounds changed. Every other change on this page either raises an
-error or adds new, opt-in behavior; this is the one that can pass silently.
+A GECKO 3 script keeps running after each change in this box and returns a different result.
+
+- The protein pool exchange and the enzyme usage reactions run forward, so bounds and fluxes of `prot_pool_exchange` and `usage_prot_*` have the opposite sign ([PR #419](https://github.com/SysBioChalmers/GECKO/pull/419)).
+- `fuzzyKcatMatching` divides a BRENDA kcat by the coefficient of the substrate the kcat was measured on. GECKO 3 divided by the smallest coefficient in the reaction.
+- `assignKcats` and `collectKcats` use the preset `brenda_ec_tree` when `model_adapter.toml` sets no other.
+- `calculateFfactor` averages each protein over the samples in which it is measured.
+- `sigmaFitter` returns the smallest sigma that reaches the best growth rate.
 :::
 
-## Additive and backward-compatible changes
+## Changes by consequence
 
-These extend GECKO 4 without changing existing behavior, so an unmodified
-GECKO 3 script keeps producing the same result:
+### Results that change without an error
 
-- kcat prediction can go through the hosted OpenKineticsPredictor service,
-  in addition to a local DLKcat installation.
-- kcat-list merging generalizes to any number of sources, rather than a
-  fixed DLKcat/fuzzy-matching pair.
-- Three analysis functions are new and were not part of the GECKO 3.0
-  protocol: `getEnzymeBottlenecks`, `getPfbaEnzymes`, `relaxProteomicsGreedy`.
+| Change | GECKO 3 | GECKO 4 | Action |
+| --- | --- | --- | --- |
+| Direction of protein reactions | `usage_prot_<id>` and `prot_pool_exchange` run in reverse and carry negative flux | both run forward, and the usage of an enzyme is the positive flux of its usage reaction | Reverse the sign of bounds and fluxes read from these reactions. `upgradeEcModel` turns a GECKO 3 ecModel (see [Upgrade a GECKO 3 project](gecko3-upgrade-project.md)) |
+| Substrate of a BRENDA kcat | the kcat is divided by the smallest coefficient in the reaction | the kcat is divided by the coefficient of the substrate that matched | Rebuild the kcat list. Reactions that are not written per the measured substrate get a lower kcat |
+| Default kcat assignment | `selectKcatValue` (now `assignKcatValues`) merges a DLKcat list and a BRENDA list | `assignKcats` decides from the kcat source files in `data/kcats` with the preset `brenda_ec_tree` | Set `preset = "gecko_classic"` in `[kcat_assignment]` to keep the GECKO 3 order (see [Kcat assignment](gecko4-kcat-assignment.md)) |
+| Protein fraction `f` | `calculateFfactor` averages over all samples, so a protein missing in one sample is left out of both totals | the average is over the samples in which the protein is measured | Recalculate `f` when the proteomics file has missing values |
+| Sigma fit | `sigmaFitter` returns the sigma with the smallest error | it returns the smallest sigma whose growth rate is within a relative 1e-9 of the best | Refit when the growth rate is flat over a range of sigma |
 
-This page is updated as GECKO 4 development continues; it does not yet
-cover every change. The [Guide](guide/index.md) pages flag GECKO-4-specific
-behavior alongside the GECKO 3.0 protocol steps they sit next to.
+### Changes that raise an error
+
+| Change | Condition | Action |
+| --- | --- | --- |
+| `loadProtData` checks the replicate count | the sum of `replPerCond` differs from the number of replicate columns of the file | Correct `replPerCond` |
+| `loadEcModel` checks the ecModel format | `gecko_format` in the file is higher than 4 | Update GECKO |
+| Adapter keys | `model_adapter.toml` has a key that is not in `adapterParameters.tsv` | Remove or rename the key, or place a key that GECKO uses and geckopy does not use under `[matlab.params]` |
+| Options of `assignKcats` and `upgradeGECKOproject` | an option name that the function does not have | Correct the option name |
+
+### Changes of the project
+
+A GECKO 3 project is configured by an adapter class and keeps its kcats in `data/DLKcat.tsv`, `data/customKcats.tsv` and in the variables of the script. A GECKO 4 project is configured by `model_adapter.toml`, keeps each kcat source in its own file in `data/kcats`, and records the ecModel format in the saved model. [Project format 4](gecko4-project-format.md) describes the files, and [Upgrade a GECKO 3 project](gecko3-upgrade-project.md) the steps that convert a project.
+
+Adapter classes keep working. Functions that now take name-value arguments also take them positionally, in the GECKO 3 order: `loadEcModel(filename, modelAdapter)` and `loadEcModel('filename', filename)` are equivalent. A call uses one of the two forms for all its optional arguments.
+
+## New functions
+
+| Group | Functions |
+| --- | --- |
+| Kcat sources | `kcatsFromBrenda`, `kcatsFromECTree`, `kcatsFromHomologs`, `kcatsFromDLKcat`, `kcatsFromOKP`, `saveKcatSource`, `loadKcatSource`, `getEcRxnKeys` |
+| Kcat assignment | `collectKcats`, `assignKcats`, `updateKcatSources`, `kcatAssignmentConfig`, `convertCustomKcats` |
+| Databases | `fetchBrendaAsset`, `loadBrendaMeasurements`, `resolveKcatAggregation` |
+| Project and model upgrade | `upgradeGECKOproject`, `upgradeEcModel`, `convertAdapterToToml` |
+| Adapter | `TomlAdapter`, `readAdapterToml`, `writeAdapterToml`, `loadAdapterParams` |
+| Proteomics | `levelComplexConcs`, `getComplexFamilies`, and the option `perComplex` of `flexibilizeEnzConcs` |
+| Analysis | `getEnzymeBottlenecks`, `getPfbaEnzymes`, `relaxProteomicsGreedy` |
+
+`getEnzymeBottlenecks` solves the model again after raising the usage bound of each enzyme that runs at its bound, and ranks the enzymes by the rise of the objective. The shadow price is reported and does not enter the order.
+
+`levelComplexConcs` gives the subunits of a multi-subunit complex one abundance. The complex is then not capped by its least abundant subunit. It runs after `fillEnzConcs` and before `constrainEnzConcs`.
+
+kcat prediction goes through the hosted OpenKineticsPredictor service, in addition to a local DLKcat installation. The DLKcat Docker context is not part of the GECKO repository (`src/dlkcat-gecko` is removed).
+
+## Removed
+
+| Removed | Replacement |
+| --- | --- |
+| BRENDA files in `databases/` | `fetchBrendaAsset` downloads the files of the toolbox-assets release `brenda-2026.1-1` into `databases/brenda-2026.1-1` on first use. A project keeps its own files in `data/brenda` |
 
 ## Renamed functions
 
-GECKO 4 renamed several functions. Each old name still works exactly as
-before: it calls the new function internally and prints a one-time
-deprecation warning, so an unmodified GECKO 3 script keeps running, not
-just keeps compiling. The old names live under `GECKO/src/deprecated/` and
-will be removed in a future release; update a script's function calls to
-the current name on the same schedule, rather than after the old name
-actually breaks.
+The old name of each function in the table calls the new function and prints a deprecation warning. The old names are in `src/deprecated` and are removed in a future release. `mergeDLKcatAndFuzzyKcats` is a wrapper of `mergeKcats` in `src/gather_kcats`.
 
-| GECKO 3 name | GECKO 4 name | Why, where a specific reason is documented |
-|---|---|---|
-| `startGECKOproject` | `createGECKOproject` | -- |
-| `copyECtoGEM` | `applyECcodes` | -- |
-| `enzymeUsage` | `getEnzymeUsage` | -- |
-| `pfbaEnzymes` | `getPfbaEnzymes` | -- |
-| `addCarbonNum` | `fillCarbonNum` | -- |
-| `updateGECKOdoc` | `buildGECKOdoc` | -- |
-| `selectKcatValue` | `assignKcatValues` | clarifies that the function writes `ecModel.ec.kcat`, not just selects a candidate value |
-| `mergeDLKcatAndFuzzyKcats` | `mergeKcats` | generalized to merge kcat lists from any number of sources, not just a fixed DLKcat/fuzzy-matching pair (see above) |
+| GECKO 3 name | GECKO 4 name | Reason |
+| --- | --- | --- |
+| `startGECKOproject` | `createGECKOproject` | |
+| `copyECtoGEM` | `applyECcodes` | |
+| `enzymeUsage` | `getEnzymeUsage` | |
+| `pfbaEnzymes` | `getPfbaEnzymes` | |
+| `addCarbonNum` | `fillCarbonNum` | |
+| `updateGECKOdoc` | `buildGECKOdoc` | |
+| `selectKcatValue` | `assignKcatValues` | the function writes `ecModel.ec.kcat` |
+| `mergeDLKcatAndFuzzyKcats` | `mergeKcats` | merges kcat lists of any number of sources |
 
-geckopy, which targets GECKO 4, uses each current name's `snake_case` form
-where a direct counterpart exists (`get_enzyme_usage`, `merge_kcats`, and
-so on); `createGECKOproject`'s counterpart is the `geckopy init` CLI
-command rather than an importable function. See [MATLAB ↔
-Python](matlab-vs-python.md) for the full name mapping.
+geckopy uses the `snake_case` form of the current name where a counterpart exists (`get_enzyme_usage`, `merge_kcats`). The counterpart of `createGECKOproject` is the command `geckopy init`, and the counterpart of `upgradeGECKOproject` is `geckopy upgrade`. [MATLAB and Python](matlab-vs-python.md) lists the full mapping.
 
 ## Staying on GECKO 3
 
-If your workflow depends on GECKO 3 behavior, install the latest GECKO 3
-release, v3.2.5, instead of GECKO 4:
+The last GECKO 3 release is v3.2.5.
 
 ::::{tab-set}
 :::{tab-item} MATLAB (git)
@@ -81,53 +95,45 @@ cd GECKO
 git checkout v3.2.5
 ```
 
-Then, in MATLAB, run `GECKOInstaller.install` as usual.
+Run `GECKOInstaller.install` in MATLAB.
 :::
 :::{tab-item} MATLAB (ZIP)
 
-Download the v3.2.5 archive from the
-[GitHub releases page](https://github.com/SysBioChalmers/GECKO/releases/tag/v3.2.5)
-instead of the latest release, extract it, then run
-`GECKOInstaller.install` as usual.
+Download the v3.2.5 archive from the [GitHub releases page](https://github.com/SysBioChalmers/GECKO/releases/tag/v3.2.5), extract it and run `GECKOInstaller.install`.
 :::
 :::{tab-item} MATLAB (Add-On)
 
-The MATLAB Add-On manager only distributes the latest GECKO release, so it
-cannot install v3.2.5 directly. Uninstall the Add-On
-(`GECKOInstaller.uninstall`, or remove it through the Add-On manager), then
-install v3.2.5 via git or ZIP instead (see the tabs above).
+The Add-On manager distributes the latest release. Uninstall the Add-On (`GECKOInstaller.uninstall`, or the Add-On manager) and install v3.2.5 with git or the ZIP archive.
 :::
 ::::
 
-See [Installation](installation/index.md) for the full installation
-instructions.
+[Installation](installation/index.md) describes the installation methods.
 
-## Earlier versions: GECKO 1 and 2
+## Earlier versions
 
-GECKO 3's refactor makes it largely incompatible with the two releases
-before it, GECKO 1 ([Sánchez et al., 2017](references.md#gecko-1)) and
-GECKO 2 ([Domenzain et al., 2022](references.md#gecko-2)). The two older
-releases share the same underlying ecModel structure with each other, and
-differ from GECKO 3 (and GECKO 4) in the same ways:
+GECKO 1 ([Sánchez et al., 2017](references.md#gecko-1)) and GECKO 2 ([Domenzain et al., 2022](references.md#gecko-2)) share one ecModel structure, which differs from GECKO 3 and GECKO 4:
 
-- GECKO 1 and 2 have no `ec` structure: enzyme and kcat information lives
-  scattered across several model fields, rather than collected in one place
-  the way `ecModel.ec` (Python: `ec_model.ec`) does from GECKO 3 onward.
-- Enzymes enter the S-matrix as `1/kcat`, with the molecular weight handled
-  separately in the protein exchange reactions, rather than the combined
-  `MW/kcat` coefficient GECKO 3 introduced (see [Building an empty
-  ecModel](guide/building-ec-model.md)).
-- Neither stores an ecModel in a YAML format that retains full model
-  content the way GECKO 3's does.
+- Enzyme and kcat information is spread over several model fields. From GECKO 3, `ecModel.ec` (Python: `ec_model.ec`) collects it.
+- Enzymes enter the S-matrix as `1/kcat`, with the molecular weight in the protein exchange reactions. From GECKO 3 the coefficient is `MW/kcat` (see [Building an empty ecModel](guide/building-ec-model.md)).
+- The YAML format of GECKO 3 and GECKO 4 retains the full model content. GECKO 1 and GECKO 2 have no such format.
 
-The practical consequence: functions from GECKO 3 or 4 do not work on a
-GECKO 1 or 2 ecModel, and functions from GECKO 1 or 2 do not work on a
-GECKO 3 or 4 ecModel. geckopy has no support for GECKO 1/2-formatted
-ecModels; it targets GECKO 4 only.
+Functions of GECKO 3 and GECKO 4 do not work on a GECKO 1 or GECKO 2 ecModel, and the reverse. geckopy supports GECKO 4 ecModels.
 
-GECKO 2's last release, 2.0.3, is still available on the [GitHub releases
-page](https://github.com/SysBioChalmers/GECKO/releases/tag/v2.0.3), and the
-[`gecko2` branch](https://github.com/SysBioChalmers/GECKO/tree/gecko2)
-remains for anyone who needs to apply a fix to it. GECKO 1 predates this
-repository's branch history; its release is cited in
-[Citations](references.md#gecko-1) for anyone who needs to reference it.
+The last GECKO 2 release is [2.0.3](https://github.com/SysBioChalmers/GECKO/releases/tag/v2.0.3), and the [`gecko2` branch](https://github.com/SysBioChalmers/GECKO/tree/gecko2) takes fixes for it. The GECKO 1 release is cited in [Citations](references.md#gecko-1).
+
+## Troubleshooting
+
+| Problem | Possible reason | Solution |
+| --- | --- | --- |
+| Deprecation warning | the script calls a GECKO 3 name | Use the GECKO 4 name from Renamed functions |
+| Warning when `loadEcModel` loads a model | the ecModel was saved by GECKO 3 and its protein reactions run in reverse | `loadEcModel` upgrades the loaded model. Run `saveEcModel` to store the upgraded model |
+| An enzyme usage flux is negative | the model was not upgraded | Run `upgradeEcModel` |
+| Error that names a key of `model_adapter.toml` | the key is not in `adapterParameters.tsv` | Place a key that GECKO uses and geckopy does not use under `[matlab.params]` |
+| A rebuilt ecModel has other kcats than the GECKO 3 model | the default preset and the substrate of BRENDA kcats changed | Use `preset = "gecko_classic"` and compare the output of `collectKcats` |
+
+## See also
+
+- [Project format 4](gecko4-project-format.md)
+- [Upgrade a GECKO 3 project](gecko3-upgrade-project.md)
+- [Kcat assignment](gecko4-kcat-assignment.md)
+- [GECKO and geckopy](gecko-to-geckopy.md)
