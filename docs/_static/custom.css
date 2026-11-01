@@ -101,3 +101,15 @@ html[data-theme="dark"] {
 .site-logo-dark { display: none; }
 html[data-theme="dark"] .site-logo-light { display: none; }
 html[data-theme="dark"] .site-logo-dark { display: inline; }
+
+/* ===== Mermaid flowcharts ============================================= */
+/* A tall flowchart scaled to the text column is unreadable. The diagram
+   keeps a minimum width, and the frame scrolls sideways when the column is
+   narrower. */
+.mermaid-container:not(.mermaid-container-fullscreen) > pre {
+  overflow-x: auto;
+}
+.mermaid-container:not(.mermaid-container-fullscreen) > pre > svg {
+  width: max(100%, 1250px) !important;
+  max-width: none !important;
+}

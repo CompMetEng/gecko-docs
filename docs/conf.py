@@ -27,6 +27,9 @@ extensions = [
 
 # Diagram height follows the content (the default of 500 px would shrink a tall flowchart).
 mermaid_height = "auto"
+# Scroll-wheel zoom and drag-to-pan in the page and in the full-screen view
+# (static/mermaid-zoom.js limits the wheel in the page to Ctrl or Cmd).
+mermaid_d3_zoom = True
 
 intersphinx_mapping = {"cobra": ("https://cobrapy.readthedocs.io/en/latest/", None)}
 
@@ -62,7 +65,7 @@ html_favicon = "_static/gecko-icon.png"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 # Remembers the language of the code tabs across pages, browser tabs and visits.
-html_js_files = ["language-sync.js"]
+html_js_files = ["language-sync.js", "mermaid-zoom.js"]
 # The source pages are generated MyST files, not something a reader can edit.
 html_show_sourcelink = False
 

@@ -16,7 +16,7 @@ Text outside a MATLAB or Python tab reads the same in both languages. Where it r
 
 ## Workflow
 
-[![Flowchart of the workflow: project, ecModel, kcat sources, assignment, growth-rate tuning, proteomics, relaxation and analysis](../_static/workflow-overview.png){width=200px}](workflow.md)
+[![Flowchart of the workflow: project, ecModel, kcat sources, assignment, growth-rate tuning, proteomics, relaxation and analysis](../_static/workflow-overview.png){width=200px .no-scaled-link}](workflow.md)
 
 The [workflow overview](workflow.md) shows the order of the stages, the kcat sources that run in parallel and the alternative paths, with the functions of each stage in MATLAB and Python.
 
