@@ -18,8 +18,7 @@
 pip install --pre geckopy
 ```
 
-`--pre` is required while geckopy and raven-toolbox are pre-releases on
-PyPI.
+`--pre` is required: the latest releases on PyPI, geckopy 4.0.0b1 and raven-toolbox 3.0.0b1, are pre-releases. Without `--pre`, pip installs geckopy 2.0.2, an earlier and unrelated package of the same name.
 :::
 :::{tab-item} Python (Git)
 
@@ -29,12 +28,7 @@ pip install \
     git+https://github.com/CompMetEng/geckopy.git@develop
 ```
 
-Tracks the `develop` branch of both packages, ahead of the latest PyPI
-release.
-:::
-:::{tab-item} MATLAB (Add-Ons)
-
-Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox".
+Installs the `develop` branch of both packages, which is ahead of the latest PyPI release.
 :::
 :::{tab-item} MATLAB (git)
 
@@ -42,27 +36,28 @@ Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox".
 git clone --depth=1 https://github.com/CompMetEng/GECKO
 ```
 
-Then run `GECKOInstaller.install` in MATLAB.
+Then run `GECKOInstaller.install` in MATLAB. The clone is the `develop` branch; `--branch 4.0.0b1` selects the tag of the GECKO 4 pre-release.
+:::
+:::{tab-item} MATLAB (Add-Ons)
+
+Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox". The Add-On manager distributes the latest release, which is GECKO 3 (see [GECKO 3 to GECKO 4](gecko3-to-gecko4.md#staying-on-gecko-3)). GECKO 4.0.0b1 is a pre-release, installed with git or from a ZIP archive.
 :::
 ::::
 
-## Key features
+## Features
 
 ::::{grid} 1 2 3 3
 
 :::{grid-item-card} Enzyme constraints
-Convert a conventional GEM into an ecModel by bounding reaction rates with
-enzyme kcat and abundance.
+Convert a conventional GEM into an ecModel by bounding reaction rates with enzyme kcat and abundance.
 :::
 
 :::{grid-item-card} Proteomics integration
-Constrain individual enzyme usage with absolute or relative proteomics
-measurements.
+Constrain individual enzyme usage with absolute or relative proteomics measurements.
 :::
 
 :::{grid-item-card} Light ecModels
-A smaller, faster-simulating ecModel variant for when full proteome coverage
-isn't needed.
+A smaller, faster-simulating ecModel variant for when full proteome coverage is not needed.
 :::
 
 ::::
@@ -74,10 +69,11 @@ isn't needed.
 :sync: python
 
 ```python
-from geckopy import load_ec_model
+from geckopy import ModelAdapter, load_ec_model
 
-# load a previously built ecModel
-model = load_ec_model("ecYeastGEM.yml")
+# load a previously built ecModel from a project folder
+adapter = ModelAdapter.from_folder("path/to/project")
+model = load_ec_model("ecYeastGEM.yml", adapter)
 
 # set growth as the objective
 model.objective = "r_2111"
@@ -91,7 +87,8 @@ print(f"Growth rate: {sol.objective_value:.4f} h⁻¹")
 :sync: matlab
 
 ```matlab
-% load a previously built ecModel
+% load a previously built ecModel from a project folder
+ModelAdapterManager.setDefault('path/to/project');
 model = loadEcModel('ecYeastGEM.yml');
 
 % set growth as the objective
@@ -112,61 +109,49 @@ fprintf('Growth rate: %.4f h-1\n', sol.f);
 :link: guide/index
 :link-type: doc
 
-Task-focused pages covering the full ecModel pipeline, MATLAB and Python
-side by side.
+Task-focused pages covering the full ecModel pipeline, MATLAB and Python side by side.
 :::
 
 :::{grid-item-card} API reference
 :link: api/index
 :link-type: doc
 
-Complete function reference for both GECKO (MATLAB) and geckopy (Python).
+Function reference for both GECKO (MATLAB) and geckopy (Python).
 :::
 
 :::{grid-item-card} Installation
 :link: installation/index
 :link-type: doc
 
-Set up GECKO in MATLAB or geckopy in Python, plus the Gurobi/SoPlex solver
-and Docker for DLKcat.
+Set up GECKO in MATLAB or geckopy in Python, the solver and Docker for DLKcat.
 :::
 
-:::{grid-item-card} GECKO vs. geckopy
+:::{grid-item-card} GECKO and geckopy
 :link: gecko-to-geckopy
 :link-type: doc
 
-Which to use for what, what only one of them has, and where the same
-function gives a different answer.
+Corresponding objects, names that differ, functions of one implementation and differences in behaviour.
 :::
 
 ::::
 
 ## Citing GECKO
 
-If you use GECKO in your research, please cite:
+Publications that use GECKO cite:
 
-> Chen, Y., Gustafsson, J., Tafur Rangel, A., Anton, M., Domenzain, I.,
-> Kittikunapong, C., Li, F., Yuan, L., Nielsen, J. & Kerkhoven, E. J.
-> **Reconstruction, simulation and analysis of enzyme-constrained metabolic
-> models using GECKO Toolbox 3.0.** *Nature Protocols* **19**, 629-667
-> (2024). <https://doi.org/10.1038/s41596-023-00931-7>
+> Chen, Y., Gustafsson, J., Tafur Rangel, A., Anton, M., Domenzain, I., Kittikunapong, C., Li, F., Yuan, L., Nielsen, J. & Kerkhoven, E. J. **Reconstruction, simulation and analysis of enzyme-constrained metabolic models using GECKO Toolbox 3.0.** *Nature Protocols* **19**, 629-667 (2024). <https://doi.org/10.1038/s41596-023-00931-7>
 
-See [Citations](references.md) for the full list, including key papers that
-have used this protocol.
+See [Citations](references.md) for the full list, including papers that have used this protocol.
 
 ## Source code
 
-GECKO is publicly available under the MIT license at
-<https://github.com/CompMetEng/GECKO>, archived at
-<https://doi.org/10.5281/zenodo.7699818>. geckopy, the Python port, is at
-<https://github.com/CompMetEng/geckopy>.
+GECKO is publicly available under the MIT licence at <https://github.com/CompMetEng/GECKO>, archived at <https://doi.org/10.5281/zenodo.7699818>. geckopy, the Python port, is at <https://github.com/CompMetEng/geckopy>.
 
 ## Getting help
 
-Report a bug or request a feature against whichever implementation it
-concerns; ask a usage question in either repository's Discussions.
+Report a bug or request a feature against whichever implementation it concerns; ask a usage question in either repository's Discussions.
 
-| | Issues | Discussions |
+| Implementation | Issues | Discussions |
 |---|---|---|
 | GECKO (MATLAB) | [github.com/CompMetEng/GECKO/issues](https://github.com/CompMetEng/GECKO/issues) | [github.com/CompMetEng/GECKO/discussions](https://github.com/CompMetEng/GECKO/discussions) |
 | geckopy (Python) | [github.com/CompMetEng/geckopy/issues](https://github.com/CompMetEng/geckopy/issues) | [github.com/CompMetEng/geckopy/discussions](https://github.com/CompMetEng/geckopy/discussions) |

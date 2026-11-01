@@ -1,28 +1,23 @@
 # Getting started
 
+The reconstruction of an ecModel starts from a curated conventional genome-scale metabolic model (GEM) and a model adapter, the file that collects the organism-specific data and parameters that every later step reads. The steps below create a project folder with the starting GEM and a filled model adapter, and set the UniProt and KEGG parameters of the organism.
+
 :::{admonition} Based on the Nature Protocols pipeline
 :class: note
-This Guide follows the structure of the published GECKO 3.0 Nature
-Protocols pipeline (Chen et al., 2024; see [Citations](../references.md)),
-adapted to reflect the current GECKO 4 codebase rather than reproducing the
-paper's numbered steps exactly. Where GECKO 4 changed or added behavior,
-the relevant page says so; see [GECKO 3 →
-GECKO 4](../gecko3-to-gecko4.md) for the full list.
+This guide follows the structure of the published GECKO 3.0 Nature Protocols pipeline (Chen et al., 2024; see [Citations](../references.md)) and describes GECKO 4. The differences from GECKO 3 are in [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md).
 :::
 
-An ecModel reconstruction starts from a curated conventional genome-scale
-metabolic model (GEM) and a **model adapter**: a file that collates the
-organism-specific data and parameters every later step reads. Creating a
-project scaffolds both the folder layout and a template model adapter to
-fill in.
-
-## Functions on this page
+## Functions
 
 | MATLAB | Python | |
 |---|---|---|
-| `createGECKOproject` | `geckopy init` | scaffold a new project folder |
-| `ModelAdapter` (classdef) | `ModelAdapter.from_folder` | define and load the model adapter |
+| `createGECKOproject` | `geckopy init` | scaffold a new project folder with a template `model_adapter.toml` |
+| `ModelAdapterManager.setDefault` | `ModelAdapter.from_folder` | load the model adapter of a project |
 | `loadDatabases('kegg')` | `geckopy kegg-download` | download KEGG data for identifier conversion |
+
+## Setup
+
+GECKO (MATLAB) or geckopy (Python) must be installed (see [Installation](../installation/index.md)). The starting GEM is a curated model in a format that the toolbox reads. The example parameters are those of the `full_ecModel` tutorial, which uses [yeast-GEM](https://github.com/SysBioChalmers/yeast-GEM); the data files of that tutorial are described in [Files in the data folder](data-folder-files.md).
 
 ## Start a new project
 
@@ -34,10 +29,9 @@ fill in.
 createGECKOproject();
 ```
 
-A dialog prompts for a location and creates the new folder there.
-`createGECKOproject` creates four subfolders: `code` and `data` hold custom
-code and data used during reconstruction and analysis; `models` and `output`
-hold reconstructed ecModels and simulation results.
+Two dialogs ask for the name of the project and for the location where `createGECKOproject` creates its folder. The options `name` and `path` replace the dialogs, as in `createGECKOproject('name', 'myproject', 'path', pwd)`. A folder that already exists at the location is not overwritten; the function prints a warning instead.
+
+`createGECKOproject` creates four subfolders: `code` and `data` hold custom code and data that the reconstruction and the analysis use, and `models` and `output` hold the reconstructed ecModels and the results of simulations. It writes the template `model_adapter.toml` in the project folder, with the project name in its first line, placeholders for the GEM and the organism, and the defaults of the other parameters. The option `'adapterFormat','class'` writes an adapter class `<name>Adapter.m` instead (see [Project format 4](../gecko4-project-format.md)).
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -46,78 +40,21 @@ hold reconstructed ecModels and simulation results.
 geckopy init myproject
 ```
 
-`init` is a subcommand of the `geckopy` command-line tool installed
-alongside the package (see [Installation](../installation/index.md)). The
-generated `model_adapter.toml` always includes the Bayesian kcat-tuning
-hyperparameter section described in
-[Tuning against experimental data](tuning-against-experimental-data.md),
-commented out at its default values; no separate flag is needed to add it.
+`init` is a subcommand of the `geckopy` command-line tool that is installed with the package (see [Installation](../installation/index.md)). The command stops with an error when the folder exists and is not empty.
 
-`geckopy init` creates the subfolders `data`, `models` and `output`, which
-hold data used during reconstruction, reconstructed ecModels and simulation
-results. It writes `adapter.py`, the equivalent of a custom `code` folder,
-directly in the project root.
+`geckopy init` creates the subfolders `data`, `models` and `output`, which hold data for the reconstruction, the reconstructed ecModels and the results of simulations. It writes `adapter.py`, the counterpart of the `code` folder, in the project root, and the template `model_adapter.toml`. In the template, `conv_gem` and `org_name` are set to placeholders, and every other parameter is a comment line with its default value.
 :::
 ::::
 
-Store the starting GEM under `models`; other locations work too, but
-keeping it there makes the project self-contained. The folder that contains
-the model adapter is called the **adapter folder** throughout this guide.
+The template of both toolboxes has a section `[evotune]` with the hyperparameters of the CMA-ES kcat tuning (see [Tuning against experimental data](tuning-against-experimental-data.md)) and a section `[kcat_assignment]` for the kcat assignment (see [Kcat assignment](../gecko4-kcat-assignment.md)). The template of `geckopy init` lists the parameters of these sections as comments. The template of `createGECKOproject` sets `preset = "brenda_ec_tree"` and the other values of both sections.
 
-`data` files use the same formats (TSV, JSON) in both languages, so a
-project's `data` folder built with one toolbox can be reused with the other.
-[Files in the data folder](data-folder-files.md) lists every file that
-belongs there and where it gets populated.
+The starting GEM is stored under `models`. Other locations work, and `models` keeps the project self-contained. The folder that contains the model adapter is called the adapter folder.
+
+The files in `data` have the same formats (TSV, JSON) in both languages, so a `data` folder that one toolbox filled is usable in the other. [Files in the data folder](data-folder-files.md) lists every file that belongs there and where it is created.
 
 ## The model adapter
 
-::::{tab-set}
-:::{tab-item} Ⓜ️ MATLAB
-:sync: matlab
-
-The model adapter is a class that inherits the `ModelAdapter` base class.
-Parameters are assigned in its constructor, and organism-specific behavior
-that a plain value cannot express (for example a non-standard way to
-identify spontaneous reactions) is added by overriding a method of the base
-class.
-
-```matlab
-classdef ecYeastGEMAdapter < ModelAdapter
-    methods
-        function obj = ecYeastGEMAdapter()
-            obj.params.path = fullfile(findGECKOroot, 'tutorials', 'full_ecModel');
-            obj.params.convGEM = fullfile(obj.params.path, 'models', 'yeast-GEM.xml');
-            obj.params.org_name = 'saccharomyces cerevisiae';
-
-            obj.params.sigma = 0.5;
-            obj.params.Ptot = 0.5;
-            obj.params.f = 0.5;
-            obj.params.gR_exp = 0.41;
-
-            obj.params.c_source = 'r_1714';
-            obj.params.bioRxn = 'r_4041';
-            obj.params.enzyme_comp = 'cytoplasm';
-
-            obj.params.uniprot.type = 'proteome';
-            obj.params.uniprot.ID = 'UP000002311';
-            obj.params.uniprot.geneIDfield = 'gene_oln';
-            obj.params.uniprot.reviewed = true;
-
-            obj.params.kegg.ID = 'sce';
-            obj.params.kegg.geneID = 'kegg';
-
-            obj.params.complex.taxonomicID = 559292;
-        end
-    end
-end
-```
-:::
-:::{tab-item} 🐍 Python
-:sync: python
-
-The model adapter is a `model_adapter.toml` file, loaded with
-`ModelAdapter.from_folder(path)`. The values are those of the
-`full_ecModel` tutorial:
+The model adapter is the file `model_adapter.toml`, which GECKO and geckopy read. Paths in it are relative to the project folder. A parameter that the file leaves out gets the default that is listed in `src/model_adapter/adapterParameters.tsv` of GECKO, and a key that is not in the list is an error in both toolboxes. [Model adapter parameters](model-adapter-parameters.md) describes every parameter. The values here are those of the `full_ecModel` tutorial, without the sections for kcat assignment and kcat tuning:
 
 ```toml
 conv_gem = "models/yeast-GEM.yml"
@@ -146,99 +83,63 @@ reviewed = true
 taxonomic_id = 559292
 ```
 
-`geckopy init` also scaffolds an `adapter.py` stub next to the TOML file,
-for organism-specific behavior that cannot be expressed as a plain value
-(the MATLAB equivalent is overriding a method of the `ModelAdapter` base
-class).
-Most projects only edit the TOML file and leave `adapter.py` untouched.
-:::
-::::
-
-If a parameter cannot be defined, because the information is absent or not
-relevant, comment it out (MATLAB) or omit the key (Python). For an organism
-not on KEGG:
+The adapter is loaded from the project folder:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
 ```matlab
-% obj.params.kegg.ID = '';
+adapter = ModelAdapterManager.setDefault(projectPath);
+params = adapter.getParameters();
 ```
+
+`ModelAdapterManager.setDefault` takes the project folder or the path of `model_adapter.toml`, and returns a `TomlAdapter`. The parameters are fields of `params` with the MATLAB names from `adapterParameters.tsv`, for example `params.Ptot` for `p_tot` and `params.uniprot.ID` for `uniprot.id`. Organism-specific behaviour that a value cannot express, for example a non-standard way to identify spontaneous reactions, is set in the sections `[spontaneous]` and `[matlab]` of the file, or in a subclass of `TomlAdapter`.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
 
-```toml
-# [kegg]
-# id = ""
+```python
+from geckopy import ModelAdapter
+
+adapter = ModelAdapter.from_folder("myproject")
+params = adapter.params
 ```
+
+`ModelAdapter.from_folder` reads `model_adapter.toml` from the folder. `adapter.py` of the project is not loaded by `from_folder`. A subclass of `ModelAdapter` in that file, for organism-specific behaviour that a value cannot express, is imported and instantiated explicitly, as in `MyAdapter.from_folder("myproject")`. Most projects edit the TOML file and leave `adapter.py` unchanged.
 :::
 ::::
 
+A GECKO 3 adapter class keeps working in MATLAB, and `convertAdapterToToml` writes it as `model_adapter.toml` (see [Upgrade a GECKO 3 project](../gecko3-upgrade-project.md)).
+
+A parameter that cannot be defined, because the information is absent or not relevant, is set to an empty string when it has a non-empty default. The default of `kegg.id` is `sce`, so a model of an organism that is not in KEGG has
+
+```toml
+[kegg]
+id = ""
+```
+
 ### Querying UniProt and KEGG
 
-The UniProt database is the source of enzyme molecular weights and amino
-acid sequences and is essential; KEGG can assign EC number annotations and
-is useful but optional. The query parameters must select data that identify
-genes with the same style of identifier as the starting GEM: a mismatch
-here means enzyme data cannot be matched to model genes later.
+The UniProt database is the source of the molecular weights and the amino acid sequences of the enzymes and is essential. KEGG can assign EC number annotations and is optional. The query parameters select data with the same style of gene identifier as the starting GEM. A mismatch means that enzyme data cannot be matched to the genes of the model.
 
 :::{warning} Proteome over taxonomy
-UniProt data can be identified either by proteome or by taxonomy. Proteome
-is preferred, because it avoids redundant matches between gene and protein
-identifiers.
+UniProt data are identified by proteome or by taxonomy. The proteome is preferred, because it avoids redundant matches between gene and protein identifiers.
 :::
 
-To find a UniProt proteome dataset, search
-[uniprot.org/proteomes](https://www.uniprot.org/proteomes) for the organism.
-If several proteome datasets exist for the same organism, prefer a
-[reference proteome](https://www.uniprot.org/proteomes?facets=proteome_type%3A1&query=%2A).
-Then open the UniProt page for one of its proteins and check, under "Names &
-Taxonomy - Gene names", that its gene identifiers use the same style as the
-starting GEM.
+To find a UniProt proteome dataset, search [uniprot.org/proteomes](https://www.uniprot.org/proteomes) for the organism. If several proteome datasets exist for the organism, a [reference proteome](https://www.uniprot.org/proteomes?facets=proteome_type%3A1&query=%2A) is preferred. The UniProt page of one protein of the proteome shows under "Names & Taxonomy - Gene names" whether its gene identifiers have the same style as the starting GEM.
 
-For example, *Saccharomyces cerevisiae* has 93 UniProt proteomes, one of
-which is the reference proteome for strain S288c (`UP000002311`). A protein
-in that proteome carries the gene identifier `YFL026W`, which matches the
-style used in yeast-GEM; UniProt labels this style "Ordered locus name",
-returned by the API field `gene_oln`. The model adapter accordingly sets
-`uniprot.type` to `proteome`, `uniprot.ID` (Python: `uniprot.id`) to
-`UP000002311` and `uniprot.geneIDfield` (Python: `uniprot.gene_id_field`) to
-`gene_oln`.
+*Saccharomyces cerevisiae* has 93 UniProt proteomes, and one of them is the reference proteome for strain S288c (`UP000002311`). A protein in that proteome has the gene identifier `YFL026W`, which matches the style of yeast-GEM. UniProt labels this style "Ordered locus name", and the API field is `gene_oln`. The model adapter accordingly sets `uniprot.type` to `proteome`, `uniprot.id` to `UP000002311` and `uniprot.gene_id_field` to `gene_oln`.
 
-Taxonomy is the alternative when no proteome fits: the
-[taxonomy browser](https://www.uniprot.org/taxonomy/) identifier should be
-as specific as possible. For *S. cerevisiae* the taxonomy identifier 4932
-covers 322 strains and 53,526 proteins in total, while 559292 refers to
-strain S288c alone, at 6,735 proteins. In that case `uniprot.type` is
-`taxonomy` and `uniprot.ID` (Python: `uniprot.id`) is `559292`.
+The taxonomy is the alternative when no proteome fits. The identifier from the [taxonomy browser](https://www.uniprot.org/taxonomy/) should be as specific as possible. For *S. cerevisiae*, the taxonomy identifier 4932 covers 322 strains and 53,526 proteins in total, and 559292 refers to strain S288c alone, with 6,735 proteins. In that case `uniprot.type` is `taxonomy` and `uniprot.id` is `559292`.
 
-For KEGG, choose the three- or four-letter species identifier (`kegg.ID`;
-Python: `kegg.id`)
-from the
-[KEGG organism list](https://www.genome.jp/kegg/catalog/org_list.html); for
-*Homo sapiens* this is `hsa`. Then check which gene identifier KEGG links to
-its genes, on the genome entry page (for example
-[genome.jp/entry/hsa](https://www.genome.jp/entry/hsa)), which links to the
-list of KEGG genes. For *H. sapiens* those genes are numbered sequentially,
-which does not match the identifiers used in human-GEM; the "Other DBs"
-section of the same page instead lists Ensembl gene identifiers (for
-example `ENSG00000236362`). `kegg.geneID` (Python: `kegg.gene_id`) for
-human-GEM is therefore `Ensembl`, not `KEGG`.
+For KEGG, `kegg.id` is the three- or four-letter species identifier from the [KEGG organism list](https://www.genome.jp/kegg/catalog/org_list.html); for *Homo sapiens* it is `hsa`. The genome entry page (for example [genome.jp/entry/hsa](https://www.genome.jp/entry/hsa)) links to the list of KEGG genes and shows which gene identifier KEGG links to its genes. The KEGG genes of *H. sapiens* are numbered sequentially, which does not match the identifiers of human-GEM. The section "Other DBs" of the same page lists Ensembl gene identifiers (for example `ENSG00000236362`), so `kegg.gene_id` for human-GEM is `Ensembl`, not `KEGG`.
 
 ## Handling unusual identifier formats
 
-If an organism is in UniProt but no `uniprot.geneIDfield` (Python:
-`uniprot.gene_id_field`) matches the model's gene identifiers, build a conversion table at
-`data/uniprotConversion.tsv` with columns of model genes and UniProt
-identifiers.
+If an organism is in UniProt and no `uniprot.gene_id_field` matches the gene identifiers of the model, a conversion table at `data/uniprotConversion.tsv` has columns of model genes and UniProt identifiers.
 
-For example, the *Escherichia coli* model iML1515 uses gene identifiers
-styled as `b0008`, which UniProt does not carry as a field, but KEGG links
-both identifiers. Build `uniprotConversion.tsv` from KEGG data (this
-requires a loaded model adapter; see
-[Building an empty ecModel](building-ec-model.md#set-the-default-model-adapter)):
+The *Escherichia coli* model iML1515 has gene identifiers of the style `b0008`. UniProt does not have this style as a field, and KEGG links both identifiers. `uniprotConversion.tsv` is built from KEGG data (this needs a loaded model adapter; see [Building an empty ecModel](building-ec-model.md#set-the-default-model-adapter)):
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -256,17 +157,13 @@ fclose(fID);
 :::{tab-item} 🐍 Python
 :sync: python
 
-geckopy downloads KEGG data through the `geckopy` CLI rather than a Python
-function, writing a header-less CSV with `uniprot`, `gene`, `kegg_gene` and
-further EC, MW, pathway and sequence columns:
+geckopy downloads KEGG data with the `geckopy` command-line tool, which has no Python function. The command writes a CSV file without a header row, with the columns `uniprot`, `gene`, `kegg_gene` and further columns for EC numbers, molecular weights, pathways and sequences:
 
 ```bash
 geckopy kegg-download eco data/kegg.csv
 ```
 
-Select the two relevant columns and write them out as
-`uniprotConversion.tsv`. The file has no header row, so the column names
-must be supplied to `pandas.read_csv` rather than read from it:
+The two relevant columns are written as `uniprotConversion.tsv`. The CSV file has no header row, so `pandas.read_csv` receives the column names:
 
 ```python
 import pandas as pd
@@ -280,36 +177,28 @@ kegg[["kegg_gene", "uniprot"]].rename(columns={"kegg_gene": "genes"}).to_csv(
 :::
 ::::
 
-Other organisms may need a different source for the conversion table. For
-human-GEM, a conversion table ships with the starting GEM and is converted
-to `uniprotConversion.tsv` in the `light_ecModel` tutorial's
-`protocol.m`/`protocol.py`.
+Other organisms can need another source for the conversion table. For human-GEM, a conversion table is part of the starting GEM, and the `light_ecModel` tutorial (`protocol.m` and `protocol.py`) converts it to `uniprotConversion.tsv`.
 
-If an organism is in neither UniProt nor KEGG, the database files
-themselves need to be built manually: use `data/kegg.tsv` and
-`data/uniprot.tsv` from the `full_ecModel` tutorial as templates for their
-column layout. Artificial UniProt and KEGG identifiers work in these
-reconstructed files, but the molecular weight and sequence of each protein
-must be accurate for the rest of the reconstruction to work.
+If an organism is in neither UniProt nor KEGG, the database files are built manually. `data/kegg.tsv` and `data/uniprot.tsv` of the `full_ecModel` tutorial are templates for the column layout. Artificial UniProt and KEGG identifiers work in these files, and the molecular weight and the sequence of each protein must be accurate for the rest of the reconstruction.
 
 :::{note} Example output
-Scaffolding a project produces empty `data`, `models` and `output`
-subfolders (MATLAB also creates `code`), plus a template model adapter file
-named after the model and suffixed `Adapter.m` (MATLAB) or named
-`model_adapter.toml` (Python). Populating
-the model adapter, then querying UniProt and KEGG, fills `data/uniprot.tsv`
-and `data/kegg.tsv`. If no UniProt or KEGG parameters could be identified
-for the organism, `data/uniprotConversion.tsv`, `data/kegg.tsv` and
-`data/uniprot.tsv` are constructed by hand instead, as described above.
+A new project has empty `data`, `models` and `output` subfolders (MATLAB also creates `code`) and a template `model_adapter.toml`. After the model adapter is filled in, the queries of UniProt and KEGG create `data/uniprot.tsv` and `data/kegg.tsv`. When no UniProt or KEGG parameters are identified for the organism, `data/uniprotConversion.tsv`, `data/kegg.tsv` and `data/uniprot.tsv` are built by hand, as described above.
 :::
+
+## Troubleshooting
+
+| Problem | Possible reason | Solution |
+|---|---|---|
+| Error that names a key of `model_adapter.toml` | the key is not in `adapterParameters.tsv`, or it is misspelled | Correct the key. A parameter that GECKO uses and geckopy does not use goes in `[matlab.params]` |
+| UniProt or KEGG data of another organism | `uniprot.id` or `kegg.id` is not set, and the default (`559292`, `sce`) applies | Set the identifiers of the organism, or set `kegg.id = ""` |
+| `geckopy init` stops with an error | the folder exists and is not empty | Use another folder name |
+| Enzymes do not match the genes of the model | the gene identifier style of UniProt or KEGG differs from the starting GEM | Choose another `uniprot.gene_id_field` or `kegg.gene_id`, or build `data/uniprotConversion.tsv` |
 
 ## See also
 
-- [Files in the data folder](data-folder-files.md), every file a project's
-  `data` folder can hold, and where it gets used.
-- [Model adapter parameters](model-adapter-parameters.md), every model
-  adapter parameter, in both languages.
-- [Building an empty ecModel](building-ec-model.md), the next step: loading
-  the conventional GEM and expanding it into an ecModel structure.
+- [Files in the data folder](data-folder-files.md), every file that a `data` folder can hold, and where it is used.
+- [Model adapter parameters](model-adapter-parameters.md), every model adapter parameter in both languages.
+- [Project format 4](../gecko4-project-format.md), the project folder and `model_adapter.toml`.
+- [Building an empty ecModel](building-ec-model.md), the next step: loading the conventional GEM and expanding it into an ecModel.
 - [API reference](../api/index.md), every function in both toolboxes.
 - [MATLAB vs Python](../matlab-vs-python.md), what each toolbox has.

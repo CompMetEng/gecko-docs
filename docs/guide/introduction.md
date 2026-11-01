@@ -2,171 +2,100 @@
 
 <!-- docs-site: concept-page -->
 
-Genome-scale metabolic models (GEMs) let you explore metabolism
-mathematically, and have accelerated work in biotechnology, biomedicine and
-fundamental biology. A conventional GEM reconstructs all known metabolic
-reactions of an organism into a computational format: a system of equations
-whose variables are reaction rates, represented in a stoichiometric matrix
-(S-matrix) that holds the stoichiometric coefficient of each metabolite in
-each reaction.
+An enzyme-constrained model (ecModel) is a genome-scale metabolic model (GEM) in which the capacity of each enzyme limits the rate of the reactions that the enzyme catalyses. GECKO builds an ecModel by expanding a conventional GEM with enzyme data: the molecular weight (MW) and the turnover number (kcat) of each enzyme, and a limit on the total protein mass that the enzymes use. Readers of the GECKO 3 protocol find the differences to GECKO 4 in [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md).
 
-Constraint-based methods solve that system by imposing bounds on reaction
-rates and searching for solutions within the resulting solution space, the
-set of all metabolic states the model allows. Adding more constraints shrinks
-the solution space and can sharpen the model's predictions.
+## Conventional GEMs and enzyme constraints
 
-The most common constraints come from condition-dependent measurements, such
-as nutrient uptake rates. Constraints on the catalytic capacity of enzymes
-add a different kind of information: several methods integrate such
-constraints into conventional models, including metabolism and expression
-models, resource balance analysis, expression and thermodynamics flux,
-pcModel, flux balance analysis with molecular crowding, MOMENT, GECKO,
-sMOMENT and ECMpy. Among these, GECKO builds enzyme-constrained models
-(ecModels) by expanding a conventional GEM for a given organism. GECKO can in
-principle convert models of any size, though this documentation focuses on
-genome-scale GEMs.
+A conventional GEM reconstructs the known metabolic reactions of an organism as a system of equations whose variables are reaction rates. The stoichiometric matrix (S-matrix) holds the stoichiometric coefficient of each metabolite in each reaction. Constraint-based methods impose bounds on the reaction rates and search the solution space, the set of all metabolic states that the model allows. Each added constraint shrinks the solution space and can sharpen the predictions of the model.
+
+The most common constraints come from condition-dependent measurements, such as nutrient uptake rates. Constraints on the catalytic capacity of enzymes add a different kind of information. Several methods integrate such constraints into conventional models: metabolism and expression models, resource balance analysis, expression and thermodynamics flux, pcModel, flux balance analysis with molecular crowding, MOMENT, GECKO, sMOMENT and ECMpy. GECKO builds an ecModel by expanding the GEM of an organism and can in principle convert models of any size. This documentation addresses genome-scale GEMs.
 
 ## The GECKO framework
 
-GECKO converts a conventional GEM into an enzyme-constrained version. The
-conversion rests on the relation:
+GECKO converts a conventional GEM with the relation
 
 $$ v \le k_{cat} \times e $$
 
-where $v$ is the rate of an enzymatic reaction, $k_{cat}$ is the turnover
-number of the enzyme that catalyzes it, and $e$ is the enzyme's
-concentration. The minimum enzyme usage for a given reaction rate is
-therefore $v / k_{cat}$, and the enzyme mass required is $v \times MW /
-k_{cat}$, where $MW$ is the enzyme's molecular weight.
+where $v$ is the rate of an enzymatic reaction, $k_{cat}$ is the turnover number of the enzyme that catalyses it, and $e$ is the concentration of the enzyme. The minimum enzyme usage for a reaction rate is $v / k_{cat}$, and the enzyme mass that the rate requires is $v \times MW / k_{cat}$, where $MW$ is the molecular weight of the enzyme.
 
-Each enzyme is added to the model as a pseudo-substrate of the reaction it
-catalyzes, so the model tracks both the turnover number and the molecular
-weight of every enzyme it constrains.
-
-### Enzyme usage reactions
-
-GECKO adds enzyme usage reactions to the model. Without proteomics data, all
-protein mass is drawn from a shared total protein pool. When quantitative
-data are available for an enzyme, that value constrains the reactions the
-enzyme catalyzes directly, and its mass is subtracted from the protein pool
-(see [Proteomics integration](proteomics-integration.md)).
-
-Earlier GECKO versions carried $k_{cat}$ and molecular weight as separate
-coefficients in the metabolic and enzyme usage reactions. Current GECKO
-combines them into a single stoichiometric coefficient:
+Each enzyme is a pseudometabolite (`prot_<id>`) that the reactions it catalyses consume. The coefficient of the enzyme in a reaction is
 
 $$ -\frac{MW}{k_{cat}} $$
 
-This reduces the chance that a reaction's enzyme usage coefficient becomes so
-small that it falls below a solver's numeric tolerance and causes solver
-issues. The combined term is also the quantity referred to as protein cost:
-the protein mass an enzymatic reaction requires per unit of flux. Compared
-with a conventional GEM, the S-matrix is larger, and the model can predict
-enzyme usage alongside reaction rates.
+with $k_{cat}$ in 1/h and, for a subunit of an enzyme complex, multiplied by the number of copies of the subunit. MW and kcat form one coefficient, which is the protein cost of the reaction: the protein mass that one unit of flux requires. A single coefficient avoids a coefficient so small that it falls below the numerical tolerance of a solver. The S-matrix of an ecModel is larger than that of the conventional GEM, and the model predicts enzyme usage together with reaction rates. `ec.kcat` stores the kcat in 1/s, and `applyKcatConstraints` (Python: `apply_kcat_constraints`) converts it to 1/h when it writes the coefficient.
+
+### Enzyme usage reactions
+
+A full ecModel has one usage reaction per enzyme, `usage_prot_<id>`, and one protein pool exchange, `prot_pool_exchange`. Both run forward. The pool exchange produces the pseudometabolite `prot_pool`, and its upper bound is the total protein budget that `setProtPoolSize` (Python: `set_prot_pool_size`) calculates from `p_tot`, `f` and `sigma`. Each usage reaction takes protein mass from the pool and produces the enzyme pseudometabolite. The usage of an enzyme is the positive flux of its usage reaction.
+
+Without proteomics data, the usage reactions are limited by the pool alone. A measured concentration of an enzyme sets the upper bound of its usage reaction (see [Proteomics integration](proteomics-integration.md)). For ecModels made with GECKO 3, in which both reactions run in reverse, see [Upgrade a GECKO 3 project](../gecko3-upgrade-project.md).
+
+### Structure of ecModel.ec
+
+The enzyme data are in the field `ecModel.ec` (Python: `ec_model.ec`) of the model.
+
+| Field | Content | One entry per |
+| --- | --- | --- |
+| `rxns` | reaction identifiers that correspond to `model.rxns` | reaction (isozymes have separate entries) |
+| `kcat` | turnover number in 1/s; 0 marks a reaction without kcat | reaction |
+| `source` | where the kcat comes from | reaction |
+| `notes` | notes that downstream functions set | reaction |
+| `eccodes` | EC numbers | reaction |
+| `genes` | the genes that code for the enzymes | enzyme |
+| `enzymes` | UniProt identifiers of the enzymes | enzyme |
+| `mw` | molecular weights | enzyme |
+| `sequence` | amino acid sequences | enzyme |
+| `concs` | enzyme concentrations from proteomics | enzyme |
+| `rxnEnzMat` (Python: `rxn_enz_mat`) | matrix that maps reactions to enzymes, with the number of copies of each subunit | reaction and enzyme |
+
+`makeEcModel` (Python: `make_ec_model`) creates the structure, and the later steps of the workflow fill `kcat`, `source`, `eccodes` and `concs`. [ecModel YAML format](yaml-format.md) describes how a file stores the structure, and [Project format 4](../gecko4-project-format.md) describes the project folder and the ecModel format that `saveEcModel` writes.
 
 ## Full and light ecModels
 
-GECKO can build two different ecModel layouts from the same conventional
-GEM. A **full** ecModel adds one pseudo-metabolite and one usage reaction per
-enzyme, so it can represent and constrain each enzyme's concentration
-individually. A **light** ecModel instead folds the protein cost of an
-enzyme directly into the stoichiometry of the reaction it catalyzes, with no
-per-enzyme bookkeeping: it is smaller and much faster to simulate, but cannot
-represent individual enzyme concentrations, so proteomics integration and
-per-enzyme usage or bottleneck analysis are only available on a full
-ecModel.
+GECKO builds two ecModel layouts from the same conventional GEM. A full ecModel has one pseudometabolite and one usage reaction per enzyme, so it constrains the concentration of each enzyme. A light ecModel writes the protein cost of an enzyme into the stoichiometry of the reaction that the enzyme catalyses and has no pseudometabolite or usage reaction per enzyme. It is smaller and faster to simulate, and it cannot represent individual enzyme concentrations. Proteomics integration, enzyme usage analysis and bottleneck analysis need a full ecModel. [GECKO light vs. full ecModels](gecko-light.md) describes both layouts and what each gives up.
 
-Choosing between the two, and what each gives up, is covered on its own page:
-see [GECKO light vs. full ecModels](gecko-light.md).
+## Workflow
+
+The workflow from a conventional GEM to an analysed ecModel has six steps. Each step has its own page.
+
+1. Build: `makeEcModel` expands the GEM with enzyme information from UniProt and KEGG, using the parameters of the model adapter (see [Getting started](getting-started.md) and [Building an empty ecModel](building-ec-model.md)).
+2. Gather kcats: `kcatsFromBrenda`, `kcatsFromECTree`, `kcatsFromHomologs`, `kcatsFromDLKcat` and `kcatsFromOKP` write one kcat source file per source in `data/kcats` (see [Gathering kcats](gathering-kcats.md)).
+3. Assign kcats: `assignKcats` decides one kcat per reaction from the source files, in the order that `model_adapter.toml` sets, and constrains the reactions (see [Kcat assignment](../gecko4-kcat-assignment.md) and [Applying kcats](applying-kcats.md)).
+4. Constrain with proteomics: `fillEnzConcs`, `levelComplexConcs` and `constrainEnzConcs` set the usage bounds of measured enzymes, and `flexibilizeEnzConcs` or `relaxProteomicsGreedy` loosen bounds that keep the model from its growth rate (see [Proteomics integration](proteomics-integration.md) and [Relaxing overconstrained proteomics](relaxing-constraints.md)). `levelComplexConcs` gives the subunits of a multi-subunit complex one abundance. The least abundant subunit then does not cap the complex.
+5. Tune: `sensitivityTuning` raises single kcats until the model reaches a target growth rate, and the `evotune` functions fit many kcats against measured growth rates and fluxes (see [Growth-rate tuning](growth-rate-tuning.md) and [Tuning against experimental data](tuning-against-experimental-data.md)).
+6. Simulate: flux balance analysis, flux variability analysis, sampling, flux scanning, enzyme usage analysis and bottleneck analysis run on the ecModel (see [Simulation and analysis](simulation-and-analysis.md) and [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md)).
 
 ## Predicted kcat values
 
-Because $k_{cat}$ values dominate ecModel performance, their availability and
-accuracy matter more than almost anything else in the reconstruction.
-Measured $k_{cat}$ values come from public databases such as BRENDA, but
-coverage is far from complete, especially for less-studied organisms, which
-historically limited ecModel reconstruction to relatively few species.
+The kcat values determine the performance of an ecModel, and the availability and accuracy of kcat values limit the reconstruction. Measured kcat values come from public databases such as [BRENDA](https://www.brenda-enzymes.org/), and the coverage is incomplete, especially for less-studied organisms. This restricted the reconstruction of ecModels to relatively few species.
 
-GECKO addresses this gap with DLKcat, a deep-learning model that predicts
-$k_{cat}$ values for a given enzyme-substrate pair. Predicted values have
-been shown to substantially improve ecModel reconstruction across hundreds of
-yeast and fungal species, and in principle let GECKO assign a $k_{cat}$ value
-to every enzymatic reaction, turning any conventional GEM into an ecModel
-even without experimental kinetic data. See
-[Gathering kcat values](gathering-kcats.md) for how to run DLKcat and combine
-its output with values collected from BRENDA.
+GECKO fills the gaps with predicted kcat values. DLKcat is a deep-learning model that predicts the kcat of an enzyme-substrate pair, and GECKO 4 also reads predictions from the OpenKineticsPredictor service. Predicted values improve the reconstruction of ecModels across hundreds of yeast and fungal species. They let GECKO assign a kcat to every enzymatic reaction and turn a conventional GEM into an ecModel without experimental kinetic data. [Gathering kcats](gathering-kcats.md) describes the sources, and [Kcat assignment](../gecko4-kcat-assignment.md) the order in which `assignKcats` uses them.
 
 ## Applications
 
-GECKO's main use is converting a conventional GEM into an ecModel, which
-substantially reduces the solution space and the flux variability ranges of
-subsequent simulations. That reduction improves the prediction of phenotypes
-such as overflow metabolism and batch growth in microbes, phenotypes a
-conventional GEM cannot capture unless the relevant enzymatic, transport, or
-exchange reactions (such as oxygen uptake) are constrained by hand.
+Converting a conventional GEM to an ecModel reduces the solution space and the flux variability ranges of later simulations. This improves the prediction of phenotypes such as overflow metabolism and batch growth in microbes. A conventional GEM predicts these phenotypes when the relevant enzymatic, transport or exchange reactions (such as oxygen uptake) are constrained by hand.
 
-An ecModel also enables calculations that have no equivalent in a
-conventional GEM: pathway protein costs, flux control coefficients, and
-enzyme usage or bottleneck analysis (see
-[Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md)). These
-quantities can guide and help interpret metabolic engineering strategies for
-overproduction of a target metabolite.
+An ecModel also supports calculations that a conventional GEM does not have: pathway protein costs, flux control coefficients, and enzyme usage and bottleneck analysis (see [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md)). These quantities guide and help interpret metabolic engineering strategies for the overproduction of a target metabolite.
 
-Any constraint-based method that works on a conventional GEM also works on an
-ecModel, because GECKO only expands the S-matrix with additional
-pseudo-metabolites and pseudo-reactions and keeps the system linear. This
-includes flux balance analysis (FBA), flux variability analysis (FVA), flux
-scanning based on enforced objective flux, and context-specific
-reconstruction methods such as tINIT (see
-[Simulation and analysis](simulation-and-analysis.md)).
+A constraint-based method for conventional GEMs also runs on an ecModel, because GECKO adds pseudometabolites and pseudoreactions to the S-matrix and the system stays linear. These methods include flux balance analysis (FBA), flux variability analysis (FVA), flux scanning with enforced objective function (`ecFSEOF`) and context-specific reconstruction methods such as tINIT (see [Simulation and analysis](simulation-and-analysis.md)).
 
 ## Comparison with other methods
 
-Enzyme constraints can also be added by other methods, such as sMOMENT and
-ECMpy, with broadly similar applications.
+Other methods, such as sMOMENT and ECMpy, add enzyme constraints with broadly similar applications.
 
-- **sMOMENT** adds a protein pool pseudo-metabolite to metabolic reactions
-  and an exchange reaction for it, producing a model similar to a GECKO light
-  ecModel. sMOMENT is Python-based and cannot construct a full ecModel.
-- **ECMpy** keeps the protein pool constraint outside the S-matrix rather
-  than adding enzymes into reactions, giving a smaller model. Its constraint
-  is harder to use directly in constraint-based simulation tools built for
-  conventional GEMs.
+- **sMOMENT** adds a protein pool pseudometabolite to the metabolic reactions and an exchange reaction for the pool. The model is similar to a GECKO light ecModel. sMOMENT is Python-based and does not construct a full ecModel.
+- **ECMpy** keeps the protein pool constraint outside the S-matrix and adds no enzymes to reactions, which gives a smaller model. The constraint is harder to use in constraint-based simulation tools that are built for conventional GEMs.
 
-GECKO differs from these methods in its capability for proteomics data
-integration and in the reach of the ecModel structures it produces, which
-stay close enough to a conventional GEM that virtually any analysis developed
-for conventional GEMs applies unchanged. Its deep learning-predicted enzyme
-kinetics (DLKcat) also give it wider parameter coverage than methods that
-rely only on measured kinetics.
+GECKO integrates proteomics data, and its ecModel structures stay close to a conventional GEM. Analyses developed for conventional GEMs apply unchanged. Its predicted enzyme kinetics give it a wider parameter coverage than methods that use measured kinetics alone.
 
 ## Limitations
 
-- ecModels are much larger than their starting GEM, so large-scale
-  simulations cost substantially more to run. Light ecModels address this by
-  disabling per-enzyme bookkeeping (see [GECKO light vs. full
-  ecModels](gecko-light.md)); the trade-off is between individual
-  enzyme-level prediction (and proteomics integration) and computational
-  speed.
-- Shrinking the solution space improves predictions on average, but can also
-  widen the gap from experimental observations where the applied constraints
-  are themselves uncertain. $k_{cat}$ values, whether measured or predicted
-  by DLKcat, can be inaccurate, particularly for enzyme complexes, and almost
-  all available kinetic data reflect in vitro measurements that may not match
-  in vivo behavior. GECKO provides ways to test an ecModel against known
-  phenotype data and to identify which constraints to revisit (see
-  [Growth-rate tuning](growth-rate-tuning.md) and
-  [Tuning against experimental data](tuning-against-experimental-data.md)),
-  but experimental data stay necessary for a high-quality reconstruction.
-- Even with enzyme constraints in place, an ecModel cannot predict every
-  phenotype, because constraints such as allosteric regulation and
-  post-translational modification are not represented. Integrating those
-  processes could shrink the solution space further and improve prediction
-  accuracy beyond what enzyme constraints alone provide.
+- An ecModel is much larger than its starting GEM, so large-scale simulations take more time. A light ecModel omits the bookkeeping per enzyme (see [GECKO light vs. full ecModels](gecko-light.md)). The trade-off is between the prediction of individual enzymes, including proteomics integration, and computation time.
+- A smaller solution space improves predictions on average, and it can widen the gap to experimental observations where the applied constraints are uncertain. The kcat values, measured or predicted by DLKcat, can be inaccurate, particularly for enzyme complexes, and almost all available kinetic data are in vitro measurements that can differ from in vivo behaviour. GECKO tests an ecModel against known phenotype data and identifies the constraints to revisit (see [Growth-rate tuning](growth-rate-tuning.md) and [Tuning against experimental data](tuning-against-experimental-data.md)). Experimental data remain necessary for a high-quality reconstruction.
+- An ecModel does not predict every phenotype, because constraints such as allosteric regulation and post-translational modification are not represented. Integrating these processes could shrink the solution space further.
 
-## Where to go next
+## See also
 
-[Installation](../installation/index.md) covers setting up GECKO or
-geckopy. [Getting started](getting-started.md) then scaffolds a project and
-loads a first model, and [Building an ecModel](building-ec-model.md) walks
-through expanding a conventional GEM into ecModel structure.
+- [Installation](../installation/index.md), set up GECKO or geckopy.
+- [Getting started](getting-started.md), scaffold a project and load a first model.
+- [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md), the differences for readers of the GECKO 3 protocol.

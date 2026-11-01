@@ -1,60 +1,52 @@
 # Proteomics integration
 
-Enzyme usage reactions let a full ecModel take proteomics data directly:
-instead of drawing every enzyme's mass from the shared total protein pool,
-individual enzymes with measured concentrations are constrained by those
-measurements. The result is a proteome-constrained ecModel that reflects one
-specific experimental condition rather than a generic protein budget.
+Enzyme usage reactions let a full ecModel take proteomics data directly: individual enzymes with measured concentrations are bounded by those measurements, in addition to drawing from the shared total protein pool. The ecModel is then constrained by the proteomics and the exchange flux data of one experimental condition, and its growth rate is solved.
 
 :::{warning}
-This page applies to full ecModels only. A light ecModel has no per-enzyme
-usage reactions to constrain; see [GECKO light vs. full
-ecModels](gecko-light.md).
+The functions below apply to full ecModels. A light ecModel has no per-enzyme usage reactions to constrain; see [GECKO light vs. full ecModels](gecko-light.md).
 :::
 
-## Functions on this page
+## Functions
 
-| MATLAB | Python | |
+| MATLAB | Python | Note |
 |---|---|---|
-| `loadProtData` | `load_prot_data` | read `proteomics.tsv` into a proteomics data structure |
+| `loadProtData` | `load_prot_data` | read `proteomics.tsv` into a proteomics data structure and filter it |
 | `fillEnzConcs` | `fill_enz_concs` | populate `ec.concs` with the measured concentrations |
-| `constrainEnzConcs` | `constrain_enz_concs` | apply those concentrations as bounds on `usage_prot_*` reactions |
-| `calculateFfactor` + `setProtPoolSize` | `calculate_f_factor` + `set_prot_pool_size` | recompute the protein pool constraint for the remaining, unmeasured enzymes |
-| `loadFluxData` | `load_flux_data` | read `fluxData.tsv` (exchange fluxes and growth rate for the same experiment) |
-| `constrainFluxData` | `apply_flux_data_constraints` | apply those exchange flux and growth rate constraints |
+| `levelComplexConcs` | `level_complex_concs` | give the subunits of each complex one abundance |
+| `getComplexFamilies` | `complex_families` | group the enzymes of multi-subunit reactions into complexes |
+| `constrainEnzConcs` | `constrain_enz_concs` | apply the concentrations as upper bounds of the `usage_prot_<id>` reactions |
+| `calculateFfactor` + `setProtPoolSize` | `calculate_f_factor` + `set_prot_pool_size` | recompute the protein pool constraint from the proteomics data |
+| `loadFluxData` | `load_flux_data` | read `fluxData.tsv` (exchange fluxes and growth rate of the same experiment) |
+| `constrainFluxData` | `apply_flux_data_constraints` | apply the exchange flux and growth rate constraints |
 
-## Constrain with proteomics data
+## Setup
 
-Constraining individual enzyme concentrations usually overconstrains the
-ecModel, because uncertainty now comes from two sources at once: the enzyme
-levels and the $k_{cat}$ values. Proteomics data therefore need to be of high
-quality, with low-certainty measurements discarded, or the resulting model
-will fail to reach its intended growth rate.
+The data are in `data/proteomics.tsv` and `data/fluxData.tsv` of the project (see [Files in the data folder](data-folder-files.md)). An ecModel is loaded or built as described in [Building an empty ecModel](building-ec-model.md). The order of the functions is `loadProtData`, `fillEnzConcs`, `levelComplexConcs` (optional), `constrainEnzConcs`.
 
-Prepare the data before loading it:
+Constraining individual enzyme concentrations usually overconstrains the ecModel, because the uncertainty comes from two sources at once: the enzyme levels and the $k_{cat}$ values. Proteomics data need to be of high quality, with low-certainty measurements discarded, or the ecModel does not reach its intended growth rate.
 
-- Provide protein concentrations in milligram per gram dry cell weight
-  (mg/gDCW). Relative proteomics cannot supply this unit; loading it anyway
-  produces a nonsensical ecModel.
-- Store the data in `data/proteomics.tsv`, which can hold multiple
-  experimental conditions as separate columns.
-- Filter out low-certainty measurements: very low concentrations, proteins
-  with high relative standard deviation across replicates, and proteins
-  absent from most replicates.
+The data are prepared before loading:
 
-:::{tip} Absolute quantitative data is not the only option
-Proteomics measurements are not always performed with external standards for
-absolute quantification. Label-free mass spectrometry is a powerful
-alternative that needs neither expensive external standards nor stable
-isotope labeling, and this kind of data has routinely been used with GECKO
-ecModels.
+- Protein concentrations are in milligram per gram dry cell weight (mg/gDCW). Relative proteomics cannot supply this unit; loading it anyway produces an ecModel with nonsensical constraints and raises no error.
+- `data/proteomics.tsv` holds the UniProt identifier in the first column and one column per replicate after it, for one or more experimental conditions.
+- Low-certainty measurements are filtered out: low concentrations, proteins with a high relative standard deviation across replicates, and proteins absent from most replicates.
+
+:::{tip} Absolute quantitative data is not the sole option
+Proteomics measurements are not always performed with external standards for absolute quantification. Label-free mass spectrometry needs neither external standards nor stable isotope labelling, and has been used with GECKO ecModels.
 :::
 
-Integration follows four steps, the same shape as integrating $k_{cat}$
-values: load the proteomics data, populate `ec.concs` with the
-relevant concentrations, apply those concentrations as bounds on the
-matching `usage_prot_*` reactions, and stop drawing the constrained enzymes
-from the protein pool. Load the data first:
+## Load the proteomics data
+
+`loadProtData` / `load_prot_data` takes the number of replicates of each condition, in the order of the columns of the file. The sum of these numbers must equal the number of replicate columns of the file; otherwise the function raises an error (`loadProtData:replicateMismatch` in MATLAB, `ValueError` in Python). It returns the mean over the replicates of each condition. The filtering is controlled by these parameters:
+
+| MATLAB | Python | Default | Effect |
+|---|---|---|---|
+| `filterData` | `filter_data` | true | when false, the other filtering parameters are not used and the mean of the replicates is returned |
+| `maxMissing` | `max_missing` | 2/3 | minimum fraction of replicates with a value above zero; a protein with fewer is discarded for that condition. A vector gives one value per condition |
+| `maxRSD` | `max_rsd` | 1 | maximum relative standard deviation across replicates; a protein above it is discarded for that condition |
+| `addStdevs` | `add_stdevs` | 1 | number of standard deviations added to the mean of the replicates |
+| `minVal` | `min_val` | 0 | minimum value after `addStdevs`; a protein below it is discarded for that condition |
+| `cutLowest` | `cut_lowest` | 5 | percentage of the lowest values per condition that is discarded |
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -68,8 +60,7 @@ protData = loadProtData(3);
 protData = loadProtData([3, 3]);
 ```
 
-`loadProtData` also filters the dataset. When `protData` holds several
-experiments, select which one to use (experiment 1 here):
+`loadProtData` also filters the dataset. When `protData` holds several experiments, select which one to use (experiment 1 here):
 
 ```matlab
 ecModel = fillEnzConcs(ecModel, protData, 1);
@@ -89,8 +80,7 @@ prot_data = load_prot_data(
 # two experiments with three replicates each: repl_per_cond=[3, 3]
 ```
 
-`data_col` selects which experiment to use, 0-indexed (MATLAB's experiment
-index is 1-indexed), so the first experiment is `data_col=0`:
+`data_col` selects which experiment to use, 0-indexed (MATLAB's experiment index is 1-indexed), so the first experiment is `data_col=0`:
 
 ```python
 fill_enz_concs(ec_model, prot_data, data_col=0)
@@ -98,9 +88,44 @@ fill_enz_concs(ec_model, prot_data, data_col=0)
 :::
 ::::
 
-Introduce the concentrations as bounds on the model. Each `usage_prot_*`
-reaction with a measured concentration receives that concentration as its
-upper bound:
+`fillEnzConcs` / `fill_enz_concs` replaces `ec.concs` with the concentrations of the selected experiment. An enzyme without a measurement has `NaN`. A negative abundance of an enzyme of the model raises the error `fillEnzConcs:negativeAbundance` in MATLAB.
+
+## Level the concentrations of complexes
+
+Absolute proteomics recovers the subunits of a complex unevenly, so the subunits of one complex can disagree several fold about the amount of it that is present. When each subunit is capped by its own measurement, the complex carries no more flux than its least abundant subunit allows. `levelComplexConcs` / `level_complex_concs` gives each complex one abundance. It runs after `fillEnzConcs` and before `constrainEnzConcs`.
+
+`getComplexFamilies` / `complex_families` groups the enzymes of the multi-subunit reactions (`ec.rxnEnzMat`, Python: `ec.rxn_enz_mat`) into complexes. Two enzyme sets are one complex when they share at least `minShared` subunits (default 2) and at least a fraction `minOverlap` (default 0.5) of the larger set (Python: `min_shared`, `min_overlap`). A subunit that appears in two complexes belongs to the complex whose enzyme sets catalyse more reactions. A subunit in three or more complexes, in two complexes of equal weight, or that also catalyses a reaction on its own is shared and stays as measured.
+
+The concentrations (mg/gDCW) are converted to molar amounts with `ec.mw`. Per complex, the median (default) of the molar amount divided by the copies of the subunit, over the measured subunits that belong to the complex, is written back to every such subunit, multiplied by its copies and its molecular weight. The option `statistic` selects `'median'` or `'mean'`. With `fillMissing` true (default; Python: `fill_missing`), subunits of the complex without a measurement receive the concentration of the complex, and are constrained by `constrainEnzConcs` afterwards.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+[ecModel, levelResult] = levelComplexConcs(ecModel);
+```
+
+`levelResult` has the fields `adjusted` (measured subunits whose concentration was replaced), `added` (unmeasured subunits that received the concentration of the complex), `shared` (measured subunits left as measured) and `skipped` (complexes without a measured subunit that belongs to them). The option `families` takes the output of `getComplexFamilies`, to reuse a grouping with other parameters.
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+from geckopy import level_complex_concs
+
+level_result = level_complex_concs(ec_model)
+```
+
+`level_complex_concs` changes `ec_model.ec.concs` in place and returns a `LevelComplexResult` with `adjusted`, `added`, `shared` and `skipped` (a list of tuples of subunits, one per complex).
+:::
+::::
+
+A model with levelled complexes is relaxed with the option `perComplex` of `flexibilizeEnzConcs` (see [Relaxing overconstrained proteomics](relaxing-constraints.md)).
+
+## Apply the concentrations as bounds
+
+Each `usage_prot_<id>` reaction of an enzyme with a measured concentration receives that concentration as its upper bound. Every usage reaction keeps drawing from the protein pool, with or without a bound.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -109,6 +134,8 @@ upper bound:
 ```matlab
 ecModel = constrainEnzConcs(ecModel);
 ```
+
+A negative concentration in `ec.concs` raises the error `constrainEnzConcs:negativeConcentration`.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -119,22 +146,17 @@ from geckopy import constrain_enz_concs
 constrain_enz_concs(ec_model)
 ```
 
-Raises `ValueError` on a light ecModel: light ecModels have no
-`usage_prot_*` reactions to constrain.
+Raises `ValueError` on a light ecModel: light ecModels have no `usage_prot_*` reactions to constrain. A negative concentration also raises `ValueError`.
 :::
 ::::
 
 :::{warning}
-Enzyme concentrations must be in mg/gDCW. Relative proteomics data loaded
-with the wrong units produces an ecModel with nonsensical constraints
-instead of raising an error.
+Enzyme concentrations must be in mg/gDCW. Relative proteomics data loaded with the wrong units produces an ecModel with nonsensical constraints and raises no error.
 :::
 
-Enzymes now constrained by a measured concentration should stop drawing from
-the protein pool pseudo-metabolite. Because a proteomics experiment may
-reflect a physiology different from the default assumption, recompute the
-pool size from a sample-specific total protein content (for example 0.5
-g/gDCW) instead of the adapter's default `Ptot` (Python: `p_tot`):
+## Set the protein pool from the proteomics data
+
+A proteomics experiment may reflect a physiology different from the default assumption. The pool size is recomputed from a sample-specific total protein content (for example 0.5 g/gDCW) in place of the adapter default `Ptot` (Python: `p_tot`), and from the f-factor of the proteomics data, the fraction of the measured protein mass that is accounted for by enzymes of the model. With several experiments in `protData`, `calculateFfactor` averages the abundance of each protein over the experiments in which it is measured.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -144,11 +166,6 @@ g/gDCW) instead of the adapter's default `Ptot` (Python: `p_tot`):
 f = calculateFfactor(ecModel, 'protData', protData);
 ecModel = setProtPoolSize(ecModel, 'Ptot', 0.5, 'f', f);
 ```
-
-**`updateProtPool` served this purpose before GECKO 3.2.0.** Since 3.2.0,
-every protein usage reaction draws from the pool regardless of whether it
-also has a concentration constraint, which makes `updateProtPool` obsolete;
-recompute the f-factor and call `setProtPoolSize` instead, as shown above.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -159,20 +176,12 @@ from geckopy import calculate_f_factor, set_prot_pool_size
 f = calculate_f_factor(ec_model, prot_data)
 set_prot_pool_size(ec_model, p_tot=0.5, f=f)
 ```
-
-geckopy never implemented `updateProtPool`: it was already obsolete in
-GECKO by the time of the port.
 :::
 ::::
 
 ## Constrain with experimentally measured exchange fluxes
 
-Because the integrated enzyme concentrations come from one particular
-experiment, also constrain any exchange reaction for which that experiment
-has measured data, such as glucose uptake, ethanol production, or CO2
-exchange rate. `data/fluxData.tsv` can hold multiple experiments and as many
-reaction fluxes as needed; a flux of zero blocks the corresponding exchange
-reaction. Load it:
+Because the integrated enzyme concentrations come from one particular experiment, any exchange reaction for which that experiment has measured data, such as glucose uptake, ethanol production or CO2 exchange rate, is constrained too. `data/fluxData.tsv` can hold multiple experiments and as many reaction fluxes as needed; a flux of zero blocks the corresponding exchange reaction, and a flux of -1000 or 1000 leaves uptake or excretion unconstrained. Load it:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -193,27 +202,12 @@ flux_data = load_flux_data(params.path / "data" / "fluxData.tsv")
 :::
 ::::
 
-Two choices decide how the constraint gets applied:
+Two choices decide how the constraint is applied:
 
-1. **Loose vs. strict.** With loose constraints, the measured rate is set as
-   the upper bound and the lower bound stays at zero (for a reaction with a
-   negative rate, the lower bound gets the measured value and the upper
-   bound stays at zero). With strict constraints, the lower and upper bounds
-   are both set close to the measured value, for example at 95% and 105% of
-   it. Strict constraints force the ecModel to follow the measured fluxes
-   closely, but imprecision in either the fluxes or the enzyme concentrations
-   can then make the model infeasible; loosen the constraint if that
-   happens.
-2. **Max vs. min growth.** With `max`, the measured growth rate is the upper
-   bound, the ceiling the ecModel should reach; suitable when growth is the
-   objective function. With `min`, the measured growth rate is the lower
-   bound, the floor the ecModel must reach; suitable when the objective is
-   minimizing protein pool usage instead (see [Simulation and
-   analysis](simulation-and-analysis.md)).
+1. **Loose or strict.** With loose constraints, the measured rate is set as the upper bound and the lower bound stays at zero (for a reaction with a negative rate, the lower bound gets the measured value and the upper bound stays at zero). With strict constraints, a percentage between 0 and 100 is passed in place of `'loose'` (Python: a number), and the lower and upper bounds are both set around the measured value; 10 gives 95 % and 105 % of it. Strict constraints force the ecModel to follow the measured fluxes closely, but imprecision in either the fluxes or the enzyme concentrations can then make the model infeasible; the constraint is loosened if that happens.
+2. **Max or min growth.** With `max`, the measured growth rate is the upper bound, the ceiling the ecModel should reach; this suits growth as the objective function. With `min`, the measured growth rate is the lower bound, the floor the ecModel must reach; this suits minimising protein pool usage as the objective (see [Simulation and analysis](simulation-and-analysis.md)).
 
-Using loose constraints for the metabolic exchange fluxes and `max` for
-growth makes the ecModel least likely to end up overconstrained. Apply the
-first experiment's data and solve:
+Loose constraints for the metabolic exchange fluxes and `max` for growth make the ecModel least likely to be overconstrained. The following applies the data of the first experiment and solves:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -239,31 +233,26 @@ sol = ec_model.optimize()
 print(f"Growth rate that is reached: {sol.objective_value:.4f} /hour")
 ```
 
-`condition` is 0-indexed (MATLAB's experiment index is 1-indexed), so the
-first experiment is `condition=0`.
+`condition` is 0-indexed (MATLAB's experiment index is 1-indexed), so the first experiment is `condition=0`.
 :::
 ::::
 
-With `max` and loose constraints, FBA should reach a solution unless too
-many exchange fluxes were pinned to zero. If the reachable growth rate falls
-short of the intended one, the enzyme levels are overconstrained and need to
-be made more flexible, covered on the next page.
+With `max` and loose constraints, FBA reaches a solution unless too many exchange fluxes were pinned to zero. If the reachable growth rate falls short of the intended one, the enzyme levels are overconstrained and are made more flexible with the functions of [Relaxing overconstrained proteomics](relaxing-constraints.md). Applying the same flux constraints to the conventional GEM, with no enzyme constraints, shows which part is overconstrained: if the conventional GEM also falls short of the intended growth rate, the exchange flux data are the limit.
 
-## Example output
+## Troubleshooting
 
-Applying strict measured exchange fluxes and a strict measured growth rate
-to a proteomics-constrained ecModel can be considerably more restrictive
-than the enzyme constraints alone: in one example, the growth rate reached
-is 0.004578 /hour, against an intended 0.1 /hour. Applying the same flux constraints to the
-conventional GEM (no enzyme constraints at all) distinguishes the two
-possible causes: if the conventional GEM still falls short of 0.1 /hour, the
-exchange flux data, not the enzyme constraints, are the bottleneck.
+| Problem | Possible reason | Solution |
+|---|---|---|
+| `loadProtData:replicateMismatch` (Python: `ValueError` from `load_prot_data`) | the sum of `replPerCond` differs from the number of replicate columns of the file | Correct `replPerCond` (Python: `repl_per_cond`) |
+| `updateProtPool` raises an error | every usage reaction draws from the protein pool, with or without a concentration bound | Calculate the f-factor and call `setProtPoolSize` |
+| The growth rate that is reached is below the intended one | the enzyme levels, the $k_{cat}$ values or the exchange flux data are overconstrained | Relax the enzyme concentrations (see [Relaxing overconstrained proteomics](relaxing-constraints.md)), or loosen the flux constraints |
+| `calculate_f_factor` returns 0 with a warning | none of the UniProt identifiers of the proteomics data matches an enzyme of the model | Use the same identifier namespace in `proteomics.tsv` and `ec.enzymes` |
+| A complex is still limited by one subunit | the subunit is shared between complexes or catalyses a reaction on its own, and stays as measured | Check the `shared` field of the result of `levelComplexConcs` |
+| `ValueError` from `constrain_enz_concs` | the ecModel is a light ecModel, or `ec.concs` has a negative value | Use a full ecModel; correct the proteomics data |
 
 ## See also
 
-- [Relaxing overconstrained proteomics](relaxing-constraints.md), for when
-  the ecModel cannot reach its intended growth rate after constraining.
-- [GECKO light vs. full ecModels](gecko-light.md), why light ecModels cannot
-  take proteomics data.
-- [Simulation and analysis](simulation-and-analysis.md), choosing between
-  maximizing growth and minimizing protein pool usage as the objective.
+- [Relaxing overconstrained proteomics](relaxing-constraints.md), for an ecModel that cannot reach its intended growth rate after constraining.
+- [GECKO light vs. full ecModels](gecko-light.md), why light ecModels cannot take proteomics data.
+- [Simulation and analysis](simulation-and-analysis.md), the choice between maximising growth and minimising protein pool usage as the objective.
+- [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md), for the changes in `loadProtData` and `calculateFfactor`.

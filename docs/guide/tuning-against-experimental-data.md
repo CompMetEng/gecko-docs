@@ -1,92 +1,38 @@
 # Tuning against experimental data
 
-:::{note} Python code, with a MATLAB equivalent
-Every code block on this page is Python. GECKO MATLAB has an equivalent
-module, `src/kcat_tuning/evotune/`, with the corresponding functions
-`loadEvotuneData`, `screenKcatLeverage`, `selectTunableMask`,
-`cmaesKcatTuning`, `tunePriorPenaltyWeight` and, for the assignment-review
-step below, `reviewKcatAssignment`; this page does not cover the MATLAB
-call signatures.
-:::
+[Growth-rate tuning](growth-rate-tuning.md) raises kcats one at a time until a single target growth rate is reached. `cmaesKcatTuning` (Python `cmaes_kcat_tuning`) fits many kcats at once with CMA-ES against measured growth rates and fluxes of several conditions, weighted by how much the source of each kcat is trusted. The result is a ranking of the kcats that the data can inform, a review of the assignment behind the top kcats, a tuned ecModel and a list of the changes of the tuning for a curator to review.
 
-[Growth-rate tuning](growth-rate-tuning.md) raises kcats one at a time
-until a single target growth rate is reached. `cmaes_kcat_tuning` instead
-fits many kcats at once, with CMA-ES, against a full set of measured
-growth rates and fluxes across several conditions, weighted by how much
-each kcat's source is trusted. This page covers one recommended path
-through that fitting process end to end, in geckopy. It is not a full
-reference; the docstrings in `geckopy.kcat_tuning.evotune` document every
-option.
+## Functions
 
-## Functions on this page
+| MATLAB | Python | Note |
+| --- | --- | --- |
+| `loadEvotuneData` | `load_evotune_data` | loads the three data files; the tuning functions call it when no data are given |
+| `screenKcatLeverage` | `screen_kcat_leverage` | reports which kcats the data can inform, without any optimisation |
+| `selectTunableMask` | `select_tunable_mask` | turns the screen into the set of kcats that are searched |
+| `reviewKcatAssignment` | `review_assignment` | flags kcat assignments that deserve a second look, independent of the data |
+| `ecStatsFromBrenda` | `ec_stats_from_brenda` | summarises BRENDA per EC number for the assignment review |
+| `cmaesKcatTuning` | `cmaes_kcat_tuning` | searches the tunable kcats with CMA-ES for the best fit to the data |
+| `tunePriorPenaltyWeight` | `tune_prior_penalty_weight` | sweeps `priorPenaltyWeight` and reports fit against reproducibility across seeds |
+| `nChanged`, `parsimonyFrontier`, `bestParsimonious` | `n_changed`, `parsimony_frontier`, `best_parsimonious` | count the changed kcats and trade their number against the fit |
+| | `EvotuneResult.corrections` | turns the result into a reviewable list of changes (no MATLAB counterpart) |
 
-| Python | |
-|---|---|
-| `screen_kcat_leverage` | report which kcats the data can inform, before any tuning runs |
-| `review_assignment` | check kcat values for assignment mistakes, independent of the data |
-| `cmaes_kcat_tuning` | search the tunable kcats with CMA-ES for the best fit to measured data |
-| `result.corrections` | turn the tuning result into a reviewable list of changes |
+## Setup
 
-## What this does
-
-An ecModel's kcats mostly come from databases (BRENDA), predictors
-(DLKcat, OpenKineticsPredictor), or manual curation (see
-[Gathering kcats](gathering-kcats.md) and
-[Applying kcats](applying-kcats.md)), and they do not on their own
-reproduce measured growth. Three functions, run in sequence, turn measured
-data into corrections:
-
-1. **`screen_kcat_leverage`** reports which kcats the data can actually
-   inform: no optimization runs yet, only "if this kcat were different,
-   how much would the fit change." This is useful for curation on its own,
-   before any tuning run.
-2. **`select_tunable_mask`** turns that report into the set of kcats a
-   tuning run searches over. It runs automatically if skipped.
-3. **`cmaes_kcat_tuning`** searches that set with CMA-ES for the kcat
-   vector that best matches the data, weighted by how much each kcat's
-   source is trusted.
-
-A fourth function, **`review_assignment`**, is complementary rather than
-part of that sequence: it checks the kcats themselves for assignment
-mistakes, independent of any measured data, since the tuner's largest
-corrections are usually places the assignment went wrong rather than
-discoveries about biology (see
-[Check the assignments behind the top kcats](#check-the-assignments-behind-the-top-kcats)
-below).
-
-The result is usually a short list of corrections, each with a
-before/after value and a source, not a wholesale rewrite of the model. A
-run that changes nearly every kcat by a little has not found anything; a
-run that changes a handful by a lot, concentrated in the least-trusted
-sources, has.
-
-## Before you start
-
-- A working ecModel and `ModelAdapter` project: an existing
-  `model_adapter.toml` and `models/*.yml` (see
-  [Getting started](getting-started.md) and
-  [Building an empty ecModel](building-ec-model.md)).
-- `pip install geckopy[evotune]`. The CMA-ES search (`cma`) is an optional
-  dependency, not part of the base install.
-- Experimental data: at least one of a set of measured exchange fluxes per
-  condition, or a set of measured maximum growth rates per carbon source.
-  Both together works and is preferred, since flux data pins the shape of
-  metabolism and growth rate pins its rate.
+- An ecModel with a model adapter and the project folders `models/` and `data/` (see [Getting started](getting-started.md) and [Building an empty ecModel](building-ec-model.md)), with kcats assigned (see [Kcat assignment](../gecko4-kcat-assignment.md)).
+- Python: `pip install geckopy[evotune]`. The CMA-ES package `cma` is an optional dependency that the base installation does not include. MATLAB needs no additional package; `cmaesKcatTuning` contains its own separable (diagonal-covariance) CMA-ES.
+- Experimental data in at least one of the files `evotuneFluxData.tsv` (measured exchange fluxes per condition) and `evotuneMaxGrowth.tsv` (measured maximum growth rates per carbon source). Both together pin the shape of metabolism (fluxes) and its rate (growth rate). Python raises a `ValueError` when neither file exists.
 
 ## Prepare the experimental data
 
-Three tab-separated files go under `<project>/data/`. All three are
-optional; a missing file is skipped rather than an error, but at least one
-of the first two is required.
+Three tab-separated files are read from `<project>/data/`. A missing file is skipped. The `full_ecModel` tutorial of GECKO has all three in its `data` folder.
 
 | File | Contents | Required |
-|---|---|---|
-| `evotuneFluxData.tsv` | Measured exchange fluxes, one row per condition. | At least one of these two |
-| `evotuneMaxGrowth.tsv` | Measured maximum growth rate, one row per condition, one active carbon source per row (at `-1000`, unconstrained). | |
+| --- | --- | --- |
+| `evotuneFluxData.tsv` | Measured exchange fluxes, one row per condition. | One of these two |
+| `evotuneMaxGrowth.tsv` | Measured maximum growth rate, one row per condition, one active carbon source per row (at `-1000`, unconstrained). | One of these two |
 | `evotuneZeroExch.tsv` | Reaction IDs assumed to carry zero flux in every condition. | No |
 
-The two flux files share one column layout, the same parser geckopy uses
-for regular flux data:
+The two flux files share the column layout of the regular flux data file, read by `loadFluxData` (Python `load_flux_data`):
 
 ```
 Condition   Ptot   grRate   glucose (r_1714)   fructose (r_1709)   ...   evotuneRMSEweight   source
@@ -94,18 +40,11 @@ glucose     NaN    0.41     -1000              NaN                ...   1       
 fructose    NaN    0.338    NaN                -1000              ...   1                     DLKcat
 ```
 
-`Condition` names the row; `grRate` is the measured growth rate; `Ptot` is
-measured protein content (`NaN` if not measured); each `<met> (<rxn>)`
-column is a measured or fixed flux for that exchange reaction;
-`evotuneRMSEweight` scales how much that row counts toward the RMSE
-(usually `1`); and `source` is free text carried through for bookkeeping.
-`evotuneZeroExch.tsv` is simpler: a `Rxns` header, then one reaction ID per
-line.
+`Condition` names the row, `grRate` is the measured growth rate and `Ptot` is the measured protein content (`NaN` if not measured). Each `<met> (<rxn>)` column holds a measured or fixed flux of that exchange reaction. `evotuneRMSEweight` scales the contribution of the row to the RMSE (usually `1`), and `source` is free text. `evotuneZeroExch.tsv` has a `Rxns` header followed by one reaction ID per line.
 
 ## Configure evotune in model_adapter.toml
 
-Every field has a default, so this section can be omitted entirely to
-start. A configured example, in plain terms:
+Every setting has a default, so the `[evotune]` table can be omitted. A configured example:
 
 ```toml
 [evotune]
@@ -128,48 +67,32 @@ brenda = 0.2
 custom = 0.1
 ```
 
-What each setting controls:
+The default template sets `sigma0_log_default = 0.5`, the groups `dlkcat`, `brenda` and `custom` with `sigma0_log_source` values 0.4, 0.2 and 0.1, `max_growth_weight = 1.0`, `prior_penalty_weight = 0.03`, `tie_isozymes = true`, `rmse_threshold = 0.2` and `max_generations = 150`. MATLAB reads the same keys under other names, for example `evotune.sigma0logDefault`, listed in `adapterParameters.tsv`.
 
-- **Trust tiers** (`source_groups`, `sigma0_log_source` and
-  `sigma0_log_default`). Group kcats by how much their origin is trusted,
-  and give each group a standard deviation in log-space: a smaller value
-  means more trust, so the search needs stronger evidence before moving
-  that kcat far. `custom` (curated by hand) at 0.1 is three times more
-  trusted than an unlabelled prediction at 0.3. This is the one section
-  with no universal default; the right tiers depend on the model's own
-  source labels.
-- **`max_growth_weight`** (default `1.0`). The combined score is
-  `(rmse_flux + w * rmse_max_growth) / (w + 1)`. At `2`, growth-rate error
-  counts double against flux error, useful when growth rate is measured
-  across many carbon sources but flux is mostly measured for one.
-- **`prior_penalty_weight`** (default `0.03`, already on). Adds
-  `w * mean(((log k - log k0) / sigma0)^2)` to the score: a charge for
-  moving a kcat, scaled by how much its prior is trusted. Without this
-  term the fit is often flat along many directions: several very
-  different kcat vectors fit equally well, and the search returns an
-  arbitrary point along that flat direction, one that does not reproduce
-  when rerun with a different seed. The default is calibrated so that
-  large corrections agree in direction and land within a handful of fold
-  of each other across seeds, at a small cost in raw fit. Setting it to
-  `0` scores on fit alone, which is also what a run reproducing GECKO
-  MATLAB, which has no such term, must do. The right strength depends on
-  the model and the data, since it scales with `sigma0_log` and the
-  objective itself; `tune_prior_penalty_weight` runs a candidate sweep and
-  reports fit cost against cross-seed reproducibility so the value does
-  not have to be picked blind (see its docstring). It costs one full
-  tuning run per candidate per seed, so treat it as an occasional
-  calibration step rather than part of routine tuning.
-- **`tie_isozymes`** (default `true`). Several ecModel reactions are one
-  enzymatic reaction split across isozyme copies. When copies share a
-  prior value and a source, no experimental condition can distinguish
-  between them, so an untied search can assign them a difference that
-  carries no biological meaning. Tying gives such copies one shared kcat.
-- **`max_generations` / `rmse_threshold`**. This search's stopping
-  conditions: run at most this many CMA-ES generations, or stop earlier
-  once the best RMSE reaches `rmse_threshold` (negative never stops
-  early).
+- **Trust tiers** (`source_groups`, `sigma0_log_source` and `sigma0_log_default`). Kcats are grouped by their entry in `ec.source`, and each group has a standard deviation in log space. A smaller value means more trust, so the search needs stronger evidence before it moves such a kcat far. With the values above, a curated kcat (`custom`, 0.1) is three times more trusted than a kcat of an unlisted source (0.3). A kcat belongs to the group that lists its `ec.source`, or the part of `ec.source` before ` (`, so `brenda (wc=0, origin=1)` is in the group that lists `brenda` and `combined (sd=0.10, n=2)` in the group that lists `combined`. A group with `match_okp = true` also takes the kcats whose `ec.source` is the configured OpenKineticsPredictor method. A kcat in no group takes `sigma0_log_default`. The tiers depend on the source labels of the model, so no tier set applies to every model.
+- **`max_growth_weight`**. The combined score is `(rmse_flux + w * rmse_max_growth) / (w + 1)`. At `2`, the growth-rate error counts double against the flux error, which suits growth rates measured on many carbon sources and fluxes measured mainly on one.
+- **`prior_penalty_weight`**. Adds `w * mean(((log k - log k0) / sigma0)^2)` to the score, a charge for moving a kcat that is scaled by the trust in its prior. Without the term the fit is flat along many directions: several different kcat vectors fit equally well, and the search returns an arbitrary point that does not reproduce with another seed. The default of `0.03` is calibrated so that large corrections agree in direction and lie within a few fold of each other across seeds, at a small cost in fit. A value of `0` scores on the fit alone, which a run that reproduces GECKO 3 has to use. The suitable strength depends on the model and the data, since it scales with `sigma0_log` and with the objective. `tunePriorPenaltyWeight` (Python `tune_prior_penalty_weight`) runs `cmaesKcatTuning` for each of `candidates` (default `0`, `0.01`, `0.03`, `0.1`) at each of `seeds` (default `0` and `1`) and reports the fit cost against the reproducibility across seeds. It costs one full tuning run per candidate and seed, which makes it an occasional calibration.
+- **`tie_isozymes`**. Several ecModel reactions are one enzymatic reaction split over isozyme copies. When copies share a prior value and a source, no condition can distinguish them, so an untied search can assign them a difference without biological meaning. Tying gives such copies one shared kcat.
+- **`max_generations`, `rmse_threshold`**. The stopping conditions: at most `max_generations` CMA-ES generations, or earlier once the best RMSE reaches `rmse_threshold`. A negative `rmse_threshold` never stops the search early.
 
 ## Screen which kcats the data can inform
+
+The screen perturbs every tunable kcat up and down by a factor (`fold`, default `2`), moving isozyme copies together as `tie_isozymes` sets, and records how much the fit changes. No tuning happens.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+ModelAdapterManager.setDefault('path/to/project');
+ecModel = loadEcModel();
+
+screen = screenKcatLeverage(ecModel, 'nProc', 8);
+removevars(screen(1:20, :), 'positions')
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
 
 ```python
 from geckopy import ModelAdapter, load_ec_model
@@ -181,36 +104,38 @@ model = load_ec_model(adapter=adapter)  # models/ecModel.yml by default
 screen = screen_kcat_leverage(model, adapter=adapter, n_proc=8)
 screen.drop(columns="_positions").head(20)
 ```
+:::
+::::
 
-This perturbs every tunable kcat, moving isozyme copies together per
-`tie_isozymes`, up and down, and measures how much the fit changes; no
-tuning happens yet. The result is a table, one row per kcat or tied group,
-ranked by that leverage weighted by trust: the reaction ID, how many
-isozyme copies it covers, its source group, its current value, its
-leverage, and `cum_leverage_share`, the running fraction of total leverage
-carried by this row and every row above it. The top rows are what a
-curator should look at first, independent of whether a tuning search ever
-runs: on ecYeastGEM, a handful of kcats routinely carry the majority of
-what any tuning run could achieve, and they tend to be implausible
-database values rather than genuine biology.
+The result is a table with one row per kcat or tied group, ranked by leverage weighted by trust: the reaction ID (`rxnId`, Python `rxn_id`), the number of isozyme copies, the source group, the current value, the leverage, and `cumLeverageShare` (Python `cum_leverage_share`), the running fraction of the total ranking value carried by the row and all rows above it. Leverage is the largest change of the plain RMSE caused by one of the two perturbations. A hidden column (`positions`, Python `_positions`) holds the indices into `ec.rxns` that `selectTunableMask` needs.
 
-This costs one simulation per condition per kcat group, roughly comparable
-in scale to a full tuning run's budget; expect tens of minutes on a
-genome-scale model, not a quick check. `n_proc` parallelizes it the same
-way tuning does.
+The top rows are what a curator can look at first, whether or not a tuning search follows. On ecYeastGEM, a handful of kcats carries most of what a tuning run can achieve, and they tend to be implausible database values.
+
+The screen costs one simulation per condition and per kcat group (two probes per group plus a baseline), which is comparable to the budget of a full tuning run. On a genome-scale model it takes tens of minutes. `nProc` (Python `n_proc`) parallelises it as it does the tuning; in MATLAB, values above 1 need the Parallel Computing Toolbox.
 
 ## Check the assignments behind the top kcats
 
-Before spending a tuning run on a kcat, check whether the value was
-assigned correctly in the first place. `review_assignment` flags
-source-level problems: a value with no kcat row behind it for its EC, one
-number reused across many unrelated reactions, an EC's maximum standing in
-for a whole distribution, an implausible magnitude, or a curated value
-that repeats what the database already said. These are corrections to
-the source, so they belong in whatever database or fuzzy-matching step in
-[Gathering kcats](gathering-kcats.md) produced the value; fixing them there
-propagates to every model built from the same data, unlike a value the
-tuner moves for this one model alone.
+`reviewKcatAssignment` (Python `review_assignment`) flags source-level problems of the assignment: a value without a kcat row for its EC number, one number reused across many unrelated reactions, the maximum of an EC number standing in for a distribution, an implausible magnitude, or a curated value that repeats what the database says. The corrections belong in the database or fuzzy-matching step in [Gathering kcats](gathering-kcats.md) that produced the value. A correction there reaches every model built from the same data, which a value moved by the tuner does not.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+% One struct per EC code queried while gathering kcats, summarising the
+% kcat database (usually BRENDA) the assignment came from. For all EC
+% codes of BRENDA: ecStatsFromBrenda(KCATcell, SAcell, KCATmedianCell).
+ecStats = containers.Map('KeyType', 'char', 'ValueType', 'any');
+ecStats('1.1.1.1') = struct('nKcat', 12, 'kcatMax', 340, 'kcatMedian', 45, ...
+                            'values', [340 45 12], 'nSa', 0);
+
+findings = reviewKcatAssignment(ecModel.ec.rxns, ecModel.ec.kcat, ...
+    ecModel.ec.source, ecModel.ec.eccodes, 'ecStats', ecStats);
+writetable(findings, 'findings.tsv', 'FileType', 'text', 'Delimiter', '\t')
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
 
 ```python
 from geckopy.gather_kcats.review import EcStats, review_assignment, findings_tsv
@@ -229,32 +154,30 @@ findings = review_assignment(
 )
 print(findings_tsv(findings))
 ```
+:::
+::::
 
-Each `Finding` names a reaction, its checks (`no-ec-evidence`,
-`repeated-value`, `ec-maximum`, `magnitude`, `custom-duplicate`), and a
-human-readable `detail`. Isozyme copies the assignment could not
-distinguish, the same grouping `tie_isozymes` uses above, are reported
-once, not once per copy. Standard fallbacks and tied groups are deliberate choices
-rather than mistakes, so neither is reported unless explicitly requested
-via `include`.
+Each finding names a reaction, its checks (`no-ec-evidence`, `repeated-value`, `ec-maximum`, `magnitude`, `custom-duplicate`) and a `detail` in words. Checks that need `ecStats` are skipped when it is absent. Isozyme copies that the assignment could not distinguish, the grouping of `tie_isozymes`, are reported once. Standard fallbacks (`standard-fallback`) and tied groups (`tied-isozymes`) are deliberate choices and are reported when `include` lists them.
 
-Findings rank by `leverage` when it is passed in, reusing the `screen`
-table from the previous step, expanded from tie-groups back to individual
-`model.ec.rxns` positions via its `_positions` column, so that looking odd
-and actually mattering are not confused; without it, rows come back in
-input order, and looking odd is all that remains. `coverage` (a share of
-the flagged rows' total leverage) or `top` (a row count) then truncates
-the report to a length worth a curator's time: `coverage` adapts to the
-model, keeping however many rows it takes to carry that share of the
-flagged leverage, where a fixed `top` does not. On ecYeastGEM the
-underlying checks flag around 1,900 of 4,834 kcats before any truncation,
-which on its own is still too long a report to read; tightening the checks
-themselves does not fix this nearly as well as truncating by leverage
-does, since looking odd (what the checks measure) and actually mattering
-(what `leverage` measures) are unrelated properties, so a stricter check
-threshold drops high-leverage entries as readily as low-leverage ones.
+Findings are ranked by `leverage` when it is given: the per-kcat effect from the screen, expanded from tie groups to the individual positions of `ec.rxns` through the position column of the screen. Without `leverage` the findings stay in input order. `coverage` (a share of the total leverage of the flagged rows) or `top` (a number of rows) truncates the report. `coverage` adapts to the model, since it keeps as many rows as carry that share of the flagged leverage, where a fixed `top` does not. On ecYeastGEM the checks flag around 1,900 of 4,834 kcats before truncation, which is too long a report to read. Stricter check thresholds do not shorten it as well as truncation by leverage, since looking odd (what the checks measure) and mattering (what leverage measures) are unrelated, so a stricter threshold removes high-leverage entries as readily as low-leverage ones.
 
 ## Tune
+
+`cmaesKcatTuning` builds the tunable set with `selectTunableMask`, which keeps the fewest highest-ranked kcats whose combined leverage reaches `targetImpactShare` (Python `target_impact_share`, default `0.9`) of the total. The cutoff is relative to the achievable improvement of the model, so the same value means a comparable set on another model. A given `screen` avoids a second screening run; without `screen`, `cmaesKcatTuning` computes one. `tunableMask` (Python `tunable_mask`) fixes the set by hand and takes precedence.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+[ecModel, result] = cmaesKcatTuning(ecModel, 'screen', screen, ...
+    'nProc', 8, 'seed', 0);
+
+saveEcModel(ecModel, 'ecModel_tuned.yml');
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
 
 ```python
 from geckopy import save_ec_model
@@ -266,75 +189,30 @@ result = cmaes_kcat_tuning(
 
 save_ec_model(model, "ecModel_tuned.yml", adapter=adapter)
 ```
+:::
+::::
 
-Passing the screen from the earlier step avoids recomputing it; omitting
-`screen` entirely makes `cmaes_kcat_tuning` compute one itself. Either way,
-the tunable set is built by `select_tunable_mask`, which keeps the fewest
-highest-ranked kcats whose combined leverage reaches `target_impact_share`
-(default `0.9`) of the total: a cutoff relative to the model's own
-achievable improvement, not a fixed count or an absolute leverage value, so
-the same setting means a comparable thing on a different model. Pass
-`tunable_mask` directly to fix the set by hand instead.
+After the call, every tunable kcat of the ecModel holds the best value that CMA-ES found, and the kcat constraints are applied. Python changes `model` in place; MATLAB copies structs on assignment, so the output `ecModel` has to be captured. The other options are `popsize` (the CMA-ES population size, default `4 + floor(3*log(n))` for `n` free parameters), `nProc` and `seed`. The remaining settings come from the `[evotune]` table.
 
-`model` is mutated in place: on return, every tunable kcat carries the
-best value CMA-ES found, and the model's kcat constraints are already
-applied, so nothing further is needed before simulating or saving it.
-Beyond `target_impact_share`, the only other knobs are `popsize` (CMA-ES's
-population size, defaulting to its own dimension-scaled choice rather than
-a value tuned for one particular model), `n_proc`, and `seed`; everything
-else comes from the same configuration as the previous step, so there is
-nothing new to configure once that section is read.
-
-If growth needs special handling for the organism, for example forcing
-anaerobic conditions or scaling the protein pool with a
-condition-specific biomass composition, pass `make_anaerobic` and/or
-`change_protein_biomass` callables; geckopy has no organism-agnostic
-default for either. `tutorials/full_ecModel/code/anaerobic.py` in the
-geckopy repository has a worked example.
+Growth that needs special handling for the organism, such as forced anaerobic conditions or a protein pool scaled with a condition-specific biomass composition, is set with functions. In Python these are the arguments `make_anaerobic` and `change_protein_biomass`, and geckopy has no organism-independent default for either; `tutorials/full_ecModel/code/anaerobic.py` in the geckopy repository has an example. In MATLAB the `[matlab]` table of `model_adapter.toml` names the functions with the keys `make_model_anaerobic` and `change_protein_biomass`.
 
 ## Read the result
 
-`result` is an `EvotuneResult`:
+`result` is an `EvotuneResult` in Python and a struct in MATLAB, with these fields (Python name first):
 
-- `rmse_trace` / `objective_trace`: best-so-far plain-fit RMSE and
-  best-so-far optimized objective, per generation (identical unless
-  `prior_penalty_weight` is nonzero). A flat trace for many generations
-  before the run ends means it stalled, not converged.
-- `new_kcat` / `old_kcat` / `rxns` / `groups`: the tuned and prior kcats
-  over the searched set, parallel arrays, with each kcat's trust tier.
-  Tied isozyme copies share one value in `new_kcat`.
-- `converged`: whether `rmse_threshold` was reached, or `max_generations`
-  was hit first.
-- `n_generations`: how many generations actually ran.
+- `rmse_trace`, `objective_trace` (MATLAB `rmseTrace`, `objectiveTrace`): the best plain-fit RMSE so far and the best optimised objective so far, per generation. They are identical when `prior_penalty_weight` is 0. A trace that is flat for many generations before the end indicates a stalled run.
+- `new_kcat`, `old_kcat`, `rxns`, `groups` (MATLAB `newKcat`, `oldKcat`, `rxns`, `groups`): the tuned and prior kcats of the searched set as parallel arrays, with the trust tier of each kcat. Tied isozyme copies share one value in `new_kcat`.
+- `converged`: whether `rmse_threshold` was reached before `max_generations`.
+- `n_generations` (MATLAB `nGenerations`): the number of generations that ran.
 
-Before trusting a tuned kcat, check more than the final RMSE:
+The final RMSE alone does not show whether a tuned kcat can be trusted:
 
-1. **How many kcats changed, and by how much.** A result that moves
-   nearly everything by a little has not identified anything.
-   `geckopy.kcat_tuning.evotune.parsimony` has the tools for this:
-   `n_changed`, `fold_change`, `source_movement`.
-2. **Impact share.** `parsimony.impact_share` reports what fraction of the
-   total achievable improvement the changed kcats actually carry,
-   distinguishing "few, large and consequential" from mere sparsity. This
-   is a different, unweighted quantity from `screen_kcat_leverage`'s
-   trust-weighted `cum_leverage_share`.
-3. **Reproducibility.** Rerun with a different `seed`. Large corrections
-   (beyond roughly two-fold) should land in the same direction and within
-   a small factor of each other; if they do not, the search has found a
-   flat direction rather than a real correction, and `prior_penalty_weight`
-   is the first setting to reach for.
-4. **Whether it generalizes.** If data exists that was not fit on, score
-   the tuned model against it and compare to the untuned model. A large
-   improvement on fitted conditions with no improvement elsewhere is a
-   sign of overfitting to a thin dataset, not a fixed model.
+1. **Number and size of the changes.** A result that moves nearly every kcat by a little has not identified anything. `n_changed` (MATLAB `nChanged`) counts the kcats that differ from the prior by more than a relative tolerance (default 0.02). The module `geckopy.kcat_tuning.evotune.parsimony` also has `fold_change` and `source_movement`; `parsimony_frontier` and `best_parsimonious` (MATLAB `parsimonyFrontier`, `bestParsimonious`) trade the number of changed kcats against the fit.
+2. **Impact share.** `parsimony.impact_share` reports the fraction of the total achievable improvement that the changed kcats carry. It separates few, large and consequential changes from sparsity. It is unweighted, unlike the trust-weighted `cum_leverage_share` of the screen.
+3. **Reproducibility.** A run with another `seed` should give large corrections (beyond about two-fold) in the same direction and within a small factor of each other. Otherwise the search has found a flat direction, and `prior_penalty_weight` is the first setting to adjust.
+4. **Generalisation.** Data that were not fitted score the tuned and the untuned model. A large improvement on the fitted conditions without an improvement elsewhere indicates overfitting to a thin dataset.
 
-`new_kcat`/`old_kcat` is thousands of numbers, most of them unchanged, not
-something a reviewer can read directly. `result.corrections()` turns it
-into the actual review artifact: one `Correction` row per changed kcat
-(reaction, EC code, source, prior/tuned value, fold change), ranked by
-leverage rather than by how far a kcat moved, so parameters the data
-cannot see, which are free to drift furthest and are the least reliable,
-sort to the bottom instead of the top:
+`new_kcat` and `old_kcat` hold thousands of numbers, most of them unchanged, which a reviewer cannot read. In Python, `result.corrections()` turns them into one `Correction` row per changed kcat (reaction, EC code, source, prior and tuned value, fold change), ranked by leverage, which differs from the order of the distance a kcat moved. Parameters that the data cannot see are free to drift furthest and are the least reliable, so they sort to the bottom. MATLAB has no counterpart of `corrections`; `result.oldKcat` and `result.newKcat` hold the values.
 
 ```python
 from geckopy.kcat_tuning import annotate_from_model, corrections_tsv
@@ -351,66 +229,38 @@ rows = result.corrections(
 open("corrections.tsv", "w").write(corrections_tsv(rows))
 ```
 
-`cumulative_share` on each row is the running fraction of total leverage
-the list has accounted for so far, so a reader can stop reading once it
-stops climbing. This is the tuning-time counterpart to `review_assignment`
-above: that step flags kcats that need curation before a run; this one
-reports which ones the run actually changed, and how much each change can
-be trusted.
+`cumulative_share` of a row is the running fraction of the total leverage that the list has accounted for, so the reading can stop once the value stops climbing. This is the tuning-time counterpart of `review_assignment`: the review flags the kcats that need curation before a run, and the corrections list the kcats that the run changed and how far each change can be trusted.
 
-## Why CMA-ES, not ABC-SMC
+## Choice of CMA-ES over ABC-SMC
 
-DLKcat's own Bayesian approach to kcat tuning implements ABC-SMC
-(Approximate Bayesian Computation, Sequential Monte Carlo); see
-[SysBioChalmers/DLKcat/BayesianApproach](https://github.com/SysBioChalmers/DLKcat/tree/master/BayesianApproach).
-geckopy's `kcat_tuning.evotune` module ported that approach faithfully and
-tested it side by side with CMA-ES, a plain optimizer, on the same
-objective, the same screened parameter set and the same experimental data
-(ecYeastGEM, 41 conditions). CMA-ES won on every criterion checked, which
-is why it is what geckopy ships.
+The Bayesian approach to kcat tuning of DLKcat implements ABC-SMC (approximate Bayesian computation with sequential Monte Carlo); see [SysBioChalmers/DLKcat/BayesianApproach](https://github.com/SysBioChalmers/DLKcat/tree/master/BayesianApproach). A comparison with CMA-ES used the same objective, the same screened parameter set and the same experimental data (ecYeastGEM, 41 conditions), and CMA-ES was better on every criterion that was checked.
 
-ABC-SMC is a sampler: each generation it draws a batch of candidate kcat
-vectors from a proposal distribution, scores them, and keeps the best
-fraction to seed the next generation's proposals. That machinery, a
-posterior approximation, a sample schedule and truncation selection, earns
-its keep when the goal is a distribution over plausible parameter values
-and the model is cheap enough to sample densely across the whole parameter
-space. Once a screen has reduced the problem to the kcats the data can
-actually inform (a few dozen to a few hundred, out of thousands), that
-premise stops holding: there is no longer a broad space to sample across,
-and each evaluation is expensive, one FBA solve per condition. At that
-point the problem is a direct search for the best-fitting vector, which is
-what an optimizer is for and not what ABC-SMC is for.
+ABC-SMC is a sampler. Each generation draws a batch of candidate kcat vectors from a proposal distribution, scores them and keeps the best fraction to seed the proposals of the next generation. This machinery pays off when the goal is a distribution over plausible parameter values and the model is cheap enough to sample densely over the whole parameter space. After a screen has reduced the problem to the kcats that the data can inform (a few dozen to a few hundred out of thousands), there is no broad space left to sample, and each evaluation costs one FBA solve per condition. The problem is then a direct search for the best-fitting vector, which is the task of an optimiser.
 
-On the same model, the same 112-parameter screen, the same objective and
-three seeds each:
+On the same model, the same 112-parameter screen, the same objective and three seeds each:
 
-| | Distance | Spread across seeds |
-|---|---|---|
+| Method | Distance | Spread across seeds |
+| --- | --- | --- |
 | ABC-SMC | 0.9156 | +/- 0.0549 |
-| **CMA-ES** | **0.7974** | **+/- 0.0048** |
+| CMA-ES | 0.7974 | +/- 0.0048 |
 
-CMA-ES fits better by 3.7 standard errors, with a spread more than ten
-times tighter. The gap is not only fit quality; it also determines whether
-an individual tuned kcat means anything. Both methods leave most kcats on
-flat directions the data cannot pin down, but ABC-SMC's posterior sampling
-spreads its samples across the whole flat region: across three ABC-SMC seeds,
-lanosterol synthase, the single highest-leverage kcat in the model, took
-values of 0.338, 20.3 and 0.0781 s^-1, a 260-fold spread, at distances
-differing by only 0.009. A number that unstable cannot be reported as a
-finding.
+CMA-ES fits better by 3.7 standard errors, with a spread more than ten times smaller. The spread also decides whether a tuned kcat has a meaning. Both methods leave most kcats on flat directions that the data cannot pin down, but the posterior sampling of ABC-SMC spreads its samples over the whole flat region. Across three ABC-SMC seeds, lanosterol synthase, the kcat with the highest leverage in the model, took the values 0.338, 20.3 and 0.0781 s^-1, a 260-fold spread, at distances that differed by 0.009. A value that unstable cannot be reported as a finding.
 
-CMA-ES does not remove flat directions; nothing can, since they are a
-property of the data rather than of the search method. A direct optimizer
-converges to one point per flat direction instead of sampling across it,
-and `prior_penalty_weight`, a Tikhonov-style penalty on moving away from
-the prior, weighted by how much each source is trusted, picks out which
-point.
+CMA-ES does not remove flat directions, which are a property of the data. A direct optimiser converges to one point per flat direction, and `prior_penalty_weight`, a Tikhonov-style penalty on the distance from the prior that is weighted by the trust in each source, picks the point.
+
+## Troubleshooting
+
+| Problem | Possible reason | Solution |
+| --- | --- | --- |
+| `ImportError` that names the `evotune` extra | The package `cma` is not installed | Run `pip install geckopy[evotune]` |
+| Error that `evotune_data` has neither `flux_data` nor `max_grate` | Neither `evotuneFluxData.tsv` nor `evotuneMaxGrowth.tsv` is in `<project>/data/` | Add one of the files, or pass the loaded data |
+| Error `No tunable kcats` | `ec.kcat` is not positive anywhere, or `tunableMask` excludes every kcat with a value | Assign kcats first, or widen the mask |
+| Error `Only 1 free parameter(s) after masking and tying` | The mask and `tie_isozymes` leave fewer than two free parameters | Widen `tunableMask` or raise `targetImpactShare` |
+| Most kcats take `sigma0_log_default` | The labels in `source_groups` do not match the `ec.source` entries of the model | List the labels that occur in `ec.source` (for example `ec_tree`, `combined` or `custom`) in `source_groups` |
+| Large corrections differ in direction between seeds | The fit is flat along these kcats | Raise `prior_penalty_weight`, calibrated with `tunePriorPenaltyWeight` |
 
 ## See also
 
-- [Growth-rate tuning](growth-rate-tuning.md), the iterative,
-  single-target approach this page's data-fitted alternative builds on.
-- [Applying kcats](applying-kcats.md), where the kcats and sources fed
-  into this fitting process come from.
+- [Growth-rate tuning](growth-rate-tuning.md), the iterative single-target tuning of kcats.
+- [Kcat assignment](../gecko4-kcat-assignment.md) and [Applying kcats](applying-kcats.md), where the kcats and sources used here come from.
 - [API reference](../api/index.md), every function in both toolboxes.
