@@ -2,6 +2,59 @@
 
 Light and full ecModels have the structure of a conventional GEM, an S-matrix with vectors of lower and upper bounds, so a method for conventional GEMs also runs on an ecModel in both languages. The tasks below are specific to ecModels: the protein pool constraint is varied, growth and protein pool usage are optimised, fluxes are mapped to the conventional GEM, the solution space is compared by FVA and sampled, engineering targets are scanned, and an ecModel is trimmed to a context-specific one. Media and solver setup are those of any model (see [Choosing a solver](../installation/index.md#choosing-a-solver)). [ecModel YAML format](yaml-format.md) describes the file format that this documentation uses.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional and dotted boxes are neighbouring pages.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Relaxing overconstrained proteomics, or a finished ecModel"]):::ctx
+  PV --> A["ecFVA<br/>randomSampling"]
+  PV --> B["ecFSEOF<br/>getSubsetEcModel"]
+  PV --> C["mapRxnsToConv"]
+  NX(["Next: Enzyme usage and bottlenecks"]):::ctx
+  PV -.-> NX
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Relaxing overconstrained proteomics, or a finished ecModel"]):::ctx
+  PV --> A["ec_fva<br/>random_sampling"]
+  PV --> B["ec_fseof<br/>get_subset_ec_model"]
+  PV --> C["map_rxns_to_conv"]
+  NX(["Next: Enzyme usage and bottlenecks"]):::ctx
+  PV -.-> NX
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | |

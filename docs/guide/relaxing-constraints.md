@@ -6,6 +6,65 @@ Constraining individual enzyme concentrations from [proteomics integration](prot
 All functions below apply to full ecModels; see [GECKO light and full ecModels](gecko-light.md).
 :::
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional and dotted boxes are neighbouring pages.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Proteomics integration"]):::ctx
+  PV --> D{"Growth reaches the target?"}
+  D -->|no, gradual| FX["flexibilizeEnzConcs"]
+  D -->|no, fast| GR["relaxProteomicsGreedy"]
+  NX(["Next: Simulation and analysis"]):::ctx
+  D -->|yes| NX
+  FX --> NX
+  GR --> NX
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Proteomics integration"]):::ctx
+  PV --> D{"Growth reaches the target?"}
+  D -->|no, gradual| FX["flexibilize_enz_concs"]
+  D -->|no, fast| GR["relax_proteomics_greedy"]
+  D -->|no, smallest total amount| SA["relax_enz_concs"]
+  NX(["Next: Simulation and analysis"]):::ctx
+  D -->|yes| NX
+  FX --> NX
+  GR --> NX
+  SA --> NX
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

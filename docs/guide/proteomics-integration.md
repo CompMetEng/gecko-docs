@@ -6,6 +6,55 @@ Enzyme usage reactions let a full ecModel take proteomics data directly: individ
 The functions below apply to full ecModels. A light ecModel has no per-enzyme usage reactions to constrain; see [GECKO light and full ecModels](gecko-light.md).
 :::
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional and dotted boxes are neighbouring pages.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Growth-rate tuning"]):::ctx
+  PV --> A["loadProtData<br/>fillEnzConcs"] --> B["levelComplexConcs<br/>constrainEnzConcs"] --> C["calculateFfactor, setProtPoolSize"] --> D["loadFluxData, constrainFluxData"]:::opt
+  NX(["Next: Relaxing overconstrained proteomics"]):::ctx
+  D --> NX
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Growth-rate tuning"]):::ctx
+  PV --> A["load_prot_data<br/>fill_enz_concs"] --> B["level_complex_concs<br/>constrain_enz_concs"] --> C["calculate_f_factor, set_prot_pool_size"] --> D["load_flux_data, apply_flux_data_constraints"]:::opt
+  NX(["Next: Relaxing overconstrained proteomics"]):::ctx
+  D --> NX
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

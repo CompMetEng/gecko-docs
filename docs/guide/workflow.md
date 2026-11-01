@@ -2,7 +2,7 @@
 
 <!-- docs-site: concept-page -->
 
-The diagram orders the functions that build, parameterise, tune and analyse an ecModel, with the parts that run in parallel and the alternatives. Each stage is a guide page. A solid arrow connects functions that run one after another, a dashed arrow an optional preview or an alternative way to reach the next step, a diamond a choice between paths, and a dashed outline an optional step. The button in the corner of a diagram opens it in full screen.
+The diagram orders the functions that build, parameterise, tune and analyse an ecModel, with the parts that run in parallel and the alternatives. Each stage is a guide page. A solid arrow connects functions that run one after another, a dashed arrow an optional preview or an alternative way to reach the next step, a diamond a choice between paths, and a dashed outline an optional step. The button in the corner of a diagram opens it in full screen, where the mouse wheel zooms and a drag pans. In the page, the wheel zooms with Ctrl (Cmd on macOS) held.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -134,19 +134,42 @@ flowchart TB
 :::
 ::::
 
-## Stages and pages
+## Stages, order and alternatives
 
-| Stage | Page | Optional |
-| --- | --- | --- |
-| Getting started | [Getting started](getting-started.md) | no |
-| Building an empty ecModel | [Building an empty ecModel](building-ec-model.md) | complex stoichiometry |
-| Gathering kcats | [Gathering kcats](gathering-kcats.md) | each source |
-| Applying kcats | [Applying kcats](applying-kcats.md) | custom kcats, isozyme and standard kcats |
-| Growth-rate tuning | [Growth-rate tuning](growth-rate-tuning.md) | when the growth rate is below the target |
-| Tuning against experimental data | [Tuning against experimental data](tuning-against-experimental-data.md) | alternative to sensitivity tuning |
-| Proteomics integration | [Proteomics integration](proteomics-integration.md) | yes |
-| Relaxing overconstrained proteomics | [Relaxing overconstrained proteomics](relaxing-constraints.md) | when the proteomics-constrained ecModel does not reach the target growth rate |
-| Simulation and analysis | [Simulation and analysis](simulation-and-analysis.md), [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md) | each analysis |
+Each row is a stage with the stage it runs after, its functions and what it leaves behind. "Any subset" marks functions that run independently of each other, "alternative" a path that replaces another, and "one of" a choice of algorithm.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+| Stage | Run after | Functions | Output |
+| --- | --- | --- | --- |
+| [Getting started](getting-started.md) | none | `createGECKOproject`, then edit `model_adapter.toml`; `loadDatabases('kegg')` (optional) | project folder |
+| [Building an empty ecModel](building-ec-model.md) | project and model adapter | `ModelAdapterManager.setDefault`, `loadConventionalGEM`, `makeEcModel` (full or light), `getComplexData, applyComplexData` (optional), `saveEcModel` | ecModel file |
+| [Gathering kcats](gathering-kcats.md) | built ecModel | any subset of `kcatsFromBrenda`, `kcatsFromECTree`, `kcatsFromHomologs`, `kcatsFromDLKcat`, `kcatsFromOKP`; `updateKcatSources` gathers all sources of `model_adapter.toml` | `data/kcats/<source>.tsv` |
+| [Applying kcats](applying-kcats.md) | at least one source file or `custom.tsv` | `assignKcats` (preview: `collectKcats`), `getKcatAcrossIsozymes` and `getStandardKcat` (optional), `applyKcatConstraints`, `setProtPoolSize` | `ec.kcat`, constrained ecModel |
+| [Growth-rate tuning](growth-rate-tuning.md) | applied kcats, growth rate below the target | `sensitivityTuning`, then `sigmaFitter` | tuned `ec.kcat` |
+| [Tuning against experimental data](tuning-against-experimental-data.md) | applied kcats, growth rates and fluxes of several conditions | alternative to sensitivity tuning: `screenKcatLeverage`, `reviewKcatAssignment`, `cmaesKcatTuning` | tuned `ec.kcat` |
+| [Proteomics integration](proteomics-integration.md) | functional ecModel | `loadProtData`, `fillEnzConcs`, `levelComplexConcs`, `constrainEnzConcs`, `calculateFfactor, setProtPoolSize`, `loadFluxData, constrainFluxData` (optional) | proteomics-constrained ecModel |
+| [Relaxing overconstrained proteomics](relaxing-constraints.md) | proteomics-constrained ecModel below the target growth rate | one of `flexibilizeEnzConcs`, `relaxProteomicsGreedy` | relaxed ecModel |
+| [Simulation and analysis](simulation-and-analysis.md), [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md) | any ecModel | independent of each other: `ecFVA`, `randomSampling`, `ecFSEOF`, `getSubsetEcModel`, `getEnzymeUsage`, `getEnzymeBottlenecks` | results |
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+| Stage | Run after | Functions | Output |
+| --- | --- | --- | --- |
+| [Getting started](getting-started.md) | none | `geckopy init`, then edit `model_adapter.toml`; `geckopy kegg-download` (optional) | project folder |
+| [Building an empty ecModel](building-ec-model.md) | project and model adapter | `ModelAdapter.from_folder`, `load_conventional_gem`, `make_ec_model` (full or light), `get_complex_data, apply_complex_data` (optional), `save_ec_model` | ecModel file |
+| [Gathering kcats](gathering-kcats.md) | built ecModel | any subset of `kcats_from_brenda`, `kcats_from_ec_tree`, `kcats_from_homologs`, `kcats_from_dlkcat`, `kcats_from_okp`; `update_kcat_sources` gathers all sources of `model_adapter.toml` | `data/kcats/<source>.tsv` |
+| [Applying kcats](applying-kcats.md) | at least one source file or `custom.tsv` | `assign_kcats` (preview: `collect_kcats`), `fill_kcats_from_isozymes` and `assign_standard_kcat` (optional), `apply_kcat_constraints`, `set_prot_pool_size` | `ec.kcat`, constrained ecModel |
+| [Growth-rate tuning](growth-rate-tuning.md) | applied kcats, growth rate below the target | `sensitivity_tuning`, then `fit_sigma` | tuned `ec.kcat` |
+| [Tuning against experimental data](tuning-against-experimental-data.md) | applied kcats, growth rates and fluxes of several conditions | alternative to sensitivity tuning: `screen_kcat_leverage`, `review_assignment`, `cmaes_kcat_tuning` | tuned `ec.kcat` |
+| [Proteomics integration](proteomics-integration.md) | functional ecModel | `load_prot_data`, `fill_enz_concs`, `level_complex_concs`, `constrain_enz_concs`, `calculate_f_factor, set_prot_pool_size`, `load_flux_data, apply_flux_data_constraints` (optional) | proteomics-constrained ecModel |
+| [Relaxing overconstrained proteomics](relaxing-constraints.md) | proteomics-constrained ecModel below the target growth rate | one of `flexibilize_enz_concs`, `relax_proteomics_greedy`, `relax_enz_concs` | relaxed ecModel |
+| [Simulation and analysis](simulation-and-analysis.md), [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md) | any ecModel | independent of each other: `ec_fva`, `random_sampling`, `ec_fseof`, `get_subset_ec_model`, `enzyme_usage`, `get_enzyme_bottlenecks` | results |
+:::
+::::
 
 ## Reading the paths
 

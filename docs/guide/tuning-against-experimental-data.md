@@ -2,6 +2,55 @@
 
 [Growth-rate tuning](growth-rate-tuning.md) raises kcats one at a time until a single target growth rate is reached. `cmaesKcatTuning` (Python `cmaes_kcat_tuning`) fits many kcats at once with CMA-ES against measured growth rates and fluxes of several conditions, weighted by how much the source of each kcat is trusted. The result is a ranking of the kcats that the data can inform, a review of the assignment behind the top kcats, a tuned ecModel and a list of the changes of the tuning for a curator to review.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional and dotted boxes are neighbouring pages.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Applying kcats"]):::ctx
+  PV --> SC["screenKcatLeverage"] --> RV["reviewKcatAssignment"] --> CM["cmaesKcatTuning"]
+  NX(["Next: Proteomics integration"]):::ctx
+  CM --> NX
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Applying kcats"]):::ctx
+  PV --> SC["screen_kcat_leverage"] --> RV["review_assignment"] --> CM["cmaes_kcat_tuning"]
+  NX(["Next: Proteomics integration"]):::ctx
+  CM --> NX
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

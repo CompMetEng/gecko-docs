@@ -103,13 +103,21 @@ html[data-theme="dark"] .site-logo-light { display: none; }
 html[data-theme="dark"] .site-logo-dark { display: inline; }
 
 /* ===== Mermaid flowcharts ============================================= */
-/* A tall flowchart scaled to the text column is unreadable. The diagram
-   keeps a minimum width, and the frame scrolls sideways when the column is
-   narrower. */
-.mermaid-container:not(.mermaid-container-fullscreen) > pre {
+/* The workflow overview is a tall flowchart. Scaled to the text column it is
+   unreadable, so it keeps a minimum width and the frame scrolls sideways when
+   the column is narrower. The small diagrams on the guide pages (marked by
+   the option align: left) keep their natural size. */
+.mermaid-container:not(.mermaid-container-fullscreen) > pre:not(.align-left) {
   overflow-x: auto;
 }
-.mermaid-container:not(.mermaid-container-fullscreen) > pre > svg {
+.mermaid-container:not(.mermaid-container-fullscreen) > pre:not(.align-left) > svg {
   width: max(100%, 1250px) !important;
   max-width: none !important;
+}
+.mermaid-container:not(.mermaid-container-fullscreen) > pre.align-left {
+  overflow-x: auto;
+}
+.mermaid-container:not(.mermaid-container-fullscreen) > pre.align-left > svg {
+  width: auto !important;
+  height: auto !important;
 }
