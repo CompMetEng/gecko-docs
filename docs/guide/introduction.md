@@ -81,10 +81,10 @@ A constraint-based method for conventional GEMs also runs on an ecModel, because
 
 ## Comparison with other methods
 
-sMOMENT and ECMpy are other methods that add enzyme constraints.
+sMOMENT ([Bekiaris and Klamt, 2020](https://doi.org/10.1186/s12859-019-3329-9)) and ECMpy ([Mao et al., 2022](https://doi.org/10.3390/biom12010065)) are other methods that add enzyme constraints.
 
-- **sMOMENT** adds a protein pool pseudometabolite to the metabolic reactions and an exchange reaction for the pool. The model is similar to a GECKO light ecModel. sMOMENT is Python-based and does not construct a full ecModel.
-- **ECMpy** keeps the protein pool constraint outside the S-matrix and adds no enzymes to reactions, which gives a smaller model. The constraint is harder to use in constraint-based simulation tools that are built for conventional GEMs.
+- **sMOMENT** is a simplified version of MOMENT. It gives the same predictions as MOMENT with fewer variables and includes the enzyme constraints in the standard representation of a constraint-based model. The AutoPACMEN toolbox constructs sMOMENT models from stoichiometric models.
+- **ECMpy** is a Python-based workflow that adds a constraint on the total enzyme amount to a GEM, takes the protein subunit composition of a reaction into account and calibrates the enzyme kinetic parameters automatically.
 
 GECKO integrates proteomics data, and its ecModel structures stay close to a conventional GEM. Analyses developed for conventional GEMs apply unchanged. GECKO 4 reads predicted kcat values (see [Predicted kcat values](#predicted-kcat-values)).
 

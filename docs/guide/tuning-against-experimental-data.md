@@ -236,23 +236,6 @@ open("corrections.tsv", "w").write(corrections_tsv(rows))
 
 `cumulative_share` of a row is the running fraction of the total leverage that the list has accounted for. The total is summed over the searched kcats, and each isozyme copy carries the leverage of its group, so a tied group counts once per copy. The reading can stop once the value stops climbing. This is the tuning-time counterpart of `review_assignment`: the review flags the kcats that need curation before a run, and the corrections list the kcats that the run changed and how far each change can be trusted.
 
-## Choice of CMA-ES over ABC-SMC
-
-The Bayesian approach to kcat tuning of DLKcat implements ABC-SMC (approximate Bayesian computation with sequential Monte Carlo); see [SysBioChalmers/DLKcat/BayesianApproach](https://github.com/SysBioChalmers/DLKcat/tree/master/BayesianApproach). ABC-SMC is a sampler. Each generation draws a batch of candidate kcat vectors from a proposal distribution, scores them and keeps the best fraction to seed the proposals of the next generation. This machinery pays off when the goal is a distribution over plausible parameter values and the model is cheap enough to sample densely over the whole parameter space. After a screen has reduced the problem to the kcats that the data can inform (a few dozen to a few hundred out of thousands), there is no broad space left to sample, and each evaluation costs one FBA solve per condition. The problem is then a direct search for the best-fitting vector, which is the task of an optimiser.
-
-CMA-ES does not remove flat directions, which are a property of the data. A direct optimiser converges to one point per flat direction, and `prior_penalty_weight`, a Tikhonov-style penalty on the distance from the prior that is weighted by the trust in each source, picks the point.
-
-### Results of one study on ecYeastGEM
-
-The figures below come from one study on ecYeastGEM and are not reproduced from the repository. The comparison of ABC-SMC with CMA-ES used the same objective, the same 112-parameter screen and the same experimental data (41 conditions), with three seeds each. CMA-ES was better on every criterion that was checked.
-
-| Method | Distance | Spread across seeds (standard deviation) |
-| --- | --- | --- |
-| ABC-SMC | 0.9156 | +/- 0.0549 |
-| CMA-ES | 0.7974 | +/- 0.0048 |
-
-The `+/-` values are standard deviations over the three seeds. The difference of the distances is 3.7 standard errors of that difference, and the spread of CMA-ES is more than ten times smaller. The spread also decides whether a tuned kcat has a meaning. Both methods leave most kcats on flat directions that the data cannot pin down, but the posterior sampling of ABC-SMC spreads its samples over the whole flat region. Across three ABC-SMC seeds, lanosterol synthase, the kcat with the highest leverage in the model, took the values 0.338, 20.3 and 0.0781 s^-1, a 260-fold spread, at distances that differed by 0.009. A value that unstable cannot be reported as a finding.
-
 ## Troubleshooting
 
 | Problem | Possible reason | Solution |

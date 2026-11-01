@@ -40,7 +40,7 @@ Then run `GECKOInstaller.install` in MATLAB. The clone is the `develop` branch; 
 :::
 :::{tab-item} MATLAB (Add-Ons)
 
-Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox". The Add-On manager distributes the latest release, which is GECKO 3 (see [GECKO 3 to GECKO 4](gecko3-to-gecko4.md#staying-on-gecko-3)). GECKO 4.0.0b1 is a pre-release, installed with git or from a ZIP archive.
+Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox". The Add-On installs a GitHub release; the latest, v3.2.5, is GECKO 3 (see [GECKO 3 to GECKO 4](gecko3-to-gecko4.md#staying-on-gecko-3)). GECKO 4.0.0b1 is a pre-release, installed with git or from a ZIP archive.
 :::
 ::::
 

@@ -287,3 +287,5 @@ taxonomy_id
 databaseSources
 database_sources
 plot_light_vs_full
+printFluxes
+exportToExcelFormat

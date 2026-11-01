@@ -18,7 +18,7 @@ The project folder with `model_adapter.toml` and the starting GEM exist (see [Ge
 
 `makeEcModel` reads `data/uniprot.tsv` and `data/kegg.tsv` of the project and downloads a missing file when the identifier is not empty (`uniprot.id` and `kegg.id`, defaults 559292 and `sce`). An empty `uniprot.id` prints a warning, and the download is still attempted. An empty `kegg.id` prints a warning and skips the KEGG download. `make_ec_model` reads `data/uniprot.tsv` and raises a `FileNotFoundError` when it is missing, and it loads `data/kegg.tsv` when that file exists.
 
-In Python, `geckopy uniprot-download` takes the UniProt identifier and the output path, for example `geckopy uniprot-download 559292 data/uniprot.tsv`. The option `--id-type` sets the query field (default `taxonomy_id`; `proteome` for a proteome identifier such as `UP000002311`), and `--gene-id-field` sets the gene identifier field (default `gene_oln`). `geckopy kegg-download eco data/kegg.tsv` creates `data/kegg.tsv`, a comma-delimited file that `make_ec_model` loads under that name.
+In Python, `geckopy uniprot-download` takes the UniProt identifier and the output path, for example `geckopy uniprot-download 559292 data/uniprot.tsv`. The option `--id-type` sets the field of the UniProt query (default `taxonomy_id`; `proteome` for a proteome identifier such as `UP000002311`), and `--gene-id-field` sets the gene identifier field (default `gene_oln`). `geckopy kegg-download eco data/kegg.tsv` creates `data/kegg.tsv`, a comma-delimited file that `make_ec_model` loads under that name.
 
 ## Set the default model adapter
 

@@ -18,7 +18,7 @@ The starting point is a conventional constraint-based metabolic model, at genome
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
-- **MATLAB** version 2019b or above
+- **MATLAB**. The test workflow of GECKO runs MATLAB R2024b; the repository states no minimum version
   ([MathWorks](https://mathworks.com/products/matlab.html)). No additional MathWorks toolboxes are required.
 - **RAVEN toolbox** version 2.9.1 or later ([repository](https://github.com/CompMetEng/RAVEN)), which provides the reconstruction functions GECKO builds on, and some of the functions used to simulate and analyse ecModels. `GECKOInstaller.install` stops with an error for an older version.
 :::
@@ -68,7 +68,7 @@ git clone --depth=1 https://github.com/CompMetEng/GECKO
 
 The clone is the `develop` branch; adding `--branch 4.0.0b1` selects the tag. A ZIP archive of the tag is on the [tags page](https://github.com/CompMetEng/GECKO/tags) of the repository; it is extracted to a location with read and write access.
 
-The [MATLAB Add-On](https://mathworks.com/help/matlab/matlab_env/get-add-ons.html) (Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox") distributes the latest release, which is GECKO 3 (see [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md#staying-on-gecko-3)).
+The [MATLAB Add-On](https://mathworks.com/help/matlab/matlab_env/get-add-ons.html) (Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox") installs a GitHub release; the latest, v3.2.5, is GECKO 3 (see [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md#staying-on-gecko-3)).
 
 After cloning or extracting, navigate to the GECKO folder in MATLAB and install it, which adds the GECKO subfolders to the MATLAB path:
 

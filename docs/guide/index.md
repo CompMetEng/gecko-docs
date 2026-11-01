@@ -40,6 +40,7 @@ Background, the reference material that the steps link to:
 - [ecModel YAML format](yaml-format.md), the file format that both toolboxes read and write.
 - [Files in the data folder](data-folder-files.md), every file that the `data` folder of a project can hold.
 - [Model adapter parameters](model-adapter-parameters.md), every parameter of `model_adapter.toml` in both languages.
+- [Basic model operations](basic-model-operations.md), bounds, objectives, FBA, flux inspection and export for conventional GEMs and ecModels.
 
 Migration, pages for GECKO 3 projects and scripts:
 
@@ -100,4 +101,5 @@ gecko-light
 yaml-format
 data-folder-files
 model-adapter-parameters
+basic-model-operations
 ```
