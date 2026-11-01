@@ -21,7 +21,12 @@ extensions = [
     # The GECKO introduction has equations ($$ ... $$): dollarmath below parses
     # them into math nodes and this extension renders them with MathJax.
     "sphinx.ext.mathjax",
+    # The workflow diagrams of the guide are Mermaid flowcharts.
+    "sphinxcontrib.mermaid",
 ]
+
+# Diagram height follows the content (the default of 500 px would shrink a tall flowchart).
+mermaid_height = "auto"
 
 intersphinx_mapping = {"cobra": ("https://cobrapy.readthedocs.io/en/latest/", None)}
 
