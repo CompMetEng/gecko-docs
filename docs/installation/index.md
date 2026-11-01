@@ -20,7 +20,7 @@ The starting point is a conventional constraint-based metabolic model, at genome
 
 - **MATLAB**. The test workflow of GECKO runs MATLAB R2024b; the repository states no minimum version
   ([MathWorks](https://mathworks.com/products/matlab.html)). No additional MathWorks toolboxes are required.
-- **RAVEN toolbox** version 2.9.1 or later ([repository](https://github.com/CompMetEng/RAVEN)), which provides the reconstruction functions GECKO builds on, and some of the functions used to simulate and analyse ecModels. `GECKOInstaller.install` stops with an error for an older version.
+- **RAVEN toolbox** version 3 or later ([repository](https://github.com/CompMetEng/RAVEN)), which provides the reconstruction functions GECKO builds on, and some of the functions used to simulate and analyse ecModels. GECKO 4 does not support RAVEN 2.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
