@@ -1,6 +1,6 @@
 # GECKO light and full ecModels
 
-GECKO builds two ecModel layouts from the same conventional GEM, **full** and **light**. A full ecModel has a pseudo-metabolite and a usage reaction for every enzyme, and a light ecModel has one shared protein pool. The reader has chosen the layout for a project and knows which functions do not work on a light ecModel.
+GECKO builds two ecModel layouts from the same conventional GEM, **full** and **light**. A full ecModel has a pseudo-metabolite and a usage reaction for every enzyme, and a light ecModel has one shared protein pool. Full and light ecModels differ in layout and in the functions that they support.
 
 ## Functions
 
@@ -18,7 +18,7 @@ A conventional GEM and a model adapter are needed, as described in [Building an 
 When a metabolic reaction is catalysed by an enzyme, GECKO encodes the protein cost of that catalysis in the model in one of two ways:
 
 - **Full ecModel.** For each enzyme, GECKO adds a pseudo-metabolite (`prot_<uniprot>`) and a usage reaction (`usage_prot_<uniprot>`). A reaction catalysed by several isozymes is split into one copy per isozyme. The solver reports the usage of each enzyme directly, for example of enzyme P00350. The LP is much larger than that of the conventional GEM: the `ecYeastGEM.yml` of the `full_ecModel` tutorial has 8001 reactions, of which 1145 are protein reactions, and a Human-GEM full ecModel runs into the tens of thousands.
-- **Light ecModel.** The per-enzyme pseudo-metabolites and usage reactions are left out, and a single shared protein pool carries the cost. Each catalysed reaction has one extra stoichiometric coefficient against that pool, $-MW_{sum} / (k_{cat} \times 3600)$, where $MW_{sum}$ is the summed molecular weight of the enzymes of the isozyme, so the reaction consumes from the pool. Isozymes are not split into separate reactions. `applyKcatConstraints` selects, for each reaction, the isozyme with the smallest $MW_{sum} / k_{cat}$ among the isozymes that have a kcat and an enzyme, and writes that coefficient. A reaction without a usable isozyme gets no coefficient. The LP stays close to the size of the conventional GEM.
+- **Light ecModel.** The per-enzyme pseudo-metabolites and usage reactions are left out, and a single shared protein pool carries the cost. Each catalysed reaction has one extra stoichiometric coefficient against that pool, $-MW_{sum} / (k_{cat} \times 3600)$, where $MW_{sum}$ is the molecular weight of the enzymes of the isozyme, summed with the subunit copies as weights, so the reaction consumes from the pool. Isozymes are not split into separate reactions. `applyKcatConstraints` selects, for each reaction, the isozyme with the smallest $MW_{sum} / k_{cat}$ among the isozymes that have a kcat and an enzyme, and writes that coefficient. A reaction without a usable isozyme gets no coefficient. The LP stays close to the size of the conventional GEM.
 
 A light ecModel suits genome-scale models for which the full layout solves slowly, such as Human-GEM or Recon3D. The full layout suits smaller models, such as yeast or *E. coli*.
 
@@ -36,7 +36,7 @@ A light ecModel has no per-enzyme pseudo-metabolites and no usage reactions. The
 
 | Capability | MATLAB | Python |
 |---|---|---|
-| Proteomics constraints | `constrainEnzConcs` raises an error, because the usage reactions are missing; `flexibilizeEnzConcs` acts on the same reactions and raises the error `Protein concentrations have not been defined`, because no concentrations are set | `constrain_enz_concs` raises `ValueError`; `flexibilize_enz_concs` acts on the same reactions |
+| Proteomics constraints | `constrainEnzConcs` raises an error, because the usage reactions are missing; `flexibilizeEnzConcs` acts on the same reactions and raises the error `Protein concentrations have not been defined` when no concentration is set | `constrain_enz_concs` raises `ValueError`; `flexibilize_enz_concs` acts on the same reactions |
 | Greedy proteomics relaxation | `relaxProteomicsGreedy` raises an error | `relax_proteomics_greedy` raises `NotImplementedError` |
 | Enzyme usage and bottlenecks | `getEnzymeUsage`, `getEnzymeBottlenecks` and `getPfbaEnzymes` raise an error; `reportEnzymeUsage` takes the output of `getEnzymeUsage` | `enzyme_usage`, `get_enzyme_bottlenecks` and `pfba_enzymes` raise `NotImplementedError`; `report_enzyme_usage` takes the output of `enzyme_usage` |
 | Flux, capacity usage or shadow price of one enzyme | no `usage_prot_<id>` reaction to read | `Enzyme.flux`, `Enzyme.cap_usage`, `Enzyme.upper_bound` and `Enzyme.shadow_price` raise `NotImplementedError` |
@@ -53,7 +53,7 @@ Functions that read `ec.kcat` and `ec.mw`, or edit the LP directly, work on a li
 
 ## Reconstruction time and simulation accuracy
 
-The comparison below builds a light and a full ecModel of yeast-GEM, populated with kcat values from BRENDA fuzzy matching alone, and runs FBA with growth maximised on each. The comparison script exists in MATLAB and has no Python equivalent. It sets the lower bound of the glucose uptake reaction `r_1714` to -1000 and the growth reaction `r_2111` as the objective:
+The comparison below builds a light and a full ecModel of yeast-GEM, populated with kcat values from BRENDA fuzzy matching alone, and runs FBA with growth maximised on each. Both toolboxes ship the comparison script (`plotlightVSfull` and `plot_light_vs_full`). It sets the lower bound of the glucose uptake reaction `r_1714` to -1000 and the growth reaction `r_2111` as the objective:
 
 | Measure | Light | Full |
 |---|---|---|

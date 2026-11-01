@@ -20,7 +20,7 @@ An existing GECKO 3 project is converted to [project format 4](gecko4-project-fo
 3. Stored predictions: `data/DLKcat.tsv` and stored OpenKineticsPredictor results become kcat source files (`kcatsFromDLKcat`, and `kcatsFromOKP` with `'useStored'`). No prediction is run.
 4. Saved ecModels: The ecModels in `models/*.yml` made with GECKO 3 get their protein usage and pool reactions turned forward (`upgradeEcModel`).
 5. Project format: `project_format = 4` is written to `model_adapter.toml`.
-6. Scripts: The lines of the `.m` files of the project that call renamed or replaced functions are listed and not changed.
+6. Scripts: the lines of the `.m` files of the project (in Python, the `.py` files) that call renamed or replaced functions are listed and not changed.
 
 Steps 2 and 3 need the full ecModel that the custom kcats and the predictions are for. Without it they are listed and skipped.
 
@@ -61,8 +61,8 @@ geckopy upgrade myproject --apply --ec-model models/ecModel.yml
 
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
-| Steps 2 and 3 are `skipped` | no `ecModel` was given | Give the full ecModel the custom kcats and predictions are for |
-| Step 1 lists methods | the adapter class overrides methods that the TOML file cannot hold | Move the code to a subclass of `TomlAdapter`, or to the `[matlab]` section |
+| Steps 2 and 3 are `skipped` | no `ecModel` was given, or in Python the project has an adapter class and no `model_adapter.toml` | Give the full ecModel the custom kcats and predictions are for, and in Python convert the adapter by hand |
+| Step 1 lists methods | the adapter class overrides methods that the TOML file cannot hold | Keep the adapter class, or move the code to a subclass of `TomlAdapter`. The `[matlab]` section holds only `make_model_anaerobic` and `change_protein_biomass` |
 | Script lines are listed | the script calls renamed functions | Change the lines by hand, with [Renamed functions](gecko3-to-gecko4.md#renamed-functions) |
 | A kcat differs from the GECKO 3 model | the default kcat preset changed | Set `preset = "gecko_classic"` (see [Kcat assignment](gecko4-kcat-assignment.md)) |
 

@@ -11,7 +11,7 @@ A GECKO 3 script keeps running after each change in this box and returns a diffe
 - `fuzzyKcatMatching` divides a BRENDA kcat by the coefficient of the substrate the kcat was measured on. GECKO 3 divided by the smallest coefficient in the reaction.
 - `assignKcats` and `collectKcats` use the preset `brenda_ec_tree` when `model_adapter.toml` sets no other.
 - `calculateFfactor` averages each protein over the samples in which it is measured.
-- `sigmaFitter` returns the smallest sigma whose growth rate is within a relative 1e-9 of the best. In geckopy, `fit_sigma` applies this rule with `method="bisect"`; the default `method="grid"` returns the first grid point with the smallest error.
+- `sigmaFitter` returns the smallest sigma whose percent error is within a relative 1e-9 of the smallest error. The 1e-9 tolerance is not part of GECKO 3. geckopy `fit_sigma` takes the first grid point with the smallest error (default `method="grid"`) or a continuous sigma (`method="bisect"`).
 :::
 
 ## Changes by consequence
@@ -22,9 +22,9 @@ A GECKO 3 script keeps running after each change in this box and returns a diffe
 | --- | --- | --- | --- |
 | Direction of protein reactions | `usage_prot_<id>` and `prot_pool_exchange` run in reverse and carry negative flux | both run forward, and the usage of an enzyme is the positive flux of its usage reaction | Reverse the sign of bounds and fluxes read from these reactions. `upgradeEcModel` turns a GECKO 3 ecModel (see [Upgrade a GECKO 3 project](gecko3-upgrade-project.md)) |
 | Substrate of a BRENDA kcat | the kcat is divided by the smallest coefficient in the reaction | the kcat is divided by the coefficient of the substrate that matched | Rebuild the kcat list. Reactions that are not written per the measured substrate get a lower kcat |
-| Default kcat assignment | `selectKcatValue` (now `assignKcatValues`) merges a DLKcat list and a BRENDA list | `assignKcats` decides from the kcat source files in `data/kcats` with the preset `brenda_ec_tree` | Set `preset = "gecko_classic"` in `[kcat_assignment]` to keep the GECKO 3 order (see [Kcat assignment](gecko4-kcat-assignment.md)) |
+| Default kcat assignment | `selectKcatValue` (`assignKcatValues` in GECKO 4) merges a DLKcat list and a BRENDA list | `assignKcats` decides from the kcat source files in `data/kcats` with the preset `brenda_ec_tree` | Set `preset = "gecko_classic"` in `[kcat_assignment]` to keep the GECKO 3 order (see [Kcat assignment](gecko4-kcat-assignment.md)) |
 | Protein fraction `f` | `calculateFfactor` averages over all samples, so a protein missing in one sample is left out of both totals | the average is over the samples in which the protein is measured | Recalculate `f` when the proteomics file has missing values |
-| Sigma fit | `sigmaFitter` returns the sigma with the smallest error | it returns the smallest sigma whose growth rate is within a relative 1e-9 of the best (geckopy: `fit_sigma` with `method="bisect"`) | Refit when the growth rate is flat over a range of sigma |
+| Sigma fit | `sigmaFitter` returns the sigma with the smallest error | it returns the smallest sigma whose percent error is within a relative 1e-9 of the smallest error (geckopy `fit_sigma`: no tolerance in the default grid) | Refit when the growth rate is flat over a range of sigma |
 
 ### Changes that raise an error
 
@@ -43,6 +43,8 @@ Adapter classes keep working. Functions with name-value arguments also take them
 
 ## New functions
 
+The table lists a selection.
+
 | Group | Functions |
 | --- | --- |
 | Kcat sources | `kcatsFromBrenda`, `kcatsFromECTree`, `kcatsFromHomologs`, `kcatsFromDLKcat`, `kcatsFromOKP`, `saveKcatSource`, `loadKcatSource`, `getEcRxnKeys` |
@@ -51,7 +53,7 @@ Adapter classes keep working. Functions with name-value arguments also take them
 | Project and model upgrade | `upgradeGECKOproject`, `upgradeEcModel`, `convertAdapterToToml` |
 | Adapter | `TomlAdapter`, `readAdapterToml`, `writeAdapterToml`, `loadAdapterParams` |
 | Proteomics | `levelComplexConcs`, `getComplexFamilies`, and the option `perComplex` of `flexibilizeEnzConcs` |
-| Analysis | `getEnzymeBottlenecks`, `getPfbaEnzymes`, `relaxProteomicsGreedy` |
+| Analysis | `getEnzymeBottlenecks`, `relaxProteomicsGreedy` |
 
 `getEnzymeBottlenecks` solves the model again after raising the usage bound of each enzyme that runs at its bound, and ranks the enzymes by the rise of the objective. The shadow price is reported and does not enter the order.
 

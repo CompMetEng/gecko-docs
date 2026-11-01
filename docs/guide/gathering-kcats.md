@@ -118,7 +118,7 @@ kcat_list_fuzzy = kcats_from_brenda(ec_model)
 :::
 ::::
 
-The option `aggregation` (`'max'` or `'median'`) of `kcatsFromBrenda` (Python: `kcats_from_brenda`) selects the BRENDA value per EC number, substrate and organism; the default is `kcat_aggregate_brenda` of `model_adapter.toml`, or `'max'`. The direct call names the option `kcatAggregation` in `fuzzyKcatMatching` and `aggregate` in `fuzzy_kcat_matching`. The option `forceWClvl` (Python: `force_wildcard_level`) replaces that number of EC levels, from the right, by a wildcard in every EC number. `fuzzyKcatMatching` (Python: `fuzzy_kcat_matching`, which takes the loaded `brenda` and `phyl_dist`) returns the same list without writing a file.
+The option `aggregation` (`'max'` or `'median'`) of `kcatsFromBrenda` (Python: `kcats_from_brenda`) selects the BRENDA value per EC number, substrate and organism; the default is `kcat_aggregate_brenda` of `model_adapter.toml`, or `'max'`. `updateKcatSources` and `assignKcats` pass `aggregation` of `[kcat_sources.brenda]` instead, which the presets set (`median` for `brenda_ec_tree`, `ec_tree_homologs`, `ec_tree_okp` and `gecko_median`; `max` for `gecko_classic`). That setting overrides `kcat_aggregate_brenda` for a `brenda.tsv` gathered that way. The direct call names the option `kcatAggregation` in `fuzzyKcatMatching` and `aggregate` in `fuzzy_kcat_matching`. The option `forceWClvl` (Python: `force_wildcard_level`) replaces that number of EC levels, from the right, by a wildcard in every EC number. `fuzzyKcatMatching` (Python: `fuzzy_kcat_matching`, which takes the loaded `brenda` and `phyl_dist`) returns the same list without writing a file.
 
 Each BRENDA kcat is divided by the coefficient of the substrate that it was measured on, so a reaction that consumes two molecules of that substrate gets a kcat per molecule of the substrate ([GECKO 3 to GECKO 4](../gecko3-to-gecko4.md) describes the change from GECKO 3).
 
@@ -130,7 +130,7 @@ In the `full_ecModel` tutorial, the fuzzy `kcatList` documents, per reaction: th
 
 ## Estimate kcats from the EC tree
 
-The EC tree takes the median of all wild-type BRENDA measurements of the EC number, from any organism and substrate, and shrinks it towards the median of the 3-digit and 2-digit EC classes with the weight `n/(n+k)` for `n` measurements. A reaction with several EC numbers uses the one with the most measurements. Reactions without an EC number, or with EC classes without measurements, get no value.
+The EC tree takes the median of all wild-type BRENDA measurements of the EC number, from any organism and substrate, and shrinks it with the weight `n/(n+k)` for `n` measurements towards the estimate of the 3-digit EC class, which is shrunk in turn towards the 2-digit class and the global median. A reaction with several EC numbers uses the one with the most measurements. Reactions without an EC number, or with EC classes without measurements, get no value.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -280,7 +280,7 @@ write_dlkcat_input(
 
 ### Run DLKcat and load its output
 
-No other input is given, because the function assumes the input file is at `data/DLKcat.tsv`:
+In MATLAB no other input is given, because the functions assume the input file is at `data/DLKcat.tsv`. The Python functions take the path of the file:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -311,10 +311,10 @@ These steps do not write `data/kcats/dlkcat.tsv`. `kcatsFromDLKcat(ecModel)` wit
 
 OpenKineticsPredictor (OKP) shares its input with DLKcat: protein sequences and single-substrate SMILES, gathered in the section on SMILES annotations. It needs no Docker. The method is set by the option `method` or, without it, by `[okp] method` of `model_adapter.toml` (default CataPro). The methods are CataPro, CatPred, CatRange, DLKcat, EITLEM, KinForm-H, KinForm-L, OmniESI, OmniESI-O2DENet, TurNup and UniKP. `kcatsFromOKP` submits enzyme-substrate pairs and raises an error for CatPred and TurNup, which read whole reactions.
 
-:::{warning} The API key is a secret; never put it in the model adapter
+:::{warning} Storage of the API key
 OKP requires a personal Bearer API key (looks like `ak_...`). Get one free, no registration required, at [predictor.openkinetics.org/api-docs](https://predictor.openkinetics.org/api-docs) (the "API key generator" section; the key is shown once, and can be revoked and regenerated from the same page). Keys are tied to the requesting IP and carry a daily prediction quota that resets at midnight UTC.
 
-Because the model adapter is shared and committed to version control, the key does not belong there. Both languages resolve it the same way, checked in this order: an explicit function argument; the `OKP_API_KEY` environment variable; or a plain-text `data/okpApiKey.txt` file in the adapter folder (a filename already git-ignored by GECKO).
+Because the model adapter is shared and committed to version control, the key is not stored there. Both languages resolve it the same way, checked in this order: an explicit function argument; the `OKP_API_KEY` environment variable; or a plain-text `data/okpApiKey.txt` file in the adapter folder (a filename already git-ignored by GECKO).
 :::
 
 OKP is a web service with a job queue. `kcatsFromOKP` submits a job when the method has none, and fetches the result of the job on a later call. The file `okp_<method>.tsv` is written once the job is done.
@@ -411,6 +411,8 @@ kcat_list_merged = merge_kcats(
 | `database_bottom` | weaker fuzzy matches: origin up to `bottomOriginLimit` (default 6), and at most `wildcardLimit` (default 3) EC wildcards; also rows without EC wildcard whose origin is above `topOriginLimit` |
 
 Any other token (`'dlkcat'`, `'catapro'`, ...) matches the `source` value of a row, in lower case with other characters than letters and digits as `_`; a leading `okp_` of the source of an OpenKineticsPredictor row is dropped for the match. The default `topOriginLimit` of 4 ranks BRENDA matches from specific activities (origin 5 and 6) after the other sources, and the value 6 ranks them with the other `database_top` matches. All rows of the winning tier of a reaction are kept, and `assignKcatValues` (Python: `apply_kcat_list`) selects the value among them (default: the highest).
+
+The option `databaseSources` (Python: `database_sources`, default `{'brenda','sabio_rk'}`) lists the sources whose rows go to the `database_*` tiers; rows of other sources only match by their own token.
 
 The merge does not query a wildcard EC number itself. The wildcard rows exist in the BRENDA kcat list, and `database_bottom` admits them for a reaction that no source of a higher tier covers. The merged list has the fields of the fuzzy-matching list and a `kcatSource` field (Python: the `source` column, which every list has) naming which source contributed each value.
 

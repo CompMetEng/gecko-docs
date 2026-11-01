@@ -1,6 +1,6 @@
 # Simulation and analysis
 
-Light and full ecModels have the structure of a conventional GEM, an S-matrix with vectors of lower and upper bounds, so a method for conventional GEMs also runs on an ecModel in both languages. The tasks below are specific to ecModels: the protein pool constraint is varied, growth and protein pool usage are optimised, fluxes are mapped to the conventional GEM, the solution space is compared by FVA and sampled, engineering targets are scanned, and an ecModel is trimmed to a context-specific one. Media and solver setup are those of any model (see [Choosing a solver](../installation/index.md#choosing-a-solver)). SBML is the most portable exchange format for other constraint-based toolboxes, and [ecModel YAML format](yaml-format.md) describes the format that this documentation uses.
+Light and full ecModels have the structure of a conventional GEM, an S-matrix with vectors of lower and upper bounds, so a method for conventional GEMs also runs on an ecModel in both languages. The tasks below are specific to ecModels: the protein pool constraint is varied, growth and protein pool usage are optimised, fluxes are mapped to the conventional GEM, the solution space is compared by FVA and sampled, engineering targets are scanned, and an ecModel is trimmed to a context-specific one. Media and solver setup are those of any model (see [Choosing a solver](../installation/index.md#choosing-a-solver)). [ecModel YAML format](yaml-format.md) describes the file format that this documentation uses.
 
 ## Functions
 
@@ -51,7 +51,7 @@ Simulating the exchange fluxes over a range of growth rates on both models shows
 
 :::{admonition} Example output
 :class: note
-The kcat values affect this comparison (see [Growth-rate tuning](growth-rate-tuning.md)): an ecModel with untuned kcats can fail to reach realistic growth rates with the protein pool constraint in place. In one such comparison, 13 kcat values needed tuning before the model showed the Crabtree effect: yeast switched from respiration to fermentation when the protein pool was fully used. The simulated switch occurred later than the experimental one (around 0.2 /h simulated and around 0.28 /h observed), which indicates that a single enzyme dominated the constraint too early. The top enzyme usages show whether this is the case (see [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md)).
+The kcat values affect this comparison (see [Growth-rate tuning](growth-rate-tuning.md)): an ecModel with untuned kcats can fail to reach realistic growth rates with the protein pool constraint in place. In the comparison of the published GECKO 3 protocol, 13 kcat values needed tuning before the model showed the Crabtree effect: yeast switched from respiration to fermentation when the protein pool was fully used. The simulated switch occurred earlier than the experimental one (around 0.2 /h simulated and around 0.28 /h observed), which indicates that a single enzyme dominated the constraint too early. The top enzyme usages show whether this is the case (see [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md)).
 :::
 
 ## Choosing the objective function
@@ -83,6 +83,8 @@ print(f"Growth rate that is reached: {sol.fluxes[params.bio_rxn]:.4f} /hour")
 
 :::{admonition} Example output
 :class: note
+Result of the published GECKO 3 protocol:
+
 ```
 Growth rate that is reached: 0.4121 /hour
 ```
@@ -193,6 +195,7 @@ maxFlux = minFlux;
 from geckopy import apply_flux_data_constraints
 from geckopy.utilities import ec_fva
 
+model.adapter = adapter
 for m in (model, ec_model, ec_model_prot):
     apply_flux_data_constraints(
         m, flux_data,
@@ -204,15 +207,17 @@ fva_full = ec_fva(ec_model, model)
 fva_prot = ec_fva(ec_model_prot, model)
 ```
 
+`load_conventional_gem` returns a plain `cobra.Model` without the attribute `adapter`, which `apply_flux_data_constraints` reads for the biomass reaction, so the adapter is attached to it first. The ecModels carry their adapter. `bio_rxn` and `c_source` can be passed instead.
+
 `ec_fva` returns a DataFrame indexed by the reaction identifiers of the conventional model, with the columns `min_flux` and `max_flux`, so no matrix is pre-allocated as in MATLAB. The option `n_proc` sets the number of worker processes (default `cobra.Configuration().processes`).
 
-With the default open-source solver (GLPK), `ec_fva` at yeast-GEM scale (around 4,000 canonical reactions times 3 models times 2 LPs each) can take well over an hour. A faster solver is configured first (`ec_model.solver = "gurobi"`, licence permitting) before the run at genome scale.
+`ec_fva` solves two LPs per reaction and model, which is slow with the default open-source solver (GLPK); the run time is not measured here. A faster solver is configured first (`ec_model.solver = "gurobi"`, licence permitting) before the run at genome scale.
 :::
 ::::
 
 ### Example output
 
-The ranges are visualised as a cumulative distribution (`plotEcFVA` or a project-specific `plot_ec_fva` helper). The median flux variability of the ecModel is more than fourfold lower than that of the conventional GEM, and more than 15 % of the reactions of the conventional GEM have a high flux variability (around 1,000 mmol/gDCWh) that neither ecModel has:
+The ranges are visualised as a cumulative distribution (`plotEcFVA` or a project-specific `plot_ec_fva` helper). In the published GECKO 3 protocol, the median flux variability of the ecModel is more than fourfold lower than that of the conventional GEM, and more than 15 % of the reactions of the conventional GEM have a high flux variability (around 1,000 mmol/gDCWh) that neither ecModel has:
 
 | Model | Median flux variability |
 |---|---|
@@ -226,15 +231,13 @@ The ranges are visualised as a cumulative distribution (`plotEcFVA` or a project
 FVA reports the extremes that each reaction reaches one at a time. Flux sampling draws many feasible flux vectors and reports their distribution, which shows what the model does as well as what it can do. RAVEN, the base of GECKO, and raven-toolbox, the base of geckopy, offer two Markov-chain Monte Carlo samplers through the entry point for conventional GEMs: ACHR (Artificially Centered Hit-and-Run) and CHRR (Coordinate Hit-and-Run with Rounding). The call is `randomSampling(model, ..., 'method', 'achr'|'chrr')` in MATLAB and `random_sampling(model, method="achr"|"chrr")` in Python. The choice of the sampler matters for an ecModel.
 :::
 
-ACHR is the default, because it is cheaper and mixes adequately on a polytope that is well conditioned. An ecModel is usually not well conditioned. Every `usage_prot` reaction has a capacity bound that derives from a kcat and, after proteomics integration (see [Proteomics integration](proteomics-integration.md)), from a measured concentration. This combination tends to overconstrain the model, and many of these bounds are close to binding at the same time. Hundreds of near-binding constraints collapse the feasible polytope into a thin, elongated region.
+ACHR is the default. The documentation of the `chrr` method in both toolboxes (the help text of MATLAB `randomSampling` and the docstring of Python `random_sampling`) names CHRR for better mixing on thin, ill-conditioned polytopes such as enzyme-constrained models.
 
-The mixing time of hit-and-run scales with the aspect ratio of the polytope, the ratio of its longest to its shortest axis. The step directions of ACHR come from warmup points (one flux vector per reaction, maximised and minimised), and on an elongated polytope these directions cluster along the long axes. The chain moves freely along them and rarely crosses the thin axes. The autocorrelation within a chain drops as usual, so the run looks converged, while the chain has explored a small part of the feasible set along the enzyme capacity bounds. The documentation of the `chrr` method in both toolboxes (the help text of MATLAB `randomSampling` and the docstring of Python `random_sampling`) names CHRR for better mixing on thin, ill-conditioned polytopes such as enzyme-constrained models.
+The [convergence study of raven-docs](https://github.com/edkerk/raven-docs/blob/main/docs/parameter-tuning/studies/sampling-convergence-calibration.md) measured both methods on a conventional GEM; it has no ecModel. At genome scale on yeast-GEM, the default settings of ACHR were not converged: the median Gelman-Rubin R-hat was 1.17 across four chains, and two in three reactions failed even the loose threshold of 1.1. CHRR converged on a small model (`e_coli_core`, 95 reactions: the worst R-hat dropped from 1.30 to 1.02) and took about 20 times longer there. A bounded probe at yeast-GEM scale measured roughly 80 minutes of fixed rounding cost per chain before the first sample, comparable to a full ACHR run of 300 samples. The probe had too few samples for a stable R-hat, so the convergence of CHRR at genome scale is untested.
 
-Before sampling, CHRR computes the maximum-volume ellipsoid that is inscribed in the polytope once and builds a rounded coordinate system from it. The transformed polytope contains the unit ball and lies inside a ball of bounded radius, whatever the thickness of the original polytope (Haraldsdóttir et al., 2017). Coordinate hit-and-run runs in the rounded space at the cost per step of ACHR once the one-time rounding is done. The mixing then does not depend on the number of enzyme constraints that are near their limit.
-
-The [convergence study of raven-docs](https://github.com/edkerk/raven-docs/blob/main/docs/parameter-tuning/studies/sampling-convergence-calibration.md) measured both methods on a conventional GEM; it has no ecModel. At genome scale on yeast-GEM, the default settings of ACHR were not converged: the median Gelman-Rubin R-hat was 1.17 across four chains, and two in three reactions failed even the loose threshold of 1.1. CHRR converged on a small model (`e_coli_core`, 95 reactions: the worst R-hat dropped from 1.30 to 1.02) and took about 20 times longer there. A bounded probe at yeast-GEM scale measured roughly 80 minutes of fixed rounding cost per chain before the first sample, comparable to a full ACHR run of 300 samples. The probe had too few samples for a stable R-hat, so the convergence of CHRR at genome scale is untested. The study concludes that no cheap, validated solution exists yet at that scale, for a conventional GEM and for an ecModel with tighter constraints.
-
-Sampled flux ranges from either method are provisional at genome scale until they are checked, for example by an R-hat close to 1 on the reactions of interest across independent chains. The fixed rounding cost per chain of CHRR is part of the time budget.
+:::{warning} Sampled ranges at genome scale
+The study concludes that no cheap, validated solution exists yet at that scale. The `chrr` call below is therefore not a validated recipe: sampled flux ranges from either method are provisional at genome scale until they are checked, for example by an R-hat close to 1 on the reactions of interest across independent chains. The fixed rounding cost per chain of CHRR is part of the time budget.
+:::
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -320,7 +323,7 @@ The function matches the canonical reaction identifiers and returns a new `EcMod
 
 ### Example output
 
-Contextualisation and enzyme constraints each lower the reachable growth rate, and the effects combine. The table compares the maximum growth rate of an unconstrained context-specific GEM, a generic ecModel, and a context-specific ecModel that derives from it:
+Contextualisation and enzyme constraints each lower the reachable growth rate, and the effects combine. The table gives the values of the published GECKO 3 protocol for the maximum growth rate of an unconstrained context-specific GEM, a generic ecModel, and a context-specific ecModel that derives from it:
 
 | Model | Maximum growth rate (/hour) |
 |---|---|
@@ -336,7 +339,7 @@ The growth rate of the unconstrained context-specific model (149.97 /h) has no b
 |---|---|---|
 | The sign of `prot_pool_exchange` or `usage_prot_*` fluxes is the opposite of the sign in the examples | the ecModel was made with GECKO 3 and these reactions run in reverse | Run `upgradeEcModel` (Python: `upgrade_ec_model`), or reload the model with `loadEcModel` |
 | `mapRxnsToConv` raises "Not all reactions from model.rxns can be found in the ecModel" | the ecModel does not derive from the conventional GEM that was passed | Pass the GEM that `makeEcModel` started from |
-| `ec_fva` runs for hours | the default solver is GLPK | Configure a commercial solver, or set `n_proc` |
+| `ec_fva` runs for a long time | the default solver is GLPK | Configure a commercial solver, or set `n_proc` |
 | `getSubsetEcModel` raises an error that lists reactions of the smaller model | the context-specific model and the ecModel derive from different starting GEMs | Contextualise the GEM that the ecModel is built from |
 
 ## See also

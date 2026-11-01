@@ -16,7 +16,9 @@ Building an ecModel expands a conventional GEM so that enzyme constraints can be
 
 The project folder with `model_adapter.toml` and the starting GEM exist (see [Getting started](getting-started.md)). `createGECKOproject` (MATLAB) and `geckopy init` (Python) create the folder. The adapter sets the path of the GEM (`conv_gem`), the compartment of the protein pseudo-metabolites (`enzyme_comp`, a compartment name), the UniProt and KEGG parameters and, for the complex data, `complex.taxonomic_id`. [Model adapter parameters](model-adapter-parameters.md) describes them. The examples use the `full_ecModel` tutorial of GECKO, and its data files are described in [Files in the data folder](data-folder-files.md).
 
-`makeEcModel` reads `data/uniprot.tsv` and `data/kegg.tsv` of the project and downloads a missing file when the adapter sets the corresponding identifiers (`uniprot.id`, `kegg.id`); otherwise it prints a warning. `make_ec_model` reads `data/uniprot.tsv` and raises a `FileNotFoundError` when it is missing; `geckopy uniprot-download` creates it. `geckopy kegg-download eco data/kegg.tsv` creates `data/kegg.tsv`, a comma-delimited file that `make_ec_model` loads under that name.
+`makeEcModel` reads `data/uniprot.tsv` and `data/kegg.tsv` of the project and downloads a missing file when the identifier is not empty (`uniprot.id` and `kegg.id`, defaults 559292 and `sce`). An empty `uniprot.id` prints a warning, and the download is still attempted. An empty `kegg.id` prints a warning and skips the KEGG download. `make_ec_model` reads `data/uniprot.tsv` and raises a `FileNotFoundError` when it is missing, and it loads `data/kegg.tsv` when that file exists.
+
+In Python, `geckopy uniprot-download` takes the UniProt identifier and the output path, for example `geckopy uniprot-download 559292 data/uniprot.tsv`. The option `--id-type` sets the query field (default `taxonomy_id`; `proteome` for a proteome identifier such as `UP000002311`), and `--gene-id-field` sets the gene identifier field (default `gene_oln`). `geckopy kegg-download eco data/kegg.tsv` creates `data/kegg.tsv`, a comma-delimited file that `make_ec_model` loads under that name.
 
 ## Set the default model adapter
 
@@ -51,7 +53,7 @@ ModelAdapterManager.setDefault(adapterLocation);
 :::{tab-item} 🐍 Python
 :sync: python
 
-geckopy has no global default adapter: every function that needs one takes it as an explicit argument. Load it once and pass it, or its `.params` attribute, to each call:
+geckopy has no session-wide default adapter. An `EcModel` carries its adapter as `model.adapter`, which functions use when no adapter is passed. Load the adapter once and pass it, or its `.params` attribute, to each call:
 
 ```python
 from pathlib import Path
@@ -217,7 +219,7 @@ get_complex_data(
 :::
 ::::
 
-Complex data is integrated for a reaction when its ecModel gene association fully (100 %) matches a Complex Portal complex. `applyComplexData` changes `ec.rxnEnzMat`; the coefficients in the stoichiometric matrix follow from `applyKcatConstraints` (see [Applying kcat values](applying-kcats.md)). For a reaction with more than one enzyme and no full match, complexes with a partial match are proposed (MATLAB: in `proposedComplex`; Python: in the log). A complex is proposed when at least 75 % of the ecModel genes of the reaction match a Complex Portal complex, or when all genes match and the Complex Portal complex contains more subunits. Inspect the proposed complexes and consider whether curating the ecModel gene association is appropriate; this may need further literature study.
+Complex data is integrated for a reaction when its ecModel gene association fully (100 %) matches a Complex Portal complex. `applyComplexData` changes `ec.rxnEnzMat`; the coefficients in the stoichiometric matrix follow from `applyKcatConstraints` (see [Applying kcat values](applying-kcats.md)). For a reaction with more than one enzyme and no full match, complexes with a partial match are proposed (MATLAB: in `proposedComplex`; Python: in the log). A complex is proposed when at least 75 % of the ecModel genes of the reaction match a Complex Portal complex that has no more subunits than the ecModel gene set, or when all genes match and the Complex Portal complex contains more subunits. Inspect the proposed complexes and consider whether curating the ecModel gene association is appropriate; this may need further literature study.
 
 :::{note} Example output
 In the `full_ecModel` tutorial, applying Complex Portal data finds 206 complexes with a full match and 17 proposed complexes. One proposed match: reaction `r_0505_EXP_2` could match complex CPX-1293, the mitochondrial 2-oxoglutarate dehydrogenase complex. In the ecModel this reaction is annotated with proteins P20967 (KGD1, subunit E1), P19262 (KGD2, subunit E2) and P09624 (LPD1, subunit E3), while CPX-1293 also includes P19955 (YMR31), the 37S ribosomal protein. Literature confirms that P19955, also called KGD4 or subunit E4, is an essential subunit for a stable complex, so the gene association of reaction `r_0505` in the starting GEM could be curated to include it, which would give a full match.
@@ -266,6 +268,8 @@ ec_model = load_ec_model("ecModel.yml", adapter=adapter)
 ec_model = load_ec_model(r"C:\path\to\ecModel.yml")
 ```
 
+When `ec_model.adapter` is set, `save_ec_model` uses it and the argument `adapter` can be omitted.
+
 geckopy provides no separate SBML export for ecModels: YAML is the sole format that round-trips the `ec` fields, and `save_ec_model` raises a `ValueError` for another extension and for a model whose `ec` is empty. Because `ec_model` is a `cobra.Model`, plain cobrapy SBML I/O still works for interoperating with other tools, with the same limit as MATLAB's `exportModel`: it does not retain the `ec` fields.
 
 ```python
@@ -288,7 +292,7 @@ Converting a conventional GEM into an empty ecModel runs up to twelve operations
 |---|---|:---:|:---:|
 | 1 | Remove gene associations from pseudo-reactions (name contains `pseudoreaction`, or listed in `data/pseudoRxns.tsv`) | ✅ | ✅ |
 | 2 | Invert irreversible reactions that run backwards (lower bound < 0, upper bound = 0) | ✅ | ✅ |
-| 3 | Determine which reactions are reversible from their bounds (MATLAB stores this as the ecModel field `rev`; geckopy has no separate reversibility vector) | ✅ | ✅ |
+| 3 | Determine which reactions are reversible from their bounds; a reaction with a single metabolite (exchange type) is also marked reversible (MATLAB stores this as the ecModel field `rev`; geckopy has no separate reversibility vector) | ✅ | ✅ |
 | 4 | Split reversible reactions into forward and reverse copies (`_REV` suffix on the reverse copy; exchange reactions keep their original, still-reversible form) | ✅ | ✅ |
 | 5 | Split isozyme-catalysed reactions (`or` in the gene-reaction rule) into one reaction per isozyme (`_EXP_1`, `_EXP_2`, …) | ✅ | -- |
 | 6 | Build an empty `ec` structure (Python: an `EcData` instance) | ✅ | ✅ |
@@ -303,7 +307,7 @@ Step 5's new reaction identifiers: reaction `r_0001` catalysed by two isozymes b
 :::
 
 :::{tip} Usage and pool exchange reactions run forward
-`usage_prot_<id>` consumes `prot_pool` to produce `prot_<id>`, and `prot_pool_exchange` supplies `prot_pool`, both with bounds from 0 to 1000 at the build. An ecModel of GECKO 3 defines both reactions in the reverse direction with negative flux (see [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md)). The direction determines which bound relaxes a constraint and which objective coefficient minimises usage; the worked example is in [Growth-rate tuning](growth-rate-tuning.md#too-tight-protein-pool-constraint).
+`usage_prot_<id>` consumes `prot_pool` to produce `prot_<id>`, and `prot_pool_exchange` supplies `prot_pool`, both with bounds from 0 to 1000 at the build. An ecModel of GECKO 3 defines both reactions in the reverse direction with negative flux (see [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md)). The direction determines which bound relaxes a constraint and which objective coefficient minimises usage; the worked example is in [Growth-rate tuning](growth-rate-tuning.md#protein-pool-constraint).
 :::
 
 ## Troubleshooting
@@ -313,7 +317,7 @@ Step 5's new reaction identifiers: reaction `r_0001` catalysed by two isozymes b
 | Error that the identifiers in `model.mets` or `model.rxns` are not allowed (Python: `ValueError`) | A metabolite identifier starts with `prot_`, or a reaction identifier starts with `usage_prot_` or `prot_pool` or ends with `_REV` or `_EXP_<digits>` | Rename the identifiers in the conventional GEM |
 | Error that a compartment cannot be found in `model.compNames` | `enzyme_comp` differs from every compartment name of the model | Set `enzyme_comp` to a compartment name |
 | Error that no protein in `uniprot.tsv` or `kegg.tsv` matches the genes | The UniProt or KEGG parameters do not fit the gene identifiers | Adjust `uniprot` and `kegg` in `model_adapter.toml` (see [Getting started](getting-started.md#the-model-adapter)) |
-| `FileNotFoundError` for `uniprot.tsv` (Python) | The file is not in `data/` | Run `geckopy uniprot-download` |
+| `FileNotFoundError` for `uniprot.tsv` (Python) | The file is not in `data/` | Run `geckopy uniprot-download 559292 data/uniprot.tsv` with the identifier of the organism |
 | `ValueError` that the model already has a populated `ec` (Python) | `make_ec_model` was called on an ecModel | Call it on the conventional GEM |
 | Warning `No taxonomicID specified` from `getComplexData` | `complex.taxonomicID` is not set | Set it in `model_adapter.toml` or give `taxonomicID` |
 

@@ -88,7 +88,7 @@ fill_enz_concs(ec_model, prot_data, data_col=0)
 :::
 ::::
 
-`fillEnzConcs` / `fill_enz_concs` replaces `ec.concs` with the concentrations of the selected experiment. An enzyme without a measurement has `NaN`. A negative abundance of an enzyme of the model raises the error `fillEnzConcs:negativeAbundance` in MATLAB.
+`fillEnzConcs` / `fill_enz_concs` replaces `ec.concs` with the concentrations of the selected experiment. An enzyme without a measurement has `NaN`. A negative abundance of an enzyme of the model raises the error `fillEnzConcs:negativeAbundance` in MATLAB and a `ValueError` in Python. In Python, a `data_col` outside the columns of the abundances raises an `IndexError`.
 
 ## Level the concentrations of complexes
 
@@ -156,7 +156,7 @@ Enzyme concentrations must be in mg/gDCW. Relative proteomics data loaded with t
 
 ## Set the protein pool from the proteomics data
 
-A proteomics experiment may reflect a physiology different from the default assumption. The pool size is recomputed from a sample-specific total protein content (for example 0.5 g/gDCW) in place of the adapter default `Ptot` (Python: `p_tot`), and from the f-factor of the proteomics data, the fraction of the measured protein mass that is accounted for by enzymes of the model. With several experiments in `protData`, `calculateFfactor` averages the abundance of each protein over the experiments in which it is measured. `updateProtPool` of GECKO 3 raises an error for ecModels of GECKO 3.2 and later, because every usage reaction draws from the protein pool, and `setProtPoolSize` takes its place.
+A proteomics experiment may reflect a physiology different from the default assumption. The pool size is recomputed from a sample-specific total protein content (for example 0.5 g/gDCW) in place of the adapter default `Ptot` (Python: `p_tot`), and from the f-factor of the proteomics data, the fraction of the measured protein mass that is accounted for by enzymes of the model. With several experiments in `protData`, `calculateFfactor` averages the abundance of each protein over the experiments in which it is measured. `updateProtPool` is a function of GECKO 4 that raises an error when a usage reaction with an upper bound other than 1000 draws from the protein pool, which is the case for every ecModel with concentration-bounded usage reactions from GECKO 3.2 on; `setProtPoolSize` sizes the pool for such ecModels.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -204,7 +204,7 @@ flux_data = load_flux_data(params.path / "data" / "fluxData.tsv")
 
 Two choices decide how the constraint is applied:
 
-1. **Loose or strict.** With loose constraints, the measured rate is set as the upper bound and the lower bound stays at zero (for a reaction with a negative rate, the lower bound gets the measured value and the upper bound stays at zero). With strict constraints, a percentage between 0 and 100 is passed in place of `'loose'` (Python: a number), and the lower and upper bounds are both set around the measured value; 10 gives 95 % and 105 % of it. Strict constraints force the ecModel to follow the measured fluxes closely, but imprecision in either the fluxes or the enzyme concentrations can then make the model infeasible; the constraint is loosened if that happens.
+1. **Loose or strict.** With loose constraints, the measured rate is set as the upper bound and the lower bound stays at zero (for a reaction with a negative rate, the lower bound gets the measured value and the upper bound stays at zero). With strict constraints, a percentage between 0 and 100 is passed in place of `'loose'` (Python: a number), and the lower and upper bounds are both set around the measured value; 10 gives 95 % and 105 % of it. Strict constraints force the ecModel to follow the measured fluxes closely, but imprecision in either the fluxes or the enzyme concentrations can then make the model infeasible; if that happens, loosen the constraint.
 2. **Max or min growth.** With `max`, the measured growth rate is the upper bound, the ceiling the ecModel should reach; this suits growth as the objective function. With `min`, the measured growth rate is the lower bound, the floor the ecModel must reach; this suits minimising protein pool usage as the objective (see [Simulation and analysis](simulation-and-analysis.md)).
 
 Loose constraints for the metabolic exchange fluxes and `max` for growth make the ecModel least likely to be overconstrained. The following applies the data of the first experiment and solves:
@@ -237,14 +237,14 @@ print(f"Growth rate that is reached: {sol.objective_value:.4f} /hour")
 :::
 ::::
 
-With `max` and loose constraints, FBA reaches a solution unless too many exchange fluxes were pinned to zero. If the reachable growth rate falls short of the intended one, the enzyme levels are overconstrained and are made more flexible with the functions of [Relaxing overconstrained proteomics](relaxing-constraints.md). Applying the same flux constraints to the conventional GEM, with no enzyme constraints, shows which part is overconstrained: if the conventional GEM also falls short of the intended growth rate, the exchange flux data are the limit.
+With `max` and loose constraints, FBA reaches a solution unless too many exchange fluxes were pinned to zero. If the reachable growth rate falls short of the intended one, the enzyme levels are overconstrained; relax them with the functions of [Relaxing overconstrained proteomics](relaxing-constraints.md). Applying the same flux constraints to the conventional GEM, with no enzyme constraints, shows which part is overconstrained: if the conventional GEM also falls short of the intended growth rate, the exchange flux data are the limit.
 
 ## Troubleshooting
 
 | Problem | Possible reason | Solution |
 |---|---|---|
 | `loadProtData:replicateMismatch` (Python: `ValueError` from `load_prot_data`) | the sum of `replPerCond` differs from the number of replicate columns of the file | Correct `replPerCond` (Python: `repl_per_cond`) |
-| `updateProtPool` raises an error | every usage reaction draws from the protein pool, with or without a concentration bound | Calculate the f-factor and call `setProtPoolSize` |
+| `updateProtPool` raises an error | a usage reaction with an upper bound other than 1000 draws from the protein pool, as in every ecModel with concentration-bounded usage reactions | Calculate the f-factor and call `setProtPoolSize` |
 | The growth rate that is reached is below the intended one | the enzyme levels, the $k_{cat}$ values or the exchange flux data are overconstrained | Relax the enzyme concentrations (see [Relaxing overconstrained proteomics](relaxing-constraints.md)), or loosen the flux constraints |
 | `calculate_f_factor` returns 0 with a warning | none of the UniProt identifiers of the proteomics data matches an enzyme of the model | Use the same identifier namespace in `proteomics.tsv` and `ec.enzymes` |
 | A complex is still limited by one subunit | the subunit is shared between complexes or catalyses a reaction on its own, and stays as measured | Check the `shared` field of the result of `levelComplexConcs` |

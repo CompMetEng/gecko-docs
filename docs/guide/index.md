@@ -9,9 +9,9 @@ This guide documents GECKO 4, a pre-release. The pages follow the structure of t
 
 :::{admonition} MATLAB and Python
 :class: info
-Every task page shows both languages side by side: GECKO (MATLAB), built on RAVEN, and geckopy (Python), built on cobrapy. Function names differ in case (`camelCase` and `snake_case`), and some differ in the word as well; [MATLAB vs Python](../matlab-vs-python.md) lists the name of each function in both languages, and the [API reference](../api/index.md) lists the signatures.
+Task pages show both languages in tabs: GECKO (MATLAB), built on RAVEN, and geckopy (Python), built on cobrapy. Function names differ in case (`camelCase` and `snake_case`), and some differ in the word as well; [MATLAB vs Python](../matlab-vs-python.md) lists the name of each function in both languages, and the [API reference](../api/index.md) lists the signatures.
 
-Text outside a MATLAB or Python tab reads the same in both languages. Where it refers to the enzyme data of a model, `ec.kcat` stands for `ecModel.ec.kcat` in MATLAB and `ec_model.ec.kcat` in Python. The field names are identical in both languages except `rxnEnzMat` (Python: `rxn_enz_mat`).
+Text outside a MATLAB or Python tab reads the same in both languages. Where it refers to the enzyme data of a model, `ec.kcat` stands for `ecModel.ec.kcat` in MATLAB and `ec_model.ec.kcat` in Python. The field names are identical in both languages except `rxnEnzMat` (Python: `rxn_enz_mat`) and `ec.geckoLight` (Python: `gecko_light`).
 :::
 
 ## Pages

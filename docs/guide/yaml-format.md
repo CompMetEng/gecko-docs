@@ -21,7 +21,7 @@ The file is an ordered mapping (`!!omap`) that is written as a list of single-ke
 | `ec-rxns` | list with the kcat, source and enzymes of every row of `ec.rxns` |
 | `ec-enzymes` | list with the molecular weight, sequence and concentration of every enzyme |
 
-The writers add `gecko_light`, `ec-rxns` and `ec-enzymes` when the model has an `ec` structure. A file with one of `ec-rxns` and `ec-enzymes` and without the other is an error in geckopy, and `load_ec_model` raises a `ValueError` for a file without both. The readers also accept `id`, `name`, `version` and `gecko_light` at the top level of the file.
+The writers add `gecko_light`, `ec-rxns` and `ec-enzymes` when the model has an `ec` structure. A file with one of `ec-rxns` and `ec-enzymes` and without the other is an error in geckopy, and `load_ec_model` raises a `ValueError` when `ec-rxns` or `ec-enzymes` is missing or empty. The readers also accept `id`, `name`, `version` and `gecko_light` at the top level of the file.
 
 The metaData section and the first metabolite of `ecYeastGEM.yml` in the `full_ecModel` tutorial, abridged. This file has no `gecko_format`, `generator` or `description` key:
 
@@ -249,7 +249,7 @@ Both toolboxes read files from earlier releases of GECKO and RAVEN. The differen
 | Document start | `---` before `!!omap` | `!!omap` |
 | Protein reactions | reverse direction | forward direction |
 
-geckopy repairs an entry `enzymes: !!omap` without items and a value in double quotes with unescaped double quotes, as earlier GECKO and RAVEN releases wrote them, before it reads the file. A file written as a list of single-key mappings without `!!omap` is merged into one mapping.
+geckopy repairs an entry `enzymes: !!omap` without items and a value in double quotes with unescaped double quotes, as earlier GECKO and RAVEN releases wrote them, when reading the file fails. A file written as a list of single-key mappings without `!!omap` is merged into one mapping.
 
 ## Troubleshooting
 

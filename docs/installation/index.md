@@ -4,7 +4,7 @@ icon: material/folder-open
 
 # Installation
 
-GECKO is available as a **MATLAB toolbox** and as the **Python package geckopy**. Both implement the same procedure and reconstruct, simulate and analyse the same ecModels (see [GECKO and geckopy](../gecko-to-geckopy.md)). GECKO 4 and geckopy 4 are in the pre-release 4.0.0b1.
+GECKO is available as a MATLAB toolbox and as the Python package geckopy. Both implement the same procedure and reconstruct, simulate and analyse the same ecModels (see [GECKO and geckopy](../gecko-to-geckopy.md)). GECKO 4 and geckopy 4 are in the pre-release 4.0.0b1.
 
 ## Equipment
 
@@ -135,7 +135,7 @@ geckopy installs the command-line tool `geckopy` with the subcommands `init` (ne
 | Solver | License | Good for |
 |---|---|---|
 | Gurobi | Free academic | Genome-scale models and large ecModels (recommended) |
-| SCIP | Open source | Open-source solver of RAVEN, reached in MATLAB through a SCIP MEX interface (`setRavenSolver('scip')`) |
+| SCIP | Open source | Open-source solver of RAVEN (`setRavenSolver('scip')`); RAVEN provides a precompiled MEX binary for Windows only, and other systems compile the interface |
 | HiGHS through the optlang scipy interface | Open source | Solver of geckopy that needs no licence |
 
 MATLAB reaches the solvers through RAVEN and the COBRA Toolbox, Python through cobrapy.
@@ -169,7 +169,7 @@ In `GECKO/tutorials`:
 In `geckopy/tutorials`:
 
 - `full_ecModel/protocol.py` mirrors the MATLAB full-ecModel tutorial step for step, covering the full pipeline for *S. cerevisiae*.
-- `light_ecModel/protocol.py` builds a light ecModel from a small 5-reaction demo model (`geckopy/examples/ecTestGEM`), so it runs in seconds without external data.
+- `light_ecModel/protocol.py` builds a light ecModel from a small 5-reaction demo model (`geckopy/examples/ecTestGEM`) without external data.
 :::
 ::::
 

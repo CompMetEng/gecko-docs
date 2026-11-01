@@ -133,7 +133,7 @@ To find a UniProt proteome dataset, search [uniprot.org/proteomes](https://www.u
 
 The taxonomy is the alternative when no proteome fits. The identifier from the [taxonomy browser](https://www.uniprot.org/taxonomy/) should be as specific as possible. For *S. cerevisiae*, the taxonomy identifier 4932 covers 322 strains and 53,526 proteins in total, and 559292 refers to strain S288c alone, with 6,735 proteins. In that case `uniprot.type` is `taxonomy` and `uniprot.id` is `559292`.
 
-For KEGG, `kegg.id` is the three- or four-letter species identifier from the [KEGG organism list](https://www.genome.jp/kegg/catalog/org_list.html); for *Homo sapiens* it is `hsa`. The genome entry page (for example [genome.jp/entry/hsa](https://www.genome.jp/entry/hsa)) links to the list of KEGG genes and shows which gene identifier KEGG links to its genes. The KEGG genes of *H. sapiens* are numbered sequentially, which does not match the identifiers of human-GEM. The section "Other DBs" of the same page lists Ensembl gene identifiers (for example `ENSG00000236362`), so `kegg.gene_id` for human-GEM is `Ensembl`, not `KEGG`.
+For KEGG, `kegg.id` is the three- or four-letter species identifier from the [KEGG organism list](https://www.genome.jp/kegg/catalog/org_list.html); for *Homo sapiens* it is `hsa`. The genome entry page (for example [genome.jp/entry/hsa](https://www.genome.jp/entry/hsa)) links to the list of KEGG genes and shows which gene identifier KEGG links to its genes. The KEGG genes of *H. sapiens* are numbered sequentially, which does not match the identifiers of human-GEM. The section "Other DBs" of the same page lists Ensembl gene identifiers (for example `ENSG00000236362`), so `kegg.gene_id` for human-GEM is `Ensembl`.
 
 ## Handling unusual identifier formats
 
@@ -153,6 +153,8 @@ fprintf(fID, '%s\t%s\n', 'genes', 'uniprot');
 fprintf(fID, '%s\t%s\n', output{:});
 fclose(fID);
 ```
+
+`loadDatabases('kegg')` takes the KEGG species from `kegg.id` of the adapter, so the adapter of iML1515 sets `kegg.id = "eco"` for this tab.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -182,7 +184,7 @@ Other organisms can need another source for the conversion table. For human-GEM,
 If an organism is in neither UniProt nor KEGG, the database files are built manually. `data/kegg.tsv` and `data/uniprot.tsv` of the `full_ecModel` tutorial are templates for the column layout. Artificial UniProt and KEGG identifiers work in these files, and the molecular weight and the sequence of each protein must be accurate for the rest of the reconstruction.
 
 :::{note} Example output
-A new project has empty `data`, `models` and `output` subfolders (MATLAB also creates `code`) and a template `model_adapter.toml`. After the model adapter is filled in, the queries of UniProt and KEGG create `data/uniprot.tsv` and `data/kegg.tsv`. When no UniProt or KEGG parameters are identified for the organism, `data/uniprotConversion.tsv`, `data/kegg.tsv` and `data/uniprot.tsv` are built by hand, as described above.
+A new project has empty `data`, `models` and `output` subfolders (MATLAB also creates `code`) and a template `model_adapter.toml`. After the model adapter is filled in, MATLAB `loadDatabases` creates `data/uniprot.tsv` and `data/kegg.tsv` with queries of UniProt and KEGG. In Python, `geckopy uniprot-download` and `geckopy kegg-download` create the two files. When no UniProt or KEGG parameters are identified for the organism, `data/uniprotConversion.tsv`, `data/kegg.tsv` and `data/uniprot.tsv` are built by hand, as described above.
 :::
 
 ## Troubleshooting

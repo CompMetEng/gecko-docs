@@ -21,7 +21,7 @@ A source is the name of a file in `data/kcats` (`custom`, `ec_tree`, `homologs`,
 | --- | --- |
 | `custom` | curated kcats of the project |
 | `brenda.tsv` | BRENDA kcats matched by EC number and substrate, with the origin of the match (1 to 6). A stage reads it through the tiers `database_exact`, `database_top` and `database_bottom`, not as `brenda` |
-| `ec_tree` | the median of all wild-type BRENDA measurements of the EC number, shrunk towards the median of its 3-digit and 2-digit EC classes (weight `n/(n+k)` for `n` measurements, `k = 5`) |
+| `ec_tree` | the median of all wild-type BRENDA measurements of the EC number, shrunk towards the median of its 3-digit EC class, its 2-digit EC class and the global median (weight `n/(n+k)` for `n` measurements, `k = 5`) |
 | `homologs` | the kcat of measured homologs that act on the same substrate, found with DIAMOND (at least 40 % identity and 80 % coverage of both sequences) |
 | `dlkcat` | DLKcat predictions |
 | `okp_<method>` | OpenKineticsPredictor predictions, with the similarity to the training sequences of the method |
@@ -30,7 +30,7 @@ A source is the name of a file in `data/kcats` (`custom`, `ec_tree`, `homologs`,
 
 A stage decides the reactions that are still open. The action `select` takes the first listed source that has a value. The action `combine` takes all listed sources that have a value, corrects each for the bias of the source and weights it by 1 divided by its error variance. The error variance depends on the evidence of the source for the reaction: for the EC tree the measurements of the EC number and of its EC class, for an OKP method the similarity of the enzyme to the training sequences of the method. The parameters are in `kcatCombineParams.tsv` of the BRENDA files. `model.ec.source` reads `combined (sd=<log10 sd>, n=<sources>)` for a combined value.
 
-After the stages, `collectKcats` applies `data/customKcats.tsv` when a stage lists `custom` and `data/kcats/custom.tsv` does not exist. With `isozymes = true`, a reaction without a kcat takes one from its isozymes. With `standard = true`, the remaining reactions get the standard kcat.
+After the stages, `collectKcats` applies `data/customKcats.tsv` when a stage lists `custom` and `data/kcats/custom.tsv` does not exist. With `isozymes = true`, a reaction without a kcat in a full ecModel takes one from its isozymes. With `standard = true`, the remaining reactions get the standard kcat.
 
 ## Presets
 
@@ -42,7 +42,7 @@ After the stages, `collectKcats` applies `data/customKcats.tsv` when a stage lis
 | `ec_tree_homologs` | custom kcats; the BRENDA value of the organism; the EC tree and the homologs combined; then the OKP methods combined |
 | `ec_tree_okp` | custom kcats; the BRENDA value of the organism; the EC tree, the homologs and the OKP methods combined; then the OKP methods combined |
 | `okp` | custom kcats; then the OKP methods combined |
-| `gecko_median` | custom kcats; the BRENDA median of matches without EC wildcards (origin 1 to 4); DLKcat; then the other BRENDA matches (EC wildcards and specific activities, origin 5 and 6) |
+| `gecko_median` | custom kcats; the BRENDA median of matches without EC wildcards (origin 1 to 4); DLKcat; then the other BRENDA matches (matches with EC wildcards, origin 3 to 6, and matches from specific activities without a wildcard, origin 5 and 6) |
 | `gecko_classic` | as `gecko_median` with the BRENDA maximum and the specific-activity matches above DLKcat (origin up to 6), the order of the GECKO 3 tutorial |
 
 The tutorial `full_ecModel` uses `gecko_classic`. A project lists the stages in `[[kcat_assignment.stage]]` tables in place of a preset:
@@ -86,7 +86,7 @@ decisions, report = assign_kcats(ec_model)   # changes ec_model in place
 :::
 ::::
 
-`updateKcatSources` has the option `dryRun`, which reports what would be gathered without gathering it. It checks the requirements first: Docker for a DLKcat run and an OpenKineticsPredictor API key for OKP. A file is outdated when its header records other settings than `[kcat_sources.<name>]` asks for, or for `brenda` and `ec_tree` another BRENDA release than the files in use. `custom.tsv` and other files it cannot gather are left as they are.
+`updateKcatSources` has the option `dryRun`, which reports what would be gathered without gathering it. In MATLAB it checks the requirements first: Docker for a DLKcat run and an OpenKineticsPredictor API key for OKP. In Python a source with a missing requirement gets the status `failed`. A file is outdated when its header records other settings than `[kcat_sources.<name>]` asks for, or for `brenda` and `ec_tree` another BRENDA release than the files in use. `custom.tsv` and other files it cannot gather are left as they are.
 
 ## Troubleshooting
 

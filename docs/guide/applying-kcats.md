@@ -162,7 +162,7 @@ This step does not apply to light ecModels, where the most efficient isozyme set
 
 ## Assign a standard kcat value (optional)
 
-Reactions without genes associated in the starting GEM (empty gene-reaction rules) cannot carry enzyme constraints, for lack of enzyme data. For such reactions, excluding exchange, spontaneous, transport and pseudo-reactions (and the reactions in `data/pseudoRxns.tsv`), a standard kcat and a standard pseudo-enzyme (`prot_standard`) constrain catalytic capacity instead. The standard kcat is the median of the kcat values of the reactions in the same subsystem, when the subsystem has at least 10 reactions with a kcat (the option `threshold`), and the median of every kcat in `ec.kcat` otherwise. The standard molecular weight is the median across every protein in the organism, and a `usage_prot_standard` reaction is added.
+Reactions without genes associated in the starting GEM (empty gene-reaction rules) cannot carry enzyme constraints, for lack of enzyme data. For such reactions, excluding exchange, spontaneous, transport and pseudo-reactions (reaction names that contain `pseudoreaction` or `SLIME rxn`, and the reactions in `data/pseudoRxns.tsv`), a standard kcat and a standard pseudo-enzyme (`prot_standard`) constrain catalytic capacity instead. The standard kcat is the median of the kcat values of the reactions in the same subsystem, when the subsystem has at least 10 reactions with a kcat (the option `threshold`), and the median of every kcat in `ec.kcat` otherwise. The standard molecular weight is the median across every protein in the organism, and a `usage_prot_standard` reaction is added.
 
 Reactions that are annotated with an enzyme but have a kcat of 0 or `NaN` receive the standard kcat as well and keep their enzyme. Earlier standard assignments (`standard` in `ec.source`) are removed when the function runs again.
 
@@ -279,7 +279,7 @@ set_prot_pool_size(ec_model, f=f)
 ::::
 
 :::{note} Values to define the total protein pool are missing
-sigma, $P_{tot}$ and f each have the standard value 0.5 when no better estimate exists. If the resulting maximum growth rate is too small or too large, adjusting sigma manually is a reasonable way to reach a more plausible value; see [Growth-rate tuning](growth-rate-tuning.md#too-tight-protein-pool-constraint).
+sigma, $P_{tot}$ and f each have the standard value 0.5 when no better estimate exists. If the resulting maximum growth rate is too small or too large, adjusting sigma manually is a reasonable way to reach a more plausible value; see [Growth-rate tuning](growth-rate-tuning.md#protein-pool-constraint).
 :::
 
 :::{note} Example output

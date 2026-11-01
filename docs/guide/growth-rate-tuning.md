@@ -120,7 +120,7 @@ In the `full_ecModel` tutorial, the growth rate right after applying enzyme cons
 
 Three reasons can leave the predicted growth rate below the experimental maximum, and a systematic check distinguishes them: the stoichiometry of the metabolic network is not fully correct; the protein pool exchange reaction is too tightly constrained; or the kcat values assigned to reactions are too low.
 
-## Network stoichiometry limits growth rate
+## Network stoichiometry
 
 The growth rate in the conventional GEM, without enzyme constraints, is predicted under the same exchange flux constraints:
 
@@ -164,9 +164,9 @@ If the conventional GEM also cannot reach the maximum growth rate, the stoichiom
 Without a constraint on carbon uptake, the conventional GEM in the `full_ecModel` tutorial reaches a growth rate of about 19.7 h^-1. This growth rate is biologically unrealistic given the unconstrained carbon uptake, but it confirms that the stoichiometry of the conventional GEM can reach 0.41 h^-1, so the enzyme constraints cause the shortfall above.
 :::
 
-## Too tight protein pool constraint
+## Protein pool constraint
 
-The protein pool constraint from [Applying kcats](applying-kcats.md#constrain-the-protein-pool-exchange-reaction) is realistic when the sigma, $P_{tot}$ and f parameters in the model adapter are realistic; the parameters are adjusted if discrepancies show up. Regardless of those parameters, the simplest test of whether the protein pool limits growth is to relax the constraint of the pool usage reaction, which releases every enzyme constraint at once:
+The protein pool constraint from [Applying kcats](applying-kcats.md#constrain-the-protein-pool-exchange-reaction) is realistic when the sigma, $P_{tot}$ and f parameters in the model adapter are realistic; adjust the parameters if discrepancies show up. Regardless of those parameters, the simplest test of whether the protein pool limits growth is to relax the constraint of the pool usage reaction, which releases every enzyme constraint at once:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -253,7 +253,7 @@ ec_model.objective_direction = "max"
 :::
 ::::
 
-This yields an ecModel that reaches the intended growth rate whenever the conventional GEM can, but it often sets the protein pool usage to an unrealistic protein content. Increasing the kcat values of some reactions is the more biologically meaningful option, covered next.
+This yields an ecModel that reaches the intended growth rate whenever the conventional GEM can, but it often sets the protein pool usage to an unrealistic protein content. Increasing the kcat values of some reactions keeps the protein pool at the sigma, f and Ptot values of the model and is covered next.
 
 :::{note} Example output
 Setting the upper bound of `prot_pool_exchange` to 1,000 mg/gDCW implies that the whole cell is 100 % protein. While unrealistic, this often avoids overconstraining. In the `full_ecModel` tutorial, the predicted protein pool usage is 446 mg/gDCW. With f = 0.5, this implies that the cell consists of 89.2 % protein. Assuming full enzyme saturation, a more realistic (lower) sigma would push the simulated total protein content above 100 %, so the recommended fix is a different one than releasing the protein pool constraint.
@@ -261,7 +261,7 @@ Setting the upper bound of `prot_pool_exchange` to 1,000 mg/gDCW implies that th
 
 ## Sensitivity tuning of kcat values
 
-Iteratively increasing the kcat values of the enzymes that limit growth until the desired growth rate is reached is the recommended approach, in preference to relaxing the pool. At this stage the enzyme constraints are dominated by the overarching protein pool constraint. Each deterministic iteration identifies the most limiting enzyme as the one that demands the largest fraction of the protein pool, and raises the kcat of the reaction that draws most on it. The raised value is the one that contributes most to overconstraining the model, which is not necessarily the one furthest from its true in situ value.
+Iteratively increasing the kcat values of the enzymes that limit growth until the desired growth rate is reached keeps the protein pool at the sigma, f and Ptot values of the model, which relaxing the pool does not. At this stage the enzyme constraints are dominated by the overarching protein pool constraint. Each deterministic iteration identifies the most limiting enzyme as the one that demands the largest fraction of the protein pool, and raises the kcat of the reaction that draws most on it. The raised value is the one that contributes most to overconstraining the model, which is not necessarily the one furthest from its true in situ value.
 
 The protein pool constraint is first reverted to a realistic value (see [Applying kcats](applying-kcats.md#constrain-the-protein-pool-exchange-reaction)), then the kcats are tuned and the changes reported:
 
@@ -315,7 +315,7 @@ The options are the same in both toolboxes (MATLAB name first):
 | | `max_iterations` | `1000` | upper limit of the iterations |
 | | `bio_rxn` | `params.bio_rxn` | biomass reaction set as the objective |
 
-MATLAB accepts the options as name-value pairs (`sensitivityTuning(ecModel, 'foldChange', 5)`) or positionally in the order of the table (`sensitivityTuning(ecModel, desiredGrowthRate, modelAdapter, foldChange, protToIgnore, verbose)`); a call uses one of the two forms. Python takes keyword arguments. The tuning stops with a warning when an iteration raises the growth rate by less than 1e-9, which indicates that the uptake or pool constraints limit growth and that the kcats do not.
+MATLAB accepts the options as name-value pairs (`sensitivityTuning(ecModel, 'foldChange', 5)`) or positionally (`sensitivityTuning(ecModel, desiredGrowthRate, modelAdapter, foldChange, protToIgnore, verbose)`); a call uses one of the two forms. Python takes keyword arguments. The tuning stops with a warning when an iteration raises the growth rate by less than 1e-9, which indicates that the uptake or pool constraints limit growth and that the kcats do not.
 
 Both toolboxes also provide a CMA-ES-based kcat tuning (`cmaesKcatTuning` in MATLAB, `cmaes_kcat_tuning` in Python), described in [Tuning against experimental data](tuning-against-experimental-data.md).
 
@@ -326,7 +326,7 @@ Some kcat values changing is expected, about 20 to 40. If a much larger fraction
 
 - No constraint is set on any nutrient uptake; the protein pool should be the sole limit.
 - The maximum growth rate specified as `gR_exp`/`gr_exp` in the model adapter is realistic.
-- The starting GEM can simulate the intended growth rate on its own, to rule out the network stoichiometry as the limiting factor (see [Network stoichiometry limits growth rate](#network-stoichiometry-limits-growth-rate) above).
+- The starting GEM can simulate the intended growth rate on its own, to rule out the network stoichiometry as the limiting factor (see [Network stoichiometry](#network-stoichiometry) above).
 :::
 
 :::{note} Example output
@@ -425,15 +425,15 @@ set_kcat_for_reactions(ec_model, ["r_0079"], 5.34)
 apply_kcat_constraints(ec_model)
 ```
 
-`set_kcat_for_reactions` takes a list of reaction ids, even for a single reaction, and one kcat value applied to all of them. With its default `apply=False` it changes `ec.kcat` and `ec.source`, as in MATLAB; `apply=True` also applies the new kcat to the S-matrix immediately.
+`set_kcat_for_reactions` takes a list of reaction ids, even for a single reaction. The `kcat` argument is one value applied to all matched reactions, or a sequence with one value per matched reaction or one value per id. With its default `apply=False` it changes `ec.kcat` and `ec.source`, as in MATLAB; `apply=True` also applies the new kcat to the S-matrix immediately.
 :::
 ::::
 
-After this is repeated for each tuned value, the results are considered overall. When convincing evidence shows that the original value is more realistic than the tuned one, reactions or whole pathways may be missing from the network stoichiometry of the starting GEM. Such issues, as in [Network stoichiometry limits growth rate](#network-stoichiometry-limits-growth-rate) above, are best resolved in the conventional GEM before the ecModel is reconstructed from it.
+After this is repeated for each tuned value, the results are considered overall. When convincing evidence shows that the original value is more realistic than the tuned one, reactions or whole pathways may be missing from the network stoichiometry of the starting GEM. Such issues, as in [Network stoichiometry](#network-stoichiometry) above, are best resolved in the conventional GEM before the ecModel is reconstructed from it.
 
 ## Fit the average saturation
 
-`sigmaFitter` (Python `fit_sigma`) sets sigma so that the ecModel reaches the experimental growth rate, after the kcats are tuned. It sizes the protein pool for a series of sigma values, solves the model for each and keeps the value whose growth rate is closest to the experimental one. Among values that reach the same growth rate within a relative 1e-9, `sigmaFitter` and `fit_sigma` with `method="bisect"` keep the smallest sigma, which is the start of the growth plateau for a target above the reachable growth rate; `fit_sigma` with the default `method="grid"` keeps the first grid point with the smallest error. The objective of the model must be growth. The bounds of the objective reaction are set to `[0, 1000]` before the scan and stay so on the returned model. The protein pool of the returned model is sized for the fitted sigma.
+`sigmaFitter` (Python `fit_sigma`) sets sigma so that the ecModel reaches the experimental growth rate, after the kcats are tuned. It sizes the protein pool for a series of sigma values from 0.01 to 1 in steps of 0.01 (`n_sigma_steps = 100` in Python), solves the model for each and keeps the value whose growth rate is closest to the target growth rate. `sigmaFitter` returns the smallest sigma whose percent error is within a relative 1e-9 of the smallest error, so a growth plateau is returned at its start on every solver. `fit_sigma` with the default `method="grid"` takes the first grid point with the smallest error and has no tolerance, so solver rounding noise on a plateau can move its pick to a later grid point. `fit_sigma` with `method="bisect"` finds a continuous sigma at 1e-6 resolution that is not on the grid and, for a target that growth cannot reach, the start of the plateau. The objective of the model must be growth. The bounds of the objective reaction are set to `[0, 1000]` before the scan and stay so on the returned model. The protein pool of the returned model is sized for the fitted sigma.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -691,7 +691,7 @@ As on [Building an empty ecModel](building-ec-model.md#save-the-ecmodel), this p
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
 | Error that the FBA of the input model gives no valid result (`sensitivityTuning`), or `ValueError` that the FBA is not optimal (`sensitivity_tuning`) | The protein pool constraint or the exchange constraints make the model infeasible | Reduce the protein pool constraint with `setProtPoolSize` (Python `set_prot_pool_size`) and check the exchange constraints |
-| Warning that growth does not increase from increased kcats | Uptake or pool constraints limit growth | Check the constraints on the uptake reactions; relax the protein pool as in [Too tight protein pool constraint](#too-tight-protein-pool-constraint) |
+| Warning that growth does not increase from increased kcats | Uptake or pool constraints limit growth | Check the constraints on the uptake reactions; relax the protein pool as in [Protein pool constraint](#protein-pool-constraint) |
 | Warning that no protein usage reaction carries flux, or that no reaction draws on the protein pool | The protein pool does not limit growth | Check the nutrient constraints and the network stoichiometry |
 | `ValueError` that `prot_to_ignore` has no usage reaction for a protein | The UniProt ID is not an enzyme of the full ecModel | Correct the ID |
 | Python `sensitivity_tuning` stops at `max_iterations` | The target growth rate is not reachable by raising kcats alone | Check the target growth rate and the constraints |

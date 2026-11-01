@@ -78,7 +78,7 @@ name_contains = "spontaneous"
 
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
-| `kcat_aggregate_brenda` | `kcatAggregation` | `"max"` | BRENDA aggregate that `fuzzyKcatMatching`, `loadBRENDAdata` and `kcatsFromBrenda` read for each combination of EC number, substrate and organism: `max` or `median` |
+| `kcat_aggregate_brenda` | `kcatAggregation` | `"max"` | BRENDA aggregate (`max` or `median`) that direct calls of `fuzzyKcatMatching`, `loadBRENDAdata` and `kcatsFromBrenda` read per EC number, substrate and organism. `updateKcatSources` and `assignKcats` pass `aggregation` of `[kcat_sources.brenda]` instead, which the presets set (`median` for `brenda_ec_tree`, `ec_tree_homologs`, `ec_tree_okp` and `gecko_median`; `max` for `gecko_classic`), which overrides this key for a `brenda.tsv` gathered that way |
 | `kcat_aggregate_candidates` | none | `"max"` | Used by geckopy. Aggregation of several candidate kcats of one reaction in `apply_kcat_list` when `criteria` is not given: `max`, `min`, `median` or `mean` |
 | `kcat_aggregate_isozymes` | none | `"mean"` | Used by geckopy. Aggregation of the kcats of the isozymes in `fill_kcats_from_isozymes` when `aggregate` is not given: `max`, `median` or `mean` |
 
@@ -171,7 +171,7 @@ In geckopy, a subclass of `ModelAdapter` overrides `get_spontaneous_reactions`, 
 
 | Problem | Possible reason | Solution |
 |---|---|---|
-| `Unknown key "<key>" in model_adapter.toml` (GECKO) or a validation error that names the key (geckopy) | the key is not in the tables above, or is misspelled | Correct the key, or place a parameter that GECKO alone uses under `[matlab.params]` |
+| `Unknown key "<key>" in <full path of model_adapter.toml>.` (GECKO) or a validation error that names the key (geckopy) | the key is not in the tables above, or is misspelled | Correct the key, or place a parameter that GECKO alone uses under `[matlab.params]` |
 | Error about a preset and stages | `[kcat_assignment]` has both `preset` and `[[kcat_assignment.stage]]` | Keep one of the two |
 | `No model_adapter.toml found in <folder>` | the folder given holds no `model_adapter.toml` | Give the folder that holds the file |
 
