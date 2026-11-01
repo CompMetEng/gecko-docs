@@ -3,7 +3,7 @@
 Enzyme usage reactions let a full ecModel take proteomics data directly: individual enzymes with measured concentrations are bounded by those measurements, in addition to drawing from the shared total protein pool. The ecModel is then constrained by the proteomics and the exchange flux data of one experimental condition, and its growth rate is solved.
 
 :::{warning}
-The functions below apply to full ecModels. A light ecModel has no per-enzyme usage reactions to constrain; see [GECKO light vs. full ecModels](gecko-light.md).
+The functions below apply to full ecModels. A light ecModel has no per-enzyme usage reactions to constrain; see [GECKO light and full ecModels](gecko-light.md).
 :::
 
 ## Functions
@@ -27,7 +27,7 @@ Constraining individual enzyme concentrations usually overconstrains the ecModel
 
 The data are prepared before loading:
 
-- Protein concentrations are in milligram per gram dry cell weight (mg/gDCW). Relative proteomics cannot supply this unit; loading it anyway produces an ecModel with nonsensical constraints and raises no error.
+- Protein concentrations are in milligram per gram dry cell weight (mg/gDCW); relative proteomics cannot supply this unit (see the warning in [Apply the concentrations as bounds](#apply-the-concentrations-as-bounds)).
 - `data/proteomics.tsv` holds the UniProt identifier in the first column and one column per replicate after it, for one or more experimental conditions.
 - Low-certainty measurements are filtered out: low concentrations, proteins with a high relative standard deviation across replicates, and proteins absent from most replicates.
 
@@ -156,7 +156,7 @@ Enzyme concentrations must be in mg/gDCW. Relative proteomics data loaded with t
 
 ## Set the protein pool from the proteomics data
 
-A proteomics experiment may reflect a physiology different from the default assumption. The pool size is recomputed from a sample-specific total protein content (for example 0.5 g/gDCW) in place of the adapter default `Ptot` (Python: `p_tot`), and from the f-factor of the proteomics data, the fraction of the measured protein mass that is accounted for by enzymes of the model. With several experiments in `protData`, `calculateFfactor` averages the abundance of each protein over the experiments in which it is measured.
+A proteomics experiment may reflect a physiology different from the default assumption. The pool size is recomputed from a sample-specific total protein content (for example 0.5 g/gDCW) in place of the adapter default `Ptot` (Python: `p_tot`), and from the f-factor of the proteomics data, the fraction of the measured protein mass that is accounted for by enzymes of the model. With several experiments in `protData`, `calculateFfactor` averages the abundance of each protein over the experiments in which it is measured. `updateProtPool` of GECKO 3 raises an error for ecModels of GECKO 3.2 and later, because every usage reaction draws from the protein pool, and `setProtPoolSize` takes its place.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -253,6 +253,6 @@ With `max` and loose constraints, FBA reaches a solution unless too many exchang
 ## See also
 
 - [Relaxing overconstrained proteomics](relaxing-constraints.md), for an ecModel that cannot reach its intended growth rate after constraining.
-- [GECKO light vs. full ecModels](gecko-light.md), why light ecModels cannot take proteomics data.
+- [GECKO light and full ecModels](gecko-light.md), why light ecModels cannot take proteomics data.
 - [Simulation and analysis](simulation-and-analysis.md), the choice between maximising growth and minimising protein pool usage as the objective.
 - [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md), for the changes in `loadProtData` and `calculateFfactor`.

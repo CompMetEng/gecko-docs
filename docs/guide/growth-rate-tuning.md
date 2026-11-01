@@ -40,8 +40,7 @@ Microorganisms reach their maximum growth rate when nutrient supply is not limit
 ecModel = setParam(ecModel, 'lb', params.c_source, -1000);
 ```
 
-Or referring directly to the glucose exchange reaction in the
-*S. cerevisiae* ecModel:
+Or referring directly to the glucose exchange reaction in the *S. cerevisiae* ecModel:
 
 ```matlab
 ecModel = setParam(ecModel, 'lb', 'r_1714', -1000);
@@ -50,8 +49,7 @@ ecModel = setParam(ecModel, 'lb', 'r_1714', -1000);
 :::{tab-item} 🐍 Python
 :sync: python
 
-geckopy/cobrapy has no `setParam` wrapper: bounds are attributes on the
-`cobra.Reaction` object itself.
+geckopy/cobrapy has no `setParam` wrapper: bounds are attributes on the `cobra.Reaction` object itself.
 
 ```python
 ec_model.reactions.get_by_id(params.c_source).lower_bound = -1000
@@ -185,8 +183,7 @@ ecModel = setParam(ecModel, 'ub', 'prot_pool_exchange', 1000);
 ec_model.reactions.prot_pool_exchange.upper_bound = 1000
 ```
 
-`set_prot_pool_size` narrows `prot_pool_exchange`'s upper bound to a
-realistic budget; relaxing it back to unconstrained means raising that upper bound back to geckopy's wide-open default (1000).
+`set_prot_pool_size` narrows `prot_pool_exchange`'s upper bound to a realistic budget; relaxing it back to unconstrained means raising that upper bound back to geckopy's wide-open default (1000).
 :::
 ::::
 
@@ -208,8 +205,7 @@ protPoolIdx = strcmp(ecModel.rxns, 'prot_pool_exchange');
 fprintf('Protein pool usage is: %.0f mg/gDCW\n', sol.x(protPoolIdx))
 ```
 
-**Objective coefficient sign.** `solveLP` maximizes the objective, so the
-coefficient `-1` minimizes the flux through `prot_pool_exchange`.
+`solveLP` maximizes the objective, so the coefficient `-1` minimizes the flux through `prot_pool_exchange`.
 
 Output in the `full_ecModel` tutorial:
 
@@ -220,8 +216,7 @@ Protein pool usage is: 446 mg/gDCW
 :::{tab-item} 🐍 Python
 :sync: python
 
-cobrapy separates the objective reaction from the optimisation direction, so minimizing `prot_pool_exchange` usage is a plain positive objective with
-`objective_direction` set to `"min"`:
+cobrapy separates the objective reaction from the optimisation direction, so minimizing `prot_pool_exchange` usage is a plain positive objective with `objective_direction` set to `"min"`:
 
 ```python
 ec_model.reactions.get_by_id("r_4041").lower_bound = 0.41
@@ -337,14 +332,14 @@ Some kcat values changing is expected, about 20 to 40. If a much larger fraction
 :::{note} Example output
 In the `full_ecModel` tutorial, iterative tuning raises the growth rate from 0.114 h^-1 in the first iteration to 0.412 h^-1 in the ninth, above the target of 0.41 h^-1.
 
-The tuned `ec.kcat` entries appear in the tuned kcat output (see [Example tuned kcat output](#example-tuned-kcat-output) below). Transferring the changes into `data/customKcats.tsv` (see [Applying kcats](applying-kcats.md#provide-custom-kcat-values)) keeps them documented.
+The tuned `ec.kcat` entries appear in the tuned kcat output (see [Example tuned kcat output](#example-tuned-kcat-output) below). Transferring the changes into `data/kcats/custom.tsv` (see [Applying kcats](applying-kcats.md#provide-custom-kcat-values)) keeps them documented.
 :::
 
 ### Example tuned kcat output
 
 | rxns | rxnNames | enzymes | oldKcat | newKcat | source |
 |------|----------|---------|---------|---------|--------|
-| `r_0079` | 5'-Phosphoribosylformyl glycinamidine synthetase | P38972 | 0.05 | 5 | BRENDA |
+| `r_0079` | 5'-Phosphoribosylformyl glycinamidine synthetase | P38972 | 0.05 | 0.5 | BRENDA |
 | `r_0109` | Acetyl-CoA carboxylase, reaction | P48445; Q00955 | 1.23 | 12.3 | BRENDA |
 | `r_0450` | Fructose-bisphosphate aldolase | P14540 | 32.5 | 325 | Custom |
 | `r_0486_EXP_2` | Glyceraldehyde-3-phosphate dehydrogenase | P00360 | 29 | 290 | Custom |
@@ -353,7 +348,7 @@ The tuned `ec.kcat` entries appear in the tuned kcat output (see [Example tuned 
 
 ## Evaluate the tuned kcat values
 
-Tuning changes values automatically, based on which enzyme overconstrains the ecModel, without regard to whether the original value was itself unrealistic. Good evidence can exist that the tuned value reflects reality better than the source it replaced, but not every tuned value can be supported by literature data. The worked example covers one value from the example tuned kcat output, 5'-phosphoribosylformyl glycinamidine synthetase (reaction `r_0079`), which tuning raised from 0.05 s^-1 to 5 s^-1 and which originates from BRENDA. The same check is repeated for each value of interest.
+Tuning changes values automatically, based on which enzyme overconstrains the ecModel, without regard to whether the original value was itself unrealistic. Good evidence can exist that the tuned value reflects reality better than the source it replaced, but not every tuned value can be supported by literature data. The worked example covers one value from the example tuned kcat output, 5'-phosphoribosylformyl glycinamidine synthetase (reaction `r_0079`), which originates from BRENDA with a kcat of 0.05 s^-1 and which `sensitivityTuning` raises in the tutorial (to 0.5 s^-1 according to the comments of the tutorial script). The same check is repeated for each value of interest.
 
 The match details behind the original BRENDA value are in the kcat list that `kcatsFromBrenda` (Python `kcats_from_brenda`) returns, which is kept as `data/kcats/brenda.tsv`:
 
@@ -382,7 +377,7 @@ print(row["wildcard_level"], row["eccode"], row["origin"])
 
 In the `full_ecModel` tutorial, which assigns the kcats with the preset `gecko_classic` (see [Kcat assignment](../gecko4-kcat-assignment.md)), this yields a wildcard level of 0 (no EC wildcard), EC number 6.3.5.3 and origin 4 (any organism, any substrate, kcat). The levels are defined in the help of `fuzzyKcatMatching`.
 
-The specific [BRENDA entry](https://www.brenda-enzymes.org/enzyme.php?ecno=6.3.5.3) shows that the reported kcat of 0.05 comes from *E. coli* with NH3 as substrate. The usual substrate is glutamine, so the value may not be a fair estimate for the reaction in the ecModel. The abstract of the original paper states that NH3 can replace glutamine as a nitrogen donor, with a Km of 1 M and a turnover of 3 min^-1 (2 % of the glutamine turnover). The same paper also reports a specific activity with glutamine as substrate, a more reasonable value to use here. The specific activity was reported as 2.15 micromol/min/mg protein, which equals mmol/min/g protein. Conversion to mol/s/g protein and multiplication with the molecular weight of the enzyme gives the kcat:
+The specific [BRENDA entry](https://www.brenda-enzymes.org/enzyme.php?ecno=6.3.5.3) shows that the reported kcat of 0.05 comes from *E. coli* with NH4+ as substrate. The usual substrate is glutamine, so the value may not be a fair estimate for the reaction in the ecModel. The abstract of the original paper states that NH3 can replace glutamine as a nitrogen donor, with a Km of 1 M and a turnover of 3 min^-1 (2 % of the glutamine turnover). The same paper also reports a specific activity with glutamine as substrate, a more reasonable value to use here. The specific activity was reported as 2.15 micromol/min/mg protein, which equals mmol/min/g protein. Conversion to mol/s/g protein and multiplication with the molecular weight of the enzyme gives the kcat:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -409,7 +404,7 @@ print(conv_kcat)
 :::
 ::::
 
-The converted kcat is 5.34, close to the value of 5 reached by the tuning. The value in the ecModel is replaced with the new literature value, either documented in `customKcats.tsv` (see [Applying kcats](applying-kcats.md#provide-custom-kcat-values)) or applied directly. `setKcatForReactions` (Python `set_kcat_for_reactions`) sets `ec.kcat` and `ec.source` (`setKcatForReactions`) of the reaction, and `applyKcatConstraints` (Python `apply_kcat_constraints`) transfers the new value to the stoichiometric matrix:
+The converted kcat is 5.34. The value in the ecModel is replaced with the new literature value, either documented in `data/kcats/custom.tsv` (see [Applying kcats](applying-kcats.md#provide-custom-kcat-values)) or applied directly. `setKcatForReactions` (Python `set_kcat_for_reactions`) sets `ec.kcat` and `ec.source` (`setKcatForReactions`) of the reaction, and `applyKcatConstraints` (Python `apply_kcat_constraints`) transfers the new value to the stoichiometric matrix:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -430,10 +425,7 @@ set_kcat_for_reactions(ec_model, ["r_0079"], 5.34)
 apply_kcat_constraints(ec_model)
 ```
 
-`set_kcat_for_reactions` takes a list of reaction ids, even for a single
-reaction, and one kcat value applied to all of them. With its default
-`apply=False` it changes `ec.kcat` and `ec.source`, as in MATLAB;
-`apply=True` also applies the new kcat to the S-matrix immediately.
+`set_kcat_for_reactions` takes a list of reaction ids, even for a single reaction, and one kcat value applied to all of them. With its default `apply=False` it changes `ec.kcat` and `ec.source`, as in MATLAB; `apply=True` also applies the new kcat to the S-matrix immediately.
 :::
 ::::
 
@@ -441,7 +433,7 @@ After this is repeated for each tuned value, the results are considered overall.
 
 ## Fit the average saturation
 
-`sigmaFitter` (Python `fit_sigma`) sets sigma so that the ecModel reaches the experimental growth rate, after the kcats are tuned. It sizes the protein pool for a series of sigma values, solves the model for each and keeps the value whose growth rate is closest to the experimental one. The objective of the model must be growth. The bounds of the objective reaction are set to `[0, 1000]` before the scan and stay so on the returned model. The protein pool of the returned model is sized for the fitted sigma.
+`sigmaFitter` (Python `fit_sigma`) sets sigma so that the ecModel reaches the experimental growth rate, after the kcats are tuned. It sizes the protein pool for a series of sigma values, solves the model for each and keeps the value whose growth rate is closest to the experimental one. Among values that reach the same growth rate within a relative 1e-9, `sigmaFitter` and `fit_sigma` with `method="bisect"` keep the smallest sigma, which is the start of the growth plateau for a target above the reachable growth rate; `fit_sigma` with the default `method="grid"` keeps the first grid point with the smallest error. The objective of the model must be growth. The bounds of the objective reaction are set to `[0, 1000]` before the scan and stay so on the returned model. The protein pool of the returned model is sized for the fitted sigma.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -451,7 +443,7 @@ After this is repeated for each tuned value, the results are considered overall.
 [ecModel, sigma] = sigmaFitter(ecModel, 'makePlot', false);
 ```
 
-`sigmaFitter` scans sigma from 0.01 to 1 in steps of 0.01. The fitted sigma is the smallest value whose growth rate lies within a relative 1e-9 of the best growth rate; a target above the reachable growth rate therefore returns the start of the growth plateau on every solver. Ptot, f and the growth rate are read from the model adapter. The options `growthRate`, `Ptot`, `f`, `makePlot` (default `true`, a plot of the error against sigma) and `modelAdapter` are given as name-value pairs or positionally in this order; a call uses one of the two forms.
+`sigmaFitter` scans sigma from 0.01 to 1 in steps of 0.01. Ptot, f and the growth rate are read from the model adapter. The options `growthRate`, `Ptot`, `f`, `makePlot` (default `true`, a plot of the error against sigma) and `modelAdapter` are given as name-value pairs or positionally in this order; a call uses one of the two forms.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -620,7 +612,7 @@ Inspect the nonzero fluxes:
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
-Through exchange reactions (this includes usage reactions for enzymes constrained by their concentration, but not enzymes that draw from the protein pool, since pool usage is itself the exchange reaction in that case):
+Through exchange reactions (reactions without substrates or without products, as `getExchangeRxns` defines them; the `usage_prot_<id>` reactions have the protein pool as substrate and the enzyme pseudometabolite as product, so the list contains `prot_pool_exchange` and no usage reaction):
 
 ```matlab
 printFluxes(ecModel, sol.x)
@@ -635,8 +627,7 @@ printFluxes(ecModel, sol.x, false)
 :::{tab-item} 🐍 Python
 :sync: python
 
-`sol.fluxes` is a pandas Series indexed by reaction id, so this is
-ordinary pandas filtering. Through all reactions:
+`sol.fluxes` is a pandas Series indexed by reaction id, so this is ordinary pandas filtering. Through all reactions:
 
 ```python
 print(sol.fluxes[sol.fluxes != 0])

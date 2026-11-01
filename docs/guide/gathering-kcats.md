@@ -38,11 +38,11 @@ GECKO does not ship BRENDA data. `fetchBrendaAsset` (Python: `fetch_brenda_asset
 
 ## Kcat source files
 
-Each `kcatsFrom*` function (Python: `kcats_from_*`) writes the kcats of one source to `data/kcats/<source>.tsv` and returns the same kcat list (`kcatList`, `pandas.DataFrame` in Python). The option `save` set to false skips the file, and `saveAs` (Python: `save_as`) sets another name. The option `ecRxns` (Python: `ec_rxns`) restricts the reactions, except for `kcatsFromHomologs`: MATLAB takes a logical vector over `ecModel.ec.rxns`, Python a list of reaction identifiers. With a subset and the default name, the file holds the reactions of the subset and no others.
+Each `kcatsFrom*` function (Python: `kcats_from_*`) writes the kcats of one source to `data/kcats/<source>.tsv` and returns the same kcat list (`kcatList`, `pandas.DataFrame` in Python). The option `save` set to false skips the file, and `saveAs` (Python: `save_as`) sets another name. The option `ecRxns` (Python: `ec_rxns`) restricts the reactions, except for `kcatsFromHomologs`: MATLAB takes a logical vector over `ecModel.ec.rxns` (`kcatsFromBrenda` and `kcatsFromECTree` also accept indices), Python a list of reaction identifiers. `kcatsFromDLKcat` takes `ecRxns` together with `'run', true` (Python: `run=True`), and `kcatsFromOKP` in a call that submits a job. With a subset and the default name, the file holds the reactions of the subset and no others.
 
 The rows of a source file are keyed by the conventional reaction and the enzyme set. The index in `ecModel.ec.rxns` is not part of the key. A file stays valid when the ecModel is rebuilt, and applies to a full and a light ecModel. `saveKcatSource` writes a kcat list made in another way, for example one that `fuzzyKcatMatching` returned, and `loadKcatSource` maps a file back to the ecModel and reports the rows that fit no reaction. A file with `kind: curated` in its header, such as `custom.tsv`, is never overwritten.
 
-`assignKcats` reads the files that `[kcat_assignment]` lists, so any combination of sources works. The hosted [OpenKineticsPredictor](https://predictor.openkinetics.org/) service offers several predictor methods and needs no Docker, which makes it the recommended alternative to a local DLKcat run. DLKcat runs locally in a Docker image.
+`assignKcats` reads the files that `[kcat_assignment]` lists, so any combination of sources works. The hosted [OpenKineticsPredictor](https://predictor.openkinetics.org/) service offers several predictor methods and needs no Docker. DLKcat runs locally in a Docker image.
 
 ## Assign EC numbers to reactions
 
@@ -66,8 +66,7 @@ If the starting GEM is not annotated with a `model.eccodes` field, does not cont
 ecModel = getECfromDatabase(ecModel);
 ```
 
-`applyECcodes` transfers EC numbers derived from the database back into the
-`model.eccodes` fields, if desired.
+`applyECcodes` transfers EC numbers derived from the database back into the `model.eccodes` fields, if desired.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -119,16 +118,14 @@ kcat_list_fuzzy = kcats_from_brenda(ec_model)
 :::
 ::::
 
-The option `aggregation` (`'max'` or `'median'`) selects the BRENDA value per EC number, substrate and organism; the default is `kcat_aggregate_brenda` of `model_adapter.toml`, or `'max'`. The option `forceWClvl` (Python: `force_wildcard_level`) replaces that number of EC levels, from the right, by a wildcard in every EC number. `fuzzyKcatMatching` (Python: `fuzzy_kcat_matching`, which takes the loaded `brenda` and `phyl_dist`) returns the same list without writing a file.
+The option `aggregation` (`'max'` or `'median'`) of `kcatsFromBrenda` (Python: `kcats_from_brenda`) selects the BRENDA value per EC number, substrate and organism; the default is `kcat_aggregate_brenda` of `model_adapter.toml`, or `'max'`. The direct call names the option `kcatAggregation` in `fuzzyKcatMatching` and `aggregate` in `fuzzy_kcat_matching`. The option `forceWClvl` (Python: `force_wildcard_level`) replaces that number of EC levels, from the right, by a wildcard in every EC number. `fuzzyKcatMatching` (Python: `fuzzy_kcat_matching`, which takes the loaded `brenda` and `phyl_dist`) returns the same list without writing a file.
 
 Each BRENDA kcat is divided by the coefficient of the substrate that it was measured on, so a reaction that consumes two molecules of that substrate gets a kcat per molecule of the substrate ([GECKO 3 to GECKO 4](../gecko3-to-gecko4.md) describes the change from GECKO 3).
 
 The kcat list documents which kcat was assigned to each reaction and how precise the match is: the number of EC wildcards used, and whether the match agreed on substrate and organism. A full match often does not exist, even for model organisms such as *S. cerevisiae*, and a partial organism or substrate match is returned. For each EC number, the levels of organism and substrate are tried in the order of the origin values 1, 2, 3, 5, 4 and 6 (see the example output below). When no level matches, the rightmost EC level is replaced by a wildcard and the levels are tried again. EC 2.4.2.3 (uridine phosphorylase), for example, becomes 2.4.2.- (pentosyltransferase). With a wildcard, the levels that require a matching substrate (origin 1 and 2) are skipped, because the last digits of the EC number carry the substrate specificity. When a reaction has several EC numbers, the match with the fewest wildcards and the earliest level is selected, and among those the highest kcat.
 
 :::{note} Example output
-In the `full_ecModel` tutorial, the fuzzy `kcatList` documents, per reaction: the substrates and EC numbers matched against BRENDA, the proposed kcat, `wildcardLvl` (Python: `wildcard_level`; 0: `w.x.y.z`, 1: `w.x.y.-`, 2: `w.x.-.-`, 3:
-`w.-.-.-`, 4: `-.-.-.-`), and `origin`, the specificity level of the match reached (1:
-correct organism and substrate; 2: closest related organism, correct substrate; 3: correct organism, any substrate; 4: closest related organism, any substrate; 5: correct organism, specific activity; 6: closest related organism, specific activity).
+In the `full_ecModel` tutorial, the fuzzy `kcatList` documents, per reaction: the substrates and EC numbers matched against BRENDA, the proposed kcat, `wildcardLvl` (Python: `wildcard_level`; 0: `w.x.y.z`, 1: `w.x.y.-`, 2: `w.x.-.-`, 3: `w.-.-.-`, 4: `-.-.-.-`), and `origin`, the specificity level of the match reached (1: correct organism and substrate; 2: closest related organism, correct substrate; 3: correct organism, any substrate; 4: closest related organism, any substrate; 5: correct organism, specific activity; 6: closest related organism, specific activity).
 :::
 
 ## Estimate kcats from the EC tree
@@ -193,8 +190,7 @@ DLKcat and OpenKineticsPredictor take the substrates as SMILES. Starting GEMs ra
 [ecModel, noSMILES] = findMetSmiles(ecModel);
 ```
 
-`findMetSmiles` reports the percentage of
-unique metabolites assigned a SMILES annotation. If it is below 100 %, as is almost always the case, inspect the `noSMILES` list of metabolite names. In some models the metabolite name is suffixed with the metabolite formula, which prevents matching with PubChem; curating `ecModel.metNames` resolves such issues.
+`findMetSmiles` reports the percentage of unique metabolites assigned a SMILES annotation. If it is below 100 %, as is almost always the case, inspect the `noSMILES` list of metabolite names. In some models the metabolite name is suffixed with the metabolite formula, which prevents matching with PubChem; curating `ecModel.metNames` resolves such issues.
 
 MATLAB prints the progress and result:
 
@@ -212,11 +208,7 @@ from geckopy import find_met_smiles
 find_met_smiles(ec_model, cache_path=params.path / "data" / "smilesDB.tsv")
 ```
 
-`find_met_smiles` mutates `ec_model` in place and reads and writes through the
-`cache_path` TSV; an existing cache, as shipped with the tutorial, means no
-PubChem network access is needed. Unmatched metabolites are logged rather than returned as a `noSMILES` list: the number of unique metabolite names with a SMILES and the number without are logged at INFO level, and each name without a SMILES at DEBUG level. As in MATLAB, curate metabolite names
-(`metabolite.name`) if a formula suffix or similar naming issue prevents
-matching.
+`find_met_smiles` mutates `ec_model` in place and reads and writes through the `cache_path` TSV. No PubChem network access is needed when every metabolite name is in the cache, as with the cache shipped with the tutorial. Unmatched metabolites are logged rather than returned as a `noSMILES` list: the number of unique metabolite names with a SMILES and the number without are logged at INFO level, counting only the names looked up in PubChem, and each name without a SMILES at DEBUG level. As in MATLAB, curate metabolite names (`metabolite.name`) if a formula suffix or similar naming issue prevents matching.
 :::
 ::::
 
@@ -226,7 +218,7 @@ In the `full_ecModel` tutorial, a SMILES annotation is found for 64 % of the uni
 
 ## Predict kcats with DLKcat
 
-DLKcat predicts a kcat from enzyme sequence information and substrate structural information in SMILES format. `kcatsFromDLKcat` with the option `run` writes the DLKcat input, runs DLKcat in a Docker image and keeps the predictions as `dlkcat.tsv`. The run downloads and starts the Docker image `ghcr.io/sysbiochalmers/dlkcat-gecko:0.1` automatically, so Docker must be installed and running. A run records the number of reactions it covered in `data/DLKcat_run.txt`.
+DLKcat predicts a kcat from enzyme sequence information and substrate structural information in SMILES format. `kcatsFromDLKcat` with the option `run` writes the DLKcat input, runs DLKcat in a Docker image and keeps the predictions as `dlkcat.tsv`. The run downloads and starts the Docker image `ghcr.io/sysbiochalmers/dlkcat-gecko:0.1` automatically, so Docker must be installed and running. A run of a subset of the reactions records their number in `data/DLKcat_run.txt`; a run of all reactions leaves the file empty.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -255,7 +247,7 @@ The kcat list is similar in shape to the BRENDA one, but has no EC numbers, wild
 
 ### Write the DLKcat input file
 
-`kcatsFromDLKcat` with `'run', true` replaces `data/DLKcat.tsv`. The input file can also be written, run and read in separate steps. Currency metabolites that occur in pairs (for example ATP versus ADP, NADH versus NAD) and a selection of small molecules (for example Fe2+) are excluded, unless a reaction has no other reactants after removing them, as for ATP synthase. Nonexhaustive exclusion lists ship with the toolbox as `DLKcatCurrencyMets.tsv` and `DLKcatIgnoreMets.tsv` (MATLAB: in `GECKO/databases`; Python: inside the `geckopy.data` package); an ecModel-specific override can be placed under `data/` in the adapter folder with the same filenames. The lists apply to the OpenKineticsPredictor input and to the substrates of the homolog search as well.
+`kcatsFromDLKcat` with `'run', true` replaces `data/DLKcat.tsv`. The input file can also be written, run and read in separate steps. Currency metabolites that occur in pairs (for example ATP versus ADP, NADH versus NAD) are excluded, unless a reaction has no other reactants after removing them, as for ATP synthase. A selection of small molecules (for example Fe2+) is excluded in every reaction. Nonexhaustive exclusion lists ship with the toolbox as `DLKcatCurrencyMets.tsv` and `DLKcatIgnoreMets.tsv` (MATLAB: in `GECKO/databases`; Python: inside the `geckopy.data` package); an ecModel-specific override can be placed under `data/` in the adapter folder with the same filenames. The lists apply to the OpenKineticsPredictor input and to the substrates of the homolog search as well.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -282,15 +274,13 @@ write_dlkcat_input(
 )
 ```
 
-`load_dlkcat_ignore_lists` reads the currency-metabolite and small-molecule
-exclusion lists (`DLKcatCurrencyMets.tsv`/`DLKcatIgnoreMets.tsv`, or their project-specific overrides under `data/`) that MATLAB's `writeDLKcatInput` reads implicitly. `write_dlkcat_input` raises `FileExistsError` when the file exists; `overwrite=True` replaces it. The same full-vs-light `DLKcat.tsv` caveat applies: the file encodes `ec_model.ec.rxns` identifiers, so a full-model file cannot be reused for a light model or the reverse. The source file `dlkcat.tsv` is keyed by the conventional reaction and applies to both.
+`load_dlkcat_ignore_lists` reads the currency-metabolite and small-molecule exclusion lists (`DLKcatCurrencyMets.tsv`/`DLKcatIgnoreMets.tsv`, or their project-specific overrides under `data/`) that MATLAB's `writeDLKcatInput` reads implicitly. `write_dlkcat_input` raises `FileExistsError` when the file exists; `overwrite=True` replaces it. The same full-vs-light `DLKcat.tsv` caveat applies: the file encodes `ec_model.ec.rxns` identifiers, so a full-model file cannot be reused for a light model or the reverse. The source file `dlkcat.tsv` is keyed by the conventional reaction and applies to both.
 :::
 ::::
 
 ### Run DLKcat and load its output
 
-No other input is given, because the function assumes the input file is at
-`data/DLKcat.tsv`:
+No other input is given, because the function assumes the input file is at `data/DLKcat.tsv`:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -324,9 +314,7 @@ OpenKineticsPredictor (OKP) shares its input with DLKcat: protein sequences and 
 :::{warning} The API key is a secret; never put it in the model adapter
 OKP requires a personal Bearer API key (looks like `ak_...`). Get one free, no registration required, at [predictor.openkinetics.org/api-docs](https://predictor.openkinetics.org/api-docs) (the "API key generator" section; the key is shown once, and can be revoked and regenerated from the same page). Keys are tied to the requesting IP and carry a daily prediction quota that resets at midnight UTC.
 
-Because the model adapter is shared and committed to version control, the key does not belong there. Both languages resolve it the same way, checked in this order: an explicit function argument; the
-`OKP_API_KEY` environment variable; or a plain-text `data/okpApiKey.txt`
-file in the adapter folder (a filename already git-ignored by GECKO).
+Because the model adapter is shared and committed to version control, the key does not belong there. Both languages resolve it the same way, checked in this order: an explicit function argument; the `OKP_API_KEY` environment variable; or a plain-text `data/okpApiKey.txt` file in the adapter folder (a filename already git-ignored by GECKO).
 :::
 
 OKP is a web service with a job queue. `kcatsFromOKP` submits a job when the method has none, and fetches the result of the job on a later call. The file `okp_<method>.tsv` is written once the job is done.
@@ -362,7 +350,7 @@ Each method keeps its job in `data/OKP_job_<method>.txt` and its result in `data
 
 ## Gather all configured sources
 
-`updateKcatSources` gathers the source files that `[kcat_assignment]` of `model_adapter.toml` uses and that are missing or outdated, with the functions above. A file is outdated when its header records other settings than `[kcat_sources.<name>]` asks for, or for `brenda` and `ec_tree` another BRENDA release than the files in use. `custom.tsv` is left as it is. The function checks Docker and the OKP API key first.
+`updateKcatSources` gathers the source files that `[kcat_assignment]` of `model_adapter.toml` uses and that are missing or outdated, with the functions above. A file is outdated when its header records other settings than `[kcat_sources.<name>]` asks for, or for `brenda` and `ec_tree` another BRENDA release than the files in use. `custom.tsv` is left as it is. In MATLAB, the function checks Docker and the OKP API key first. In Python, a source whose requirement is missing gets the status `failed`.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -420,7 +408,7 @@ kcat_list_merged = merge_kcats(
 |---|---|
 | `database_exact` | an exact experimental measurement without fuzzy metadata, which OpenKineticsPredictor can return directly |
 | `database_top` | fuzzy BRENDA matches without EC wildcard and with an origin up to `topOriginLimit` (Python: `top_origin_limit`, default 4) |
-| `database_bottom` | weaker fuzzy matches: origin up to `bottomOriginLimit` (default 6), and at most `wildcardLimit` (default 3) EC wildcards |
+| `database_bottom` | weaker fuzzy matches: origin up to `bottomOriginLimit` (default 6), and at most `wildcardLimit` (default 3) EC wildcards; also rows without EC wildcard whose origin is above `topOriginLimit` |
 
 Any other token (`'dlkcat'`, `'catapro'`, ...) matches the `source` value of a row, in lower case with other characters than letters and digits as `_`; a leading `okp_` of the source of an OpenKineticsPredictor row is dropped for the match. The default `topOriginLimit` of 4 ranks BRENDA matches from specific activities (origin 5 and 6) after the other sources, and the value 6 ranks them with the other `database_top` matches. All rows of the winning tier of a reaction are kept, and `assignKcatValues` (Python: `apply_kcat_list`) selects the value among them (default: the highest).
 

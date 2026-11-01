@@ -23,7 +23,7 @@ The file is an ordered mapping (`!!omap`) that is written as a list of single-ke
 
 The writers add `gecko_light`, `ec-rxns` and `ec-enzymes` when the model has an `ec` structure. A file with one of `ec-rxns` and `ec-enzymes` and without the other is an error in geckopy, and `load_ec_model` raises a `ValueError` for a file without both. The readers also accept `id`, `name`, `version` and `gecko_light` at the top level of the file.
 
-The head of a file written by GECKO:
+The metaData section and the first metabolite of `ecYeastGEM.yml` in the `full_ecModel` tutorial, abridged. This file has no `gecko_format`, `generator` or `description` key:
 
 ```yaml
 !!omap
@@ -74,7 +74,7 @@ The head of a file written by GECKO:
 
 | Key | Content |
 | --- | --- |
-| `description` | `Enzyme-constrained model of <id>`, written when the model has neither a description nor a note |
+| `description` | `Enzyme-constrained model of <id>`, written when the model has no description. GECKO also treats a note as a description, and geckopy checks the key `description` |
 | `gecko_format` | the ecModel format of the file, written as text. The value is `4`, as `project_format` in `model_adapter.toml` |
 | `generator` | the release that wrote the file: `GECKO <version>` from GECKO and `geckopy <version>` from geckopy |
 

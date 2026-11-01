@@ -16,7 +16,7 @@ Building an ecModel expands a conventional GEM so that enzyme constraints can be
 
 The project folder with `model_adapter.toml` and the starting GEM exist (see [Getting started](getting-started.md)). `createGECKOproject` (MATLAB) and `geckopy init` (Python) create the folder. The adapter sets the path of the GEM (`conv_gem`), the compartment of the protein pseudo-metabolites (`enzyme_comp`, a compartment name), the UniProt and KEGG parameters and, for the complex data, `complex.taxonomic_id`. [Model adapter parameters](model-adapter-parameters.md) describes them. The examples use the `full_ecModel` tutorial of GECKO, and its data files are described in [Files in the data folder](data-folder-files.md).
 
-`makeEcModel` reads `data/uniprot.tsv` and `data/kegg.tsv` of the project and downloads a missing file. `make_ec_model` reads `data/uniprot.tsv` and raises a `FileNotFoundError` when it is missing; `geckopy uniprot-download` creates it, and `geckopy kegg-download` creates `data/kegg.tsv`.
+`makeEcModel` reads `data/uniprot.tsv` and `data/kegg.tsv` of the project and downloads a missing file when the adapter sets the corresponding identifiers (`uniprot.id`, `kegg.id`); otherwise it prints a warning. `make_ec_model` reads `data/uniprot.tsv` and raises a `FileNotFoundError` when it is missing; `geckopy uniprot-download` creates it. `geckopy kegg-download eco data/kegg.tsv` creates `data/kegg.tsv`, a comma-delimited file that `make_ec_model` loads under that name.
 
 ## Set the default model adapter
 
@@ -42,7 +42,7 @@ params = ModelAdapter.getParameters();
 
 The rest of this guide assumes a default model adapter is set.
 
-**Reset the default after editing the adapter.** The adapter is read when it is set. After a change in `model_adapter.toml`, set it as default again:
+The adapter is read when it is set. After a change in `model_adapter.toml`, set it as default again:
 
 ```matlab
 ModelAdapterManager.setDefault(adapterLocation);
@@ -89,9 +89,9 @@ or YAML:
 model = readYAMLmodel('path/to/modelFile.yml');
 ```
 
-**Convert from the COBRA Toolbox format if needed.** GECKO loads models through RAVEN by default. A model loaded through the COBRA Toolbox (recognizable by a `model.rules` field) needs converting to the RAVEN format (recognizable by a `model.metComps` field) first, with `ravenCobraWrapper()`. `makeEcModel` stops with an error for a model that has the field `rules` or `modelID`.
+GECKO loads models through RAVEN by default. A model loaded through the COBRA Toolbox (recognizable by a `model.rules` field) needs converting to the RAVEN format (recognizable by a `model.metComps` field) first, with `ravenCobraWrapper()`. `makeEcModel` stops with an error for a model that has the field `rules` or `modelID`.
 
-**Warnings when the model loads.** Not every GEM in SBML format strictly follows the L3V1 FBCv2 standard; the [SBML Validator](https://sbml.bioquant.uni-heidelberg.de/validator_servlet/) reports what is wrong. In most cases the model still loads despite the warning. If it is later exported to SBML again, RAVEN avoids re-writing the same invalid content, so cycling through `importModel`, `exportModel` and `importModel` brings the loaded GEM closer to valid SBML.
+Not every GEM in SBML format strictly follows the L3V1 FBCv2 standard; the [SBML Validator](https://sbml.bioquant.uni-heidelberg.de/validator_servlet/) reports what is wrong. In most cases the model still loads despite the warning. If it is later exported to SBML again, RAVEN avoids re-writing the same invalid content, so cycling through `importModel`, `exportModel` and `importModel` brings the loaded GEM closer to valid SBML.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -144,7 +144,7 @@ Light ecModel:
 
 The optional argument is `geckoLight`, also given as `makeEcModel(model, 'geckoLight', true)`.
 
-**Genes without a match.** `noUniprot` lists the model genes that match neither `data/uniprot.tsv` nor `data/kegg.tsv`. `makeEcModel` raises an error when no gene matches. If `noUniprot` contains many genes, for example more than ten, a different UniProt taxonomy or proteome identifier (see [The model adapter](getting-started.md#the-model-adapter)) may fit better.
+`noUniprot` lists the model genes that match neither `data/uniprot.tsv` nor `data/kegg.tsv`. `makeEcModel` raises an error when no gene matches. If `noUniprot` contains many genes, for example more than ten, a different UniProt taxonomy or proteome identifier (see [The model adapter](getting-started.md#the-model-adapter)) may fit better.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -165,11 +165,11 @@ ec_model = make_ec_model(model, adapter, gecko_light=True)
 
 UniProt data loads automatically from `params.path / "data" / "uniprot.tsv"`. Pass a pre-loaded `uniprot_db=` to use a different file or to avoid re-reading it across multiple calls. KEGG data loads from `params.path / "data" / "kegg.tsv"` when that file exists; pass a pre-loaded `kegg_db=` to use another source. `make_ec_model` leaves the input `model` unchanged and returns the built `EcModel`.
 
-**Genes without a match.** `make_ec_model` returns the built `EcModel` and no list of unmatched genes. Unmatched genes are logged as a warning summary and recorded on the affected reactions in `reaction.notes["geckopy_warning"]`. As in MATLAB, many unmatched genes are a reason to reconsider the UniProt taxonomy or proteome identifier.
+`make_ec_model` returns the built `EcModel` and no list of unmatched genes. Unmatched genes are logged as a warning summary and recorded on the affected reactions in `reaction.notes["geckopy_warning"]`. As in MATLAB, many unmatched genes are a reason to reconsider the UniProt taxonomy or proteome identifier.
 :::
 ::::
 
-The build consults the KEGG data for genes that UniProt does not match. `ec.enzymes` receives the UniProt accession on the matching KEGG row, or the KEGG gene identifier when that row has no accession; the build prints a separate warning for these genes, because a KEGG identifier is a different identifier type than a UniProt accession.
+The build consults the KEGG data for genes that UniProt does not match. `ec.enzymes` receives the UniProt accession on the matching KEGG row, or the KEGG gene identifier when that row has no accession; the build warns that the bare KEGG gene identifier is used in `ec.enzymes` for these genes.
 
 The result is an empty ecModel: the model structure allows enzyme constraints (see [the ec structure](applying-kcats.md#the-ec-structure)), and no constraints are applied yet.
 

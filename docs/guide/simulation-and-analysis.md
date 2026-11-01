@@ -32,11 +32,14 @@ ecModel_infProt = setProtPoolSize(ecModel, Inf);
 :::{tab-item} 🐍 Python
 :sync: python
 
+`set_prot_pool_size` changes the model in place and returns the new bound, so the copy is made first:
+
 ```python
 import math
 
 from geckopy import set_prot_pool_size
 
+ec_model_inf = ec_model.copy()
 set_prot_pool_size(ec_model_inf, p_tot=math.inf)
 ```
 
@@ -117,6 +120,8 @@ print(f"Minimum protein pool usage: {abs(sol.fluxes['prot_pool_exchange']):.2f} 
 :::
 ::::
 
+The printed value depends on the model and is not shown.
+
 The flux distribution has a growth rate of at least 99 % of the maximum for the condition, and it uses the enzyme resources as efficiently as the model allows. The sign of `prot_pool_exchange` and of the `usage_prot_*` fluxes is the opposite in an ecModel from GECKO 3 until `upgradeEcModel` runs (see [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md)).
 
 ## Comparing flux distributions of different models
@@ -153,13 +158,13 @@ mapped_flux, enz_usage_flux, usage_enz = (
 
 `mappedFlux` (Python: `mapped_flux`) has the length and the order of a flux vector of the conventional GEM and is used as any other conventional flux vector. `enzUsageFlux` (Python: `enz_usage_flux`) holds the fluxes of the `usage_prot_*` reactions and of `prot_pool_exchange`, which are absent from `mappedFlux`, and `usageEnz` (Python: `usage_enz`) holds their labels (`pool` for the protein pool exchange). These fluxes are positive, because the usage reactions run forward.
 
-:::{warning} The ecModel must derive from the conventional GEM
+:::{warning} Reaction mapping to the conventional GEM
 `mapRxnsToConv` matches reactions by identifier and does not check that the underlying chemical reaction is the same. A stoichiometric change beyond the enzyme and proteomics constraints, such as a flipped directionality or a new reaction, breaks the correspondence without an error. `mapRxnsToConv` raises an error when a reaction of the conventional GEM is missing from the ecModel.
 :::
 
 ## Evaluating the solution space
 
-A smaller solution space is a benefit of an ecModel over a conventional GEM, and flux variability analysis (FVA) shows it. FVA on an ecModel works as on any constraint-based model. `ecFVA` (Python: `ec_fva`) maps the ranges to the reaction identifiers of the conventional GEM, so the result is comparable to the FVA of the conventional GEM itself.
+An ecModel has a smaller solution space than a conventional GEM, which flux variability analysis (FVA) shows. FVA on an ecModel works as on any constraint-based model. `ecFVA` (Python: `ec_fva`) maps the ranges to the reaction identifiers of the conventional GEM, so the result is comparable to the FVA of the conventional GEM itself.
 
 The same exchange flux constraints are applied to three models: an ecModel with proteomics integrated (see [Proteomics integration](proteomics-integration.md)), the same ecModel without proteomics, and the underlying conventional GEM:
 
@@ -217,7 +222,7 @@ The ranges are visualised as a cumulative distribution (`plotEcFVA` or a project
 
 ## Sampling the solution space
 
-:::{tip} Not part of the original protocol
+:::{tip} Sampler choice
 FVA reports the extremes that each reaction reaches one at a time. Flux sampling draws many feasible flux vectors and reports their distribution, which shows what the model does as well as what it can do. RAVEN, the base of GECKO, and raven-toolbox, the base of geckopy, offer two Markov-chain Monte Carlo samplers through the entry point for conventional GEMs: ACHR (Artificially Centered Hit-and-Run) and CHRR (Coordinate Hit-and-Run with Rounding). The call is `randomSampling(model, ..., 'method', 'achr'|'chrr')` in MATLAB and `random_sampling(model, method="achr"|"chrr")` in Python. The choice of the sampler matters for an ecModel.
 :::
 
@@ -254,7 +259,7 @@ result = random_sampling(ec_model, n_samples=1000, method="chrr")
 
 ## Scanning for engineering targets
 
-`ecFSEOF` (Python: `ec_fseof`) runs flux scanning with enforced objective function (FSEOF) on an ecModel. It enforces an increasing flux through a production reaction, optimises biomass at each step, and classifies the reactions whose absolute flux correlates with the enforced flux as targets. A reaction is a target when the absolute correlation is at least `corrThreshold` (Python: `correlation_threshold`, default 0.9). The scan runs from the production at the optimum of biomass to 90 % of the maximum production. The reactions that draw enzyme usage (`usage_prot_*`) take part in the classification and are not reported. A target is over expressed (OE) when its flux increases with production, knocked out (KO) when it decreases and is at most 1e-8 at the last step, and knocked down (KD) when it decreases otherwise (MATLAB help of `ecFSEOF`). The function warns when the lower bound of the carbon source reaction is tighter than its uptake at maximum growth.
+`ecFSEOF` (Python: `ec_fseof`) runs flux scanning with enforced objective function (FSEOF) on an ecModel. It enforces an increasing flux through a production reaction, maximises biomass at each step and then minimises the total flux (`ecFSEOF` calls `solveLP(model, 1)`; `ec_fseof` runs pFBA at each step), and classifies the reactions whose absolute flux correlates with the enforced flux as targets. A reaction is a target when the absolute correlation is at least `corrThreshold` (Python: `correlation_threshold`, default 0.9). The scan runs from the production at the optimum of biomass to 90 % of the maximum production. The reactions that draw enzyme usage (`usage_prot_*`) take part in the classification and are not reported. A target is over expressed (OE) when its flux increases with production, knocked out (KO) when it decreases and is at most 1e-8 at the last step, and knocked down (KD) when it decreases otherwise (MATLAB help of `ecFSEOF`). The function warns when the lower bound of the carbon source reaction is tighter than its uptake at maximum growth.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -336,7 +341,7 @@ The growth rate of the unconstrained context-specific model (149.97 /h) has no b
 
 ## See also
 
-- [GECKO light vs. full ecModels](gecko-light.md), the runtime and accuracy trade-off between the two ecModel layouts.
+- [GECKO light and full ecModels](gecko-light.md), the runtime and accuracy trade-off between the two ecModel layouts.
 - [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md), the analyses of `getEnzymeUsage`, `getPfbaEnzymes` and `getEnzymeBottlenecks` that the usage reactions of a full ecModel allow.
 - [Proteomics integration](proteomics-integration.md), the construction of the proteomics-constrained ecModel of the solution space comparison.
 - [Growth-rate tuning](growth-rate-tuning.md), the kcat values that decide the growth rate of the simulation.

@@ -123,7 +123,7 @@ id = ""
 
 The UniProt database is the source of the molecular weights and the amino acid sequences of the enzymes and is essential. KEGG can assign EC number annotations and is optional. The query parameters select data with the same style of gene identifier as the starting GEM. A mismatch means that enzyme data cannot be matched to the genes of the model.
 
-:::{warning} Proteome over taxonomy
+:::{warning} UniProt proteome and taxonomy identifiers
 UniProt data are identified by proteome or by taxonomy. The proteome is preferred, because it avoids redundant matches between gene and protein identifiers.
 :::
 
@@ -157,19 +157,19 @@ fclose(fID);
 :::{tab-item} 🐍 Python
 :sync: python
 
-geckopy downloads KEGG data with the `geckopy` command-line tool, which has no Python function. The command writes a CSV file without a header row, with the columns `uniprot`, `gene`, `kegg_gene` and further columns for EC numbers, molecular weights, pathways and sequences:
+geckopy downloads KEGG data with the `geckopy` command-line tool, which has no Python function. The command writes a comma-delimited file without a header row, with the columns `uniprot`, `gene`, `kegg_gene` and further columns for EC numbers, molecular weights, pathways and sequences:
 
 ```bash
-geckopy kegg-download eco data/kegg.csv
+geckopy kegg-download eco data/kegg.tsv
 ```
 
-The two relevant columns are written as `uniprotConversion.tsv`. The CSV file has no header row, so `pandas.read_csv` receives the column names:
+`make_ec_model` loads the file as `data/kegg.tsv`, so the command saves it under that name although the delimiter is a comma. The two relevant columns are written as `uniprotConversion.tsv`. The file has no header row, so `pandas.read_csv` receives the column names:
 
 ```python
 import pandas as pd
 
 columns = ["uniprot", "gene", "kegg_gene", "ec", "mw", "pathway", "sequence"]
-kegg = pd.read_csv(params.path / "data" / "kegg.csv", header=None, names=columns)
+kegg = pd.read_csv(params.path / "data" / "kegg.tsv", header=None, names=columns)
 kegg[["kegg_gene", "uniprot"]].rename(columns={"kegg_gene": "genes"}).to_csv(
     params.path / "data" / "uniprotConversion.tsv", sep="\t", index=False,
 )

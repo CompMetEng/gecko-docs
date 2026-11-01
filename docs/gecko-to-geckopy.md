@@ -2,7 +2,7 @@
 
 <!-- docs-site: concept-page -->
 
-GECKO (MATLAB) and geckopy (Python) build and analyse enzyme-constrained models with the same algorithms, read the same project folder and exchange ecModels in the same YAML format. The two implementations are similar and not equivalent: they correspond in objects and algorithms, and differ in some names, in some functions and in some behaviour.
+GECKO (MATLAB) and geckopy (Python) build and analyse enzyme-constrained models with the same algorithms, read the same project folder and exchange ecModels in the same YAML format. The two implementations correspond in objects and algorithms. They differ in some names, in some functions and in some behaviour.
 
 [MATLAB and Python](matlab-vs-python.md) pairs every function that exists on both sides and links each to its API entry.
 
@@ -29,8 +29,16 @@ GECKO (MATLAB) and geckopy (Python) build and analyse enzyme-constrained models 
 
 ## Names that differ in more than case
 
+The table is a selection; [MATLAB and Python](matlab-vs-python.md) lists all pairs.
+
 | MATLAB | geckopy |
 |---|---|
+| `applyECcodes` | `copy_ec_to_gem` |
+| `constrainFluxData` | `apply_flux_data_constraints` |
+| `getECfromDatabase` | `fill_eccodes_from_database` |
+| `getECfromGEM` | `fill_eccodes_from_gem` |
+| `evotuneScore` | `evotune_distance` |
+| `getEcRxnKeys` | `ec_rxn_keys` |
 | `assignKcatValues` | `apply_kcat_list` |
 | `getKcatAcrossIsozymes` | `fill_kcats_from_isozymes` |
 | `getStandardKcat` | `assign_standard_kcat` |
@@ -67,10 +75,13 @@ GECKO (MATLAB) and geckopy (Python) build and analyse enzyme-constrained models 
 
 ## Differences in behaviour
 
-The scenarios of the [raven-gecko-parity](https://github.com/CompMetEng/raven-gecko-parity) repository run both implementations on the same input and compare the results. Two differences are recorded in its ledger.
+The scenarios of the [raven-gecko-parity](https://github.com/CompMetEng/raven-gecko-parity) repository run both implementations on the same input and compare the results. The ledger of that repository records two differences as checkpoints, and further differences in the notes of single rows.
 
-- **`ecFSEOF` and `ec_fseof`** return the same target reactions on ecTestGEM. On ecYeastGEM the order of targets differs in runs of reactions of one lipid pathway, because the pFBA solution that the regression uses is not unique.
-- **`upgradeGECKOproject` and `upgrade_project`** differ for a project that has an adapter class and no `model_adapter.toml`. `upgradeGECKOproject` converts the class. `upgrade_project` lists the adapter for conversion by hand, because an adapter class is MATLAB code.
+- **`ecFSEOF` and `ec_fseof`** return the same target reactions on ecTestGEM. On the ecYeastGEM of the tutorial the order of targets differs in 27 positions, and the set of targets depends on the solver pair, because the pFBA solution that the regression uses is not unique. On ecYeastGEM 9.1.1 the order is the same.
+- **`upgradeGECKOproject` and `upgrade_project`** differ for a project that has an adapter class and no `model_adapter.toml`. `upgradeGECKOproject` converts the class. `upgrade_project` lists the adapter for conversion by hand, because an adapter class is MATLAB code, and then skips the conversion of the custom kcats and the stored predictions.
+- **`setProtPoolSize` and `set_prot_pool_size`** read the default of `f` from their own adapters, and the defaults differ.
+- **`sigmaFitter` and `fit_sigma`** return the same sigma with `method="bisect"`; the default `method="grid"` of `fit_sigma` takes the first grid point with the smallest error.
+- **`saveEcModel` and `save_ec_model`** write files that differ in charge, SBO terms, gene names and the subsystem of the protein usage reactions.
 
 ## See also
 

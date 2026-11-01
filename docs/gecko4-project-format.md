@@ -20,16 +20,17 @@ A GECKO 4 project is a folder with a configuration file, input data, kcat source
 
 ## model_adapter.toml
 
-The file holds the parameters that an adapter class sets in GECKO 3. Paths are relative to the project folder. Keys that are left out get the default listed, with their MATLAB names, in `src/model_adapter/adapterParameters.tsv` of GECKO. A key that the file does not list is an error in both toolboxes.
+The file holds the parameters that an adapter class sets in GECKO 3. Paths are relative to the project folder. Keys that are left out get the default listed, with their MATLAB names, in `src/model_adapter/adapterParameters.tsv` of GECKO. A key that `adapterParameters.tsv` does not list is an error in both toolboxes.
 
 | Section | Content |
 | --- | --- |
-| top level | `conv_gem`, `org_name`, `sigma`, `p_tot`, `f`, `gr_exp`, `c_source`, `bio_rxn`, `enzyme_comp`, `kcat_aggregate_brenda` |
+| top level | `project_format`, `conv_gem`, `org_name`, `sigma`, `p_tot`, `f`, `gr_exp`, `c_source`, `bio_rxn`, `enzyme_comp`, `kcat_aggregate_brenda`, and for geckopy `kcat_aggregate_candidates` and `kcat_aggregate_isozymes` |
 | `[kegg]`, `[uniprot]`, `[complex]` | the organism and gene identifiers for the database downloads |
 | `[spontaneous]` | reactions without an enzyme: a name fragment (`name_contains`) and a file with reaction identifiers (`file`) |
 | `[evotune]` | the hyperparameters of the CMA-ES kcat tuning, with the source groups and the prior width per source |
 | `[kcat_assignment]` | a preset or stages, and the options `isozymes` and `standard` (see [Kcat assignment](gecko4-kcat-assignment.md)) |
 | `[kcat_sources.<name>]` | settings of one source, for example `aggregation` of `brenda` and `methods` of `okp` |
+| `[okp]` | the OpenKineticsPredictor settings `method` (default `CataPro`), `handle_long_sequences`, `include_similarity_columns` and `canonicalize_substrates` |
 | `[matlab]` | names of MATLAB functions for the anaerobic model and the protein content of the biomass. GECKO alone reads this section |
 | `[matlab.params]` | parameters that GECKO uses and geckopy does not use |
 
@@ -52,7 +53,7 @@ A kcat source file stores the kcats of one source. Each row is keyed by the conv
 
 ## ecModel format
 
-`saveEcModel` writes `gecko_format` (the ecModel format, 4) and `generator` (the GECKO release that wrote the file) to the `metaData` of the YAML file. The key `geckopy_version` of earlier geckopy releases is not written. A model without a description gets `Enzyme-constrained model of <id>`, and an existing description is kept.
+`saveEcModel` writes `gecko_format` (the ecModel format, 4) and `generator` (the release of the toolbox that wrote the file) to the `metaData` of the YAML file. The key `geckopy_version` of earlier geckopy releases is not written. A model without a description gets `Enzyme-constrained model of <id>`, and an existing description is kept.
 
 `loadEcModel` upgrades an ecModel whose protein reactions run in the GECKO 3 direction in the loaded model and prints a warning. It raises an error for a `gecko_format` above 4. See [ecModel YAML format](guide/yaml-format.md) for the file structure.
 

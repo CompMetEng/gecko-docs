@@ -83,7 +83,7 @@ To remove:
 GECKOInstaller.uninstall
 ```
 
-**Upgrading, with any install method.** Run `GECKOInstaller.uninstall` first, regardless of how GECKO was installed: it clears the old GECKO folder from the MATLAB path so a later session does not warn about paths that no longer exist. Then update (the Add-On manager's Check for Updates, a fresh ZIP extract, or `git pull`) and run `GECKOInstaller.install` again.
+Upgrading with any install method: run `GECKOInstaller.uninstall` first, regardless of how GECKO was installed: it clears the old GECKO folder from the MATLAB path so a later session does not warn about paths that no longer exist. Then update (the Add-On manager's Check for Updates, a fresh ZIP extract, or `git pull`) and run `GECKOInstaller.install` again.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -135,12 +135,13 @@ geckopy installs the command-line tool `geckopy` with the subcommands `init` (ne
 | Solver | License | Good for |
 |---|---|---|
 | Gurobi | Free academic | Genome-scale models and large ecModels (recommended) |
-| SoPlex (SCIP Optimization Suite) | Open source | An open-source alternative to Gurobi |
+| SCIP | Open source | Open-source solver of RAVEN, reached in MATLAB through a SCIP MEX interface (`setRavenSolver('scip')`) |
+| HiGHS through the optlang scipy interface | Open source | Solver of geckopy that needs no licence |
 
 MATLAB reaches the solvers through RAVEN and the COBRA Toolbox, Python through cobrapy.
 
 :::{tip} Avoid GLPK
-GLPK, the default solver of RAVEN, is not recommended for GECKO: ecModels are larger and more numerically demanding than the conventional GEMs for which GLPK is adequate. Configure Gurobi or SoPlex before working with an ecModel of genome scale.
+GLPK, the default solver of RAVEN, is not recommended for GECKO: ecModels are larger and more numerically demanding than the conventional GEMs for which GLPK is adequate. Configure Gurobi, or in MATLAB SCIP, before working with an ecModel of genome scale.
 :::
 
 ## Docker

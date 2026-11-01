@@ -67,7 +67,7 @@ name_contains = "spontaneous"
 | `conv_gem` | `convGEM` | none (required in geckopy) | Path to the starting conventional GEM file, for example `models/yeast-GEM.yml` |
 | `org_name` | `org_name` | none (required in geckopy) | Scientific name of the organism, used by `fuzzyKcatMatching` (Python: `fuzzy_kcat_matching`) and `kcatsFromBrenda` (`kcats_from_brenda`) |
 | `sigma` | `sigma` | `0.5` | Average enzyme saturation factor |
-| `p_tot` | `Ptot` | `0.5` | Total protein content in the cell (g protein/gDCW) |
+| `p_tot` | `Ptot` | `0.5` | Total protein content in the cell [g protein/gDW] |
 | `f` | `f` | `0.5` | Fraction of enzymes in the ecModel relative to all proteins (g enzyme/g protein). `calculateFfactor` (Python: `calculate_f_factor`) computes it from a proteomics data set |
 | `gr_exp` | `gR_exp` | `0.41` | Reference (experimentally observed) maximum growth rate in h^-1, the default tuning target in [Growth-rate tuning](growth-rate-tuning.md#sensitivity-tuning-of-kcat-values) |
 | `c_source` | `c_source` | `""` | Identifier of the exchange reaction of glucose or of another preferred carbon source |

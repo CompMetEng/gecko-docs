@@ -1,9 +1,9 @@
-﻿# Enzyme usage and bottlenecks
+# Enzyme usage and bottlenecks
 
 A full ecModel simulation reports the amount of each enzyme that a flux distribution uses, and which enzyme would raise the objective most if more of it were available. These are two questions with two answers. The usage of every enzyme is ranked for a solved flux distribution, the enzymes that limit the objective are ranked independently of any particular solution, and the flux distribution with the smallest total enzyme mass is found.
 
 :::{warning}
-Every function below requires a full ecModel; see [GECKO light vs. full ecModels](gecko-light.md).
+Every function below requires a full ecModel; see [GECKO light and full ecModels](gecko-light.md).
 :::
 
 ## Functions
@@ -66,6 +66,8 @@ print(report.top_abs_usage.head(10))
 - `highCapUsage` / `high_cap_usage`, every enzyme above a capacity-usage threshold, not limited to a top-N count. The option `highCapUsage` (Python: `high_cap_usage`) sets the threshold, default 0.9.
 - `totalUsageFlux` / `total_usage_flux`, the current upper bound of the protein pool exchange, the denominator of the percentage column.
 
+Enzymes whose reactions carry no flux are never listed. An enzyme that catalyses several reactions with flux appears as a combined row marked `===`, followed by one row per reaction.
+
 An ecModel without individual concentrations in `ec.concs` shows an empty `highCapUsage` / `high_cap_usage` table: every enzyme draws from the shared protein pool through a usage reaction with the default upper bound of 1000 mg/gDCW, and capacity usage rarely comes close to that bound. Once individual concentrations constrain the usage reactions of some enzymes (see [Proteomics integration](proteomics-integration.md)), their upper bounds reflect the measured availability, and the capacity usage of those enzymes can approach or reach the threshold.
 
 ### Example output
@@ -125,6 +127,8 @@ The columns have these meanings:
 | `upperBound` / `upper_bound` | upper bound of the usage reaction |
 | `multipleActive` / `multiple_active` | true when another capacity constraint is active at the same optimum: another enzyme at its bound, or `prot_pool_exchange` at its upper bound (within 1e-6 relative) |
 
+`getEnzymeBottlenecks` maximises the objective. `get_enzyme_bottlenecks` reports the gain in the direction of the objective: for a minimised objective the gain is the objective of the unchanged model minus the objective after raising the bound, so a positive value is an improvement in both cases.
+
 The shadow price does not enter the order. At a degenerate optimum, which is common in enzyme-constrained models, several constraints are active and the solver assigns the dual to one of them, so the dual depends on the basis. Where `multipleActive` is true, the dual is not informative about a single enzyme. Enzymes with equal `objectiveGain` (rounded to 9 decimals) keep their order in `ec.enzymes`.
 
 When no enzyme is at its usage bound, a warning (MATLAB identifier `getEnzymeBottlenecks:noEnzymeAtBound`; Python: logged) states that no single enzyme limits the objective, every `objectiveGain` is 0 and the rows are in model order. The warning names the protein pool exchange when that is at its bound. `getEnzymeBottlenecks` raises an error on a light ecModel, when `foldChange` is not greater than 1 and when the solve is not optimal (Python: `ValueError` and `RuntimeError`).
@@ -174,4 +178,4 @@ Both implementations require the `usage_prot_<id>` reactions to run forward (`lb
 
 - [Simulation and analysis](simulation-and-analysis.md), the flux distributions that the usage and bottleneck data are computed from.
 - [Relaxing overconstrained proteomics](relaxing-constraints.md), where shadow prices pick the next constraint to relax.
-- [GECKO light vs. full ecModels](gecko-light.md), why none of these functions work on a light ecModel.
+- [GECKO light and full ecModels](gecko-light.md), why none of these functions work on a light ecModel.

@@ -39,7 +39,7 @@ A GECKO 3 script keeps running after each change in this box and returns a diffe
 
 A GECKO 3 project is configured by an adapter class and keeps its kcats in `data/DLKcat.tsv`, `data/customKcats.tsv` and in the variables of the script. A GECKO 4 project is configured by `model_adapter.toml`, keeps each kcat source in its own file in `data/kcats`, and records the ecModel format in the saved model. [Project format 4](gecko4-project-format.md) describes the files, and [Upgrade a GECKO 3 project](gecko3-upgrade-project.md) the steps that convert a project.
 
-Adapter classes keep working. Functions that now take name-value arguments also take them positionally, in the GECKO 3 order: `loadEcModel(filename, modelAdapter)` and `loadEcModel('filename', filename)` are equivalent. A call uses one of the two forms for all its optional arguments.
+Adapter classes keep working. Functions with name-value arguments also take them positionally, in the GECKO 3 order: `loadEcModel(filename, modelAdapter)` and `loadEcModel('filename', filename)` are equivalent. A call uses one of the two forms for all its optional arguments.
 
 ## New functions
 
@@ -67,7 +67,7 @@ kcat prediction goes through the hosted OpenKineticsPredictor service, in additi
 
 ## Renamed functions
 
-The old name of each function in the table calls the new function and prints a deprecation warning. The old names are in `src/deprecated` and are removed in a future release. `mergeDLKcatAndFuzzyKcats` is a wrapper of `mergeKcats` in `src/gather_kcats`.
+The old name of each function in the table calls the new function and prints a deprecation warning. Seven of the old names are in `src/deprecated`; `mergeDLKcatAndFuzzyKcats` is a wrapper of `mergeKcats` in `src/gather_kcats`. The old names are removed in a future release.
 
 | GECKO 3 name | GECKO 4 name | Reason |
 | --- | --- | --- |

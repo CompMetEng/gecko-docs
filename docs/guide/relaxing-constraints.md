@@ -1,9 +1,9 @@
 # Relaxing overconstrained proteomics
 
-Constraining individual enzyme concentrations from [proteomics integration](proteomics-integration.md) can leave the ecModel unable to reach its intended growth rate: measurement error in the proteomics data and uncertainty in the $k_{cat}$ values compound, and the model is more constrained than the cell. The usage bounds of the enzymes that limit growth are raised until the target growth rate is reachable. Two algorithms answer the same question (which enzyme bounds are relaxed, and by how much) and are not interchangeable.
+Constraining individual enzyme concentrations from [proteomics integration](proteomics-integration.md) can leave the ecModel unable to reach its intended growth rate: measurement error in the proteomics data and uncertainty in the $k_{cat}$ values compound, and the model is more constrained than the cell. The usage bounds of the enzymes that limit growth are raised until the target growth rate is reachable. Two algorithms in both toolboxes and a third in geckopy answer the same question (which enzyme bounds are relaxed, and by how much), and they differ in the result they give.
 
 :::{warning}
-All functions below apply to full ecModels; see [GECKO light vs. full ecModels](gecko-light.md).
+All functions below apply to full ecModels; see [GECKO light and full ecModels](gecko-light.md).
 :::
 
 ## Functions
@@ -21,7 +21,7 @@ The ecModel has `ec.concs` filled and applied as bounds on the `usage_prot_<id>`
 
 ## Choice of algorithm
 
-`flexibilizeEnzConcs` / `flexibilize_enz_concs` follows the procedure of the published GECKO pipeline. An iteration computes the control coefficient (the change in growth rate over the change in the enzyme concentration) of every measured enzyme whose usage runs at more than 75 % of its upper bound, and raises the usage upper bound of the enzyme with the largest coefficient. On the k-th pick of the same enzyme the upper bound is `original_concentration * (1 + fold_change * k)`. The loop ends when the target growth rate is reached. A tighten-back pass then minimises protein pool usage at the target growth rate and drops each relaxation that the resulting flux distribution does not need. The result stays as close to the measured proteomics as the target growth rate allows. Computing the control coefficients re-solves the LP once per candidate enzyme, on every iteration.
+`flexibilizeEnzConcs` / `flexibilize_enz_concs` follows the procedure of the published GECKO pipeline. An iteration computes the control coefficient (the change in growth rate over the change in the enzyme concentration) of every measured enzyme whose usage runs at more than 75 % of its upper bound, and raises the usage upper bound of the enzyme with the largest coefficient. On the k-th pick of the same enzyme the upper bound is `original_concentration * (1 + fold_change * k)`. The loop ends when the target growth rate is reached. A tighten-back pass then minimises protein pool usage at the target growth rate and drops each relaxation that the resulting flux distribution does not need. The pass is skipped when the loop stopped on an iteration limit, and the target growth rate is then not reached. The result stays as close to the measured proteomics as the target growth rate allows. Computing the control coefficients re-solves the LP once per candidate enzyme, on every iteration.
 
 `relaxProteomicsGreedy` / `relax_proteomics_greedy` is not part of the published GECKO pipeline (see [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md)). It solves the model once, reads the shadow price of every `prot_<id>` mass-balance constraint from the LP dual, selects the still-constrained enzyme with the largest absolute shadow price and raises its usage upper bound to the default of 1000 in one step. It repeats until the target growth rate is reached. There is no tighten-back pass, so it tends to relax more than the target requires. Each step costs one solve; the control-coefficient algorithm costs one solve per candidate, which matters when one or two enzymes dominate the infeasibility.
 
@@ -38,7 +38,7 @@ The ecModel has `ec.concs` filled and applied as bounds on the `usage_prot_<id>`
 
 ## Gradual relaxation with tighten-back
 
-The usage upper bound of the enzyme with the largest control coefficient is raised, with a fold change of 10 per pick, until the intended growth rate (0.1 /h) is reached. The raised bounds are then reduced to the smallest values that still allow the same flux distribution:
+The usage upper bound of the enzyme with the largest control coefficient is raised, with a fold change of 10 per pick, until the intended growth rate (0.1 /h) is reached. The raised bounds are then reduced to the smallest values that still allow the same flux distribution. When the loop stopped on an iteration limit, the pass is skipped, the relaxed bounds stay and the target growth rate is not reached. The call is:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB

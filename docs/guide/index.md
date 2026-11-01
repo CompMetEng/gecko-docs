@@ -36,7 +36,7 @@ Steps, in the order of the work:
 
 Background, the reference material that the steps link to:
 
-- [GECKO light vs. full ecModels](gecko-light.md), the two ecModel layouts and the choice between them.
+- [GECKO light and full ecModels](gecko-light.md), the two ecModel layouts and the choice between them.
 - [ecModel YAML format](yaml-format.md), the file format that both toolboxes read and write.
 - [Files in the data folder](data-folder-files.md), every file that the `data` folder of a project can hold.
 - [Model adapter parameters](model-adapter-parameters.md), every parameter of `model_adapter.toml` in both languages.

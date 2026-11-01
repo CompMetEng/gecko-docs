@@ -46,7 +46,7 @@ path, report = convert_custom_kcats(ec_model)
 :::
 ::::
 
-`report.rows` is the number of rows written. In MATLAB, `report.partial` lists the reactions whose enzymes match an entry in part.
+In MATLAB, `report` is a struct: `report.rows` is the number of rows written and `report.partial` lists the reactions whose enzymes match an entry in part. In Python, `report` is a dict with the number of rows written as `report["rows"]`, and has no `partial`.
 
 Without `data/kcats/custom.tsv`, `collectKcats` applies `data/customKcats.tsv` itself when a stage lists `custom`. The file can also be applied to an ecModel directly:
 
@@ -60,7 +60,7 @@ Without `data/kcats/custom.tsv`, `collectKcats` applies `data/customKcats.tsv` i
 
 This overwrites existing values in `ecModel.ec.kcat` for matching reactions, on the assumption that custom values carry higher confidence. The stoichiometry changes when `applyKcatConstraints` runs.
 
-**Custom values that fail to match.** If `notMatch` contains reactions, their values were not successfully applied, because the gene association between the model and the input file is a partial match: at least 50 %, but not 100 %. A gene association that matches less than 50 % is skipped and does not appear in `notMatch`. Inspect which enzymes are associated with the reaction in the ecModel and curate the input file to resolve it.
+Custom values that fail to match: if `notMatch` contains reactions, their values were not successfully applied, because the gene association between the model and the input file is a partial match: at least 50 %, but not 100 %. A gene association that matches less than 50 % is skipped and does not appear in `notMatch`. Inspect which enzymes are associated with the reaction in the ecModel and curate the input file to resolve it.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -77,7 +77,7 @@ The same overwrite behaviour and the same gene-match threshold of 50 % apply her
 
 ## Assign kcats from the source files
 
-`assignKcats` decides one kcat per reaction from the kcat source files, writes `ec.kcat` and `ec.source`, and applies the kcat constraints with `applyKcatConstraints`. The order of the sources follows the preset or the stages of `[kcat_assignment]`; [Kcat assignment](../gecko4-kcat-assignment.md) describes the presets, the stages and the gathering of missing source files with `updateKcatSources`. Kcats that the model had are replaced, because the source files are the input of the assignment. After the stages, `assignKcats` fills reactions without a kcat from their isozymes when `isozymes` is true, and gives the remaining reactions the standard kcat when `standard` is true; both options are true by default.
+`assignKcats` decides one kcat per reaction from the kcat source files, writes `ec.kcat` and `ec.source`, and applies the kcat constraints with `applyKcatConstraints`. The order of the sources follows the preset or the stages of `[kcat_assignment]`; [Kcat assignment](../gecko4-kcat-assignment.md) describes the presets, the stages and the gathering of missing source files with `updateKcatSources`. Kcats that the model had are replaced, because the source files are the input of the assignment. After the stages, `assignKcats` fills reactions without a kcat from their isozymes for full ecModels when `isozymes` is true, and gives the remaining reactions the standard kcat when `standard` is true; both options are true by default.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -98,7 +98,7 @@ decisions, report = assign_kcats(ec_model)
 :::
 ::::
 
-`decisions` has one row per reaction of `ec`: the stage that decided the kcat (a stage number, `custom`, `isozymes` or `standard`, and empty when no kcat was found), the source as written to `ec.source`, the kcat, the number of candidate values and their range in log10 units. For a combined value it also has the uncertainty in log10 units. The table is written to `output/<model id>_kcatDecisions.tsv` unless `writeReport` (Python: `write_report`) is false. `report` records the preset, the source files that a stage names and that do not exist, and the reactions of each source file that were not applied.
+`decisions` has one row per reaction of `ec`: the stage that decided the kcat (a stage number, `custom`, `isozymes` (full ecModels) or `standard`, and empty when no kcat was found), the source as written to `ec.source`, the kcat, the number of candidate values and their range in log10 units. For a combined value it also has the uncertainty in log10 units. The table is written to `output/<model id>_kcatDecisions.tsv` unless `writeReport` (Python: `write_report`) is false. `report` records the preset, the source files that a stage names and that do not exist, and the reactions of each source file that were not applied.
 
 `collectKcats` makes the same decisions without changing the model and returns the ecModel with the decided kcats, before the kcat constraints. The reactions without a kcat are those with an empty stage:
 
@@ -313,7 +313,7 @@ In Python, `ec.n_rxns` and `ec.n_enzymes` return the m and n sizes above, and `e
 | `No kcat source file <file>; it is left out` | a stage names a source that has no file in `data/kcats` | Gather the file with `updateKcatSources`, or remove the source from the stage |
 | Kcats set with `setKcatForReactions` are gone after `assignKcats` | `assignKcats` replaces the kcats of the model | Place the kcats in `data/kcats/custom.tsv`, or set them after the assignment and apply the constraints again |
 | `notMatch` of `applyCustomKcats` is not empty | the enzymes of an entry match the reaction in part | Curate `data/customKcats.tsv` or `custom.tsv` for the enzyme set of the reaction |
-| `No kcat values are provided in model.ec.kcat` | every kcat is 0 when `getKcatAcrossIsozymes` or `applyKcatConstraints` runs | Run `assignKcats` first |
+| `No kcat values are provided in model.ec.kcat` | every kcat is 0 when `getKcatAcrossIsozymes` or `applyKcatConstraints` runs; `applyKcatConstraints` also clears existing enzyme constraints, `getKcatAcrossIsozymes` leaves the model unchanged | Run `assignKcats` first |
 | `convertCustomKcats` raises an error that `custom.tsv` exists | the target file is not overwritten | Remove the file or give another `outFile` |
 | `getKcatAcrossIsozymes` raises an error on a light ecModel | isozymes are not split in a light ecModel | Skip the step; the constraint uses the most efficient isozyme |
 | Growth rate far from the experimental value | sigma, $P_{tot}$ or f differs from the cell | See [Growth-rate tuning](growth-rate-tuning.md) |

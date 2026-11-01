@@ -20,7 +20,7 @@ A source is the name of a file in `data/kcats` (`custom`, `ec_tree`, `homologs`,
 | Source | Content |
 | --- | --- |
 | `custom` | curated kcats of the project |
-| `brenda` | BRENDA kcats matched by EC number and substrate, with the origin of the match (1 to 6) |
+| `brenda.tsv` | BRENDA kcats matched by EC number and substrate, with the origin of the match (1 to 6). A stage reads it through the tiers `database_exact`, `database_top` and `database_bottom`, not as `brenda` |
 | `ec_tree` | the median of all wild-type BRENDA measurements of the EC number, shrunk towards the median of its 3-digit and 2-digit EC classes (weight `n/(n+k)` for `n` measurements, `k = 5`) |
 | `homologs` | the kcat of measured homologs that act on the same substrate, found with DIAMOND (at least 40 % identity and 80 % coverage of both sequences) |
 | `dlkcat` | DLKcat predictions |
@@ -38,7 +38,7 @@ After the stages, `collectKcats` applies `data/customKcats.tsv` when a stage lis
 
 | Preset | Stages |
 | --- | --- |
-| `brenda_ec_tree` | custom kcats; the BRENDA median of the measurements of the organism on the substrate of the reaction (origin 1, no EC wildcards); the EC tree; then the OKP methods combined for the reactions without an EC number |
+| `brenda_ec_tree` | custom kcats; the BRENDA median of the measurements of the organism on the substrate of the reaction (origin 1, no EC wildcards); the EC tree; then the OKP methods combined for the reactions that the earlier stages left open |
 | `ec_tree_homologs` | custom kcats; the BRENDA value of the organism; the EC tree and the homologs combined; then the OKP methods combined |
 | `ec_tree_okp` | custom kcats; the BRENDA value of the organism; the EC tree, the homologs and the OKP methods combined; then the OKP methods combined |
 | `okp` | custom kcats; then the OKP methods combined |
@@ -59,12 +59,14 @@ criteria = "max"
 top_origin_limit = 1
 ```
 
-The help of `collectKcats` records the comparison on which `brenda_ec_tree` is the default: against measured kcats hidden from the search, the EC tree was closer than the BRENDA median at origin 2, origin 4 and with EC wildcards, and as close at origin 1 and 3. In ecModels, values combined with predictions set high-turnover enzymes such as ATP synthase too low, The default therefore uses predictions where measurements give no value.
+A stage has the options `action` (default `select`), `sources`, `criteria` (default `max`), `top_origin_limit` (default 4), `bottom_origin_limit` (default 6) and `wildcard_limit` (default 3).
+
+Against measured kcats hidden from the search, the EC tree was closer than the BRENDA median at origin 2, at origin 4 and with EC wildcards, and as close at origin 1 and 3. The EC tree combined with the OKP methods was slightly closer than the EC tree, and the OKP methods combined were as close. In ecModels, values combined with predictions set high-turnover enzymes such as ATP synthase too low. The default therefore uses predictions where measurements give no value.
 
 ## Run the assignment
 
 ::::{tab-set}
-:::{tab-item} MATLAB
+:::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
 ```matlab

@@ -8,14 +8,14 @@ An existing GECKO 3 project is converted to [project format 4](gecko4-project-fo
 | --- | --- | --- |
 | `upgradeGECKOproject` | `geckopy upgrade`, `upgrade_project` | converts a project folder |
 | `upgradeEcModel` | `upgrade_ec_model` | turns the protein reactions of one ecModel forward |
-| `convertAdapterToToml` | | writes an adapter class as `model_adapter.toml` |
+| `convertAdapterToToml` | | writes an adapter class as `model_adapter.toml`. `geckopy upgrade` lists the adapter class for conversion by hand |
 | `convertCustomKcats` | `convert_custom_kcats` | writes `data/customKcats.tsv` as `data/kcats/custom.tsv` |
 
 ## Steps of the upgrade
 
 `upgradeGECKOproject` carries out these steps for a project made with GECKO 3 or with an earlier GECKO 4:
 
-1. Adapter: An adapter class without `model_adapter.toml` gets one (`convertAdapterToToml`). The methods that the class overrides are listed, because they need to be carried over by hand. The class stays.
+1. Adapter: in MATLAB, an adapter class without `model_adapter.toml` gets one (`convertAdapterToToml`), and the methods that the class overrides are listed, because they need to be carried over by hand. The class stays. `geckopy upgrade` lists the adapter as a step to do by hand and skips steps 2 and 3 for such a project.
 2. Custom kcats: `data/customKcats.tsv` becomes `data/kcats/custom.tsv` (`convertCustomKcats`). The kcats are those that `applyCustomKcats` gives the ecModel, including which of two entries for the same reaction applies. The column `stoicho` is not carried over, because the complex stoichiometry comes from `applyComplexData`.
 3. Stored predictions: `data/DLKcat.tsv` and stored OpenKineticsPredictor results become kcat source files (`kcatsFromDLKcat`, and `kcatsFromOKP` with `'useStored'`). No prediction is run.
 4. Saved ecModels: The ecModels in `models/*.yml` made with GECKO 3 get their protein usage and pool reactions turned forward (`upgradeEcModel`).
@@ -31,7 +31,7 @@ A file that is replaced or converted is first moved to `legacy/<yyyy-mm-dd>/`, a
 The default of `upgradeGECKOproject` is a dry run. The report has one row per step, with the status `to do`, `done`, `skipped`, `failed` or `by hand`, and one row per script line.
 
 ::::{tab-set}
-:::{tab-item} MATLAB
+:::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
 ```matlab

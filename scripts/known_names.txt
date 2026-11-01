@@ -277,3 +277,9 @@ solveLP
 writeYAMLmodel
 write_yaml_model
 frozenset
+getExchangeRxns
+evoData
+okp_method
+handle_long_sequences
+include_similarity_columns
+canonicalize_substrates

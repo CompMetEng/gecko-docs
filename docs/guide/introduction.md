@@ -52,7 +52,7 @@ The enzyme data are in the field `ecModel.ec` (Python: `ec_model.ec`) of the mod
 
 ## Full and light ecModels
 
-GECKO builds two ecModel layouts from the same conventional GEM. A full ecModel has one pseudometabolite and one usage reaction per enzyme, so it constrains the concentration of each enzyme. A light ecModel writes the protein cost of an enzyme into the stoichiometry of the reaction that the enzyme catalyses and has no pseudometabolite or usage reaction per enzyme. It is smaller and faster to simulate, and it cannot represent individual enzyme concentrations. Proteomics integration, enzyme usage analysis and bottleneck analysis need a full ecModel. [GECKO light vs. full ecModels](gecko-light.md) describes both layouts and what each gives up.
+GECKO builds two ecModel layouts from the same conventional GEM. A full ecModel has one pseudometabolite and one usage reaction per enzyme, so it constrains the concentration of each enzyme. A light ecModel writes the protein cost of an enzyme into the stoichiometry of the reaction that the enzyme catalyses and has no pseudometabolite or usage reaction per enzyme. It is smaller and faster to simulate, and it cannot represent individual enzyme concentrations. Proteomics integration, enzyme usage analysis and bottleneck analysis need a full ecModel. [GECKO light and full ecModels](gecko-light.md) describes both layouts and what each gives up.
 
 ## Workflow
 
@@ -69,11 +69,11 @@ The workflow from a conventional GEM to an analysed ecModel has six steps. Each 
 
 The kcat values determine the performance of an ecModel, and the availability and accuracy of kcat values limit the reconstruction. Measured kcat values come from public databases such as [BRENDA](https://www.brenda-enzymes.org/), and the coverage is incomplete, especially for less-studied organisms. This restricted the reconstruction of ecModels to relatively few species.
 
-GECKO fills the gaps with predicted kcat values. DLKcat is a deep-learning model that predicts the kcat of an enzyme-substrate pair, and GECKO 4 also reads predictions from the OpenKineticsPredictor service. Predicted values improve the reconstruction of ecModels across hundreds of yeast and fungal species. They let GECKO assign a kcat to every enzymatic reaction and turn a conventional GEM into an ecModel without experimental kinetic data. [Gathering kcats](gathering-kcats.md) describes the sources, and [Kcat assignment](../gecko4-kcat-assignment.md) the order in which `assignKcats` uses them.
+GECKO fills the gaps with predicted kcat values. DLKcat is a deep-learning model that predicts the kcat of an enzyme-substrate pair, and GECKO 4 also reads predictions from the OpenKineticsPredictor service. Predicted values let GECKO assign a kcat to every enzymatic reaction and turn a conventional GEM into an ecModel without experimental kinetic data. [Gathering kcats](gathering-kcats.md) describes the sources, and [Kcat assignment](../gecko4-kcat-assignment.md) the order in which `assignKcats` uses them.
 
 ## Applications
 
-Converting a conventional GEM to an ecModel reduces the solution space and the flux variability ranges of later simulations. This improves the prediction of phenotypes such as overflow metabolism and batch growth in microbes. A conventional GEM predicts these phenotypes when the relevant enzymatic, transport or exchange reactions (such as oxygen uptake) are constrained by hand.
+Converting a conventional GEM to an ecModel reduces the solution space and the flux variability ranges of later simulations. The first GECKO study showed an improved prediction of phenotypes such as overflow metabolism for a yeast GEM (Sanchez et al., 2017; see [References](../references.md)). A conventional GEM predicts these phenotypes when the relevant enzymatic, transport or exchange reactions (such as oxygen uptake) are constrained by hand.
 
 An ecModel also supports calculations that a conventional GEM does not have: pathway protein costs, flux control coefficients, and enzyme usage and bottleneck analysis (see [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md)). These quantities guide and help interpret metabolic engineering strategies for the overproduction of a target metabolite.
 
@@ -81,16 +81,16 @@ A constraint-based method for conventional GEMs also runs on an ecModel, because
 
 ## Comparison with other methods
 
-Other methods, such as sMOMENT and ECMpy, add enzyme constraints with broadly similar applications.
+sMOMENT and ECMpy are other methods that add enzyme constraints.
 
 - **sMOMENT** adds a protein pool pseudometabolite to the metabolic reactions and an exchange reaction for the pool. The model is similar to a GECKO light ecModel. sMOMENT is Python-based and does not construct a full ecModel.
 - **ECMpy** keeps the protein pool constraint outside the S-matrix and adds no enzymes to reactions, which gives a smaller model. The constraint is harder to use in constraint-based simulation tools that are built for conventional GEMs.
 
-GECKO integrates proteomics data, and its ecModel structures stay close to a conventional GEM. Analyses developed for conventional GEMs apply unchanged. Its predicted enzyme kinetics give it a wider parameter coverage than methods that use measured kinetics alone.
+GECKO integrates proteomics data, and its ecModel structures stay close to a conventional GEM. Analyses developed for conventional GEMs apply unchanged. GECKO 4 reads predicted kcat values (see [Predicted kcat values](#predicted-kcat-values)).
 
 ## Limitations
 
-- An ecModel is much larger than its starting GEM, so large-scale simulations take more time. A light ecModel omits the bookkeeping per enzyme (see [GECKO light vs. full ecModels](gecko-light.md)). The trade-off is between the prediction of individual enzymes, including proteomics integration, and computation time.
+- An ecModel is much larger than its starting GEM, so large-scale simulations take more time. A light ecModel omits the bookkeeping per enzyme (see [GECKO light and full ecModels](gecko-light.md)). The trade-off is between the prediction of individual enzymes, including proteomics integration, and computation time.
 - A smaller solution space improves predictions on average, and it can widen the gap to experimental observations where the applied constraints are uncertain. The kcat values, measured or predicted by DLKcat, can be inaccurate, particularly for enzyme complexes, and almost all available kinetic data are in vitro measurements that can differ from in vivo behaviour. GECKO tests an ecModel against known phenotype data and identifies the constraints to revisit (see [Growth-rate tuning](growth-rate-tuning.md) and [Tuning against experimental data](tuning-against-experimental-data.md)). Experimental data remain necessary for a high-quality reconstruction.
 - An ecModel does not predict every phenotype, because constraints such as allosteric regulation and post-translational modification are not represented. Integrating these processes could shrink the solution space further.
 
