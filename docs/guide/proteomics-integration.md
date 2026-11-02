@@ -56,7 +56,7 @@ Proteomics measurements are not always performed with external standards for abs
 % one experiment with three replicates
 protData = loadProtData(3);
 
-% two experiments with three replicates each
+% two experiments with three replicates each (a file with six replicate columns)
 protData = loadProtData([3, 3]);
 ```
 

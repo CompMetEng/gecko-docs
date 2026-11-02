@@ -83,10 +83,10 @@ print(f"Growth rate that is reached: {sol.fluxes[params.bio_rxn]:.4f} /hour")
 
 :::{admonition} Example output
 :class: note
-Result of the published GECKO 3 protocol:
+Output in the `full_ecModel` tutorial, with the tuned kcats and the fitted sigma:
 
 ```
-Growth rate that is reached: 0.4121 /hour
+Growth rate that is reached: 0.4067 /hour
 ```
 :::
 
@@ -122,7 +122,11 @@ print(f"Minimum protein pool usage: {abs(sol.fluxes['prot_pool_exchange']):.2f} 
 :::
 ::::
 
-The printed value depends on the model and is not shown.
+Output in the `full_ecModel` tutorial (MATLAB), with the tuned kcats and the fitted sigma:
+
+```
+Minimum protein pool usage: 116.33 mg/gDCW
+```
 
 The flux distribution has a growth rate of at least 99 % of the maximum for the condition, and it uses the enzyme resources as efficiently as the model allows. The sign of `prot_pool_exchange` and of the `usage_prot_*` fluxes is the opposite in an ecModel from GECKO 3 until `upgradeEcModel` runs (see [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md)).
 

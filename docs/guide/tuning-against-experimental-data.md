@@ -111,7 +111,7 @@ The result is a table with one row per kcat or tied group, ranked by leverage we
 
 The top rows are what a curator can look at first, whether or not a tuning search follows. In one study on ecYeastGEM (not reproduced from the repository), a few kcats carried most of what a tuning run can achieve, and they tended to be implausible database values.
 
-The screen costs one simulation per condition and per kcat group (two probes per group plus a baseline), which is comparable to the budget of a full tuning run. On a genome-scale model it takes tens of minutes. `nProc` (Python `n_proc`) parallelises it as it does the tuning; in MATLAB, values above 1 need the Parallel Computing Toolbox.
+The screen costs one simulation per condition and per kcat group (two probes per group plus a baseline), which is comparable to the budget of a full tuning run. On the `full_ecModel` tutorial the screen runs 8413 simulations (4206 kcat groups, two probes each, and a baseline). With `nProc` and `n_proc` set to 8, the Python screen took 2.8 h. In MATLAB a simulation took 3.6 s with eight processes, an estimate of 8.4 h for the full screen. Both runs used Gurobi; the difference between the two was not investigated. `nProc` (Python `n_proc`) parallelises it as it does the tuning; in MATLAB, values above 1 need the Parallel Computing Toolbox.
 
 ## Check the assignments behind the top kcats
 

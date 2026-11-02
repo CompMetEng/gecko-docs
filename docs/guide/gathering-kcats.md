@@ -196,7 +196,7 @@ MATLAB prints the progress and result:
 
 ```
 Check for local SMILES database... done.
-SMILES could be found for 64% of the unique metabolite names.
+SMILES could be found for 66% of the unique metabolite names.
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -213,7 +213,7 @@ find_met_smiles(ec_model, cache_path=params.path / "data" / "smilesDB.tsv")
 ::::
 
 :::{note} Example output
-In the `full_ecModel` tutorial, a SMILES annotation is found for 64 % of the unique metabolite names, after checking the local SMILES database and querying PubChem for the rest.
+In the `full_ecModel` tutorial, a SMILES annotation is found for 66 % of the unique metabolite names, after checking the local SMILES database and querying PubChem for the rest.
 :::
 
 ## Predict kcats with DLKcat

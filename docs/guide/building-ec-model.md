@@ -194,8 +194,10 @@ complexInfo = getComplexData();
 MATLAB prints the number of full and proposed matches:
 
 ```
-A total of 206 complex have full match, and 17 proposed.
+A total of 238 complex have full match, and 22 proposed.
 ```
+
+The counts depend on the Complex Portal release that `getComplexData` downloads. The `data/ComplexPortal.json` file shipped with the tutorial gives 208 full matches and 17 proposed complexes.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -222,7 +224,7 @@ get_complex_data(
 Complex data is integrated for a reaction when its ecModel gene association fully (100 %) matches a Complex Portal complex. `applyComplexData` changes `ec.rxnEnzMat`; the coefficients in the stoichiometric matrix follow from `applyKcatConstraints` (see [Applying kcat values](applying-kcats.md)). For a reaction with more than one enzyme and no full match, complexes with a partial match are proposed (MATLAB: in `proposedComplex`; Python: in the log). A complex is proposed when at least 75 % of the ecModel genes of the reaction match a Complex Portal complex that has no more subunits than the ecModel gene set, or when all genes match and the Complex Portal complex contains more subunits. Inspect the proposed complexes and consider whether curating the ecModel gene association is appropriate; this may need further literature study.
 
 :::{note} Example output
-In the `full_ecModel` tutorial, applying Complex Portal data finds 206 complexes with a full match and 17 proposed complexes. One proposed match: reaction `r_0505_EXP_2` could match complex CPX-1293, the mitochondrial 2-oxoglutarate dehydrogenase complex. In the ecModel this reaction is annotated with proteins P20967 (KGD1, subunit E1), P19262 (KGD2, subunit E2) and P09624 (LPD1, subunit E3), while CPX-1293 also includes P19955 (YMR31), the 37S ribosomal protein. Literature confirms that P19955, also called KGD4 or subunit E4, is an essential subunit for a stable complex, so the gene association of reaction `r_0505` in the starting GEM could be curated to include it, which would give a full match.
+In the `full_ecModel` tutorial, applying the Complex Portal data file shipped with the tutorial finds 208 complexes with a full match and 17 proposed complexes (MATLAB and Python agree). One proposed match: reaction `r_0505_EXP_2` could match complex CPX-1293, the mitochondrial 2-oxoglutarate dehydrogenase complex. In the ecModel this reaction is annotated with proteins P20967 (KGD1, subunit E1), P19262 (KGD2, subunit E2) and P09624 (LPD1, subunit E3), while CPX-1293 also includes P19955 (YMR31), the 37S ribosomal protein. Literature confirms that P19955, also called KGD4 or subunit E4, is an essential subunit for a stable complex, so the gene association of reaction `r_0505` in the starting GEM could be curated to include it, which would give a full match.
 :::
 
 :::{note} Complex data is missing for some or all complexes
