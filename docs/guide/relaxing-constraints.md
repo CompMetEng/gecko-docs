@@ -97,7 +97,7 @@ The ecModel has `ec.concs` filled and applied as bounds on the `usage_prot_<id>`
 
 ## Gradual relaxation with tighten-back
 
-The usage upper bound of the enzyme with the largest control coefficient is raised, with a fold change of 10 per pick, until the intended growth rate (0.1 /h) is reached. The tighten-back pass then finds the flux distribution that minimises protein pool usage at the target growth rate (within a band of 0.25 % growth either side), sets each raised bound to the usage in that distribution, and restores the original concentration where the usage is lower. When the loop stopped on an iteration limit, the pass is skipped, the relaxed bounds stay and the target growth rate is not reached. The call is:
+The usage upper bound of the enzyme with the largest control coefficient is raised, with a fold change of 10 per pick, until the intended growth rate (0.1 /h) is reached or no enzyme limits growth any more. The tighten-back pass then finds the flux distribution that minimises protein pool usage at the target growth rate (within a band of 0.25 % growth either side), sets each raised bound to the usage in that distribution, and restores the original concentration where the usage is lower. When the loop stopped on an iteration limit, the pass is skipped, the relaxed bounds stay and the target growth rate is not reached. The call is:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -108,6 +108,15 @@ The usage upper bound of the enzyme with the largest control coefficient is rais
 ```
 
 The relaxed levels are bounds of the affected `usage_prot_<id>` reactions. `ecModel.ec.concs` is unchanged and keeps the measured values from `fillEnzConcs`. `flexEnz` has the fields `uniprotIDs`, `oldConcs`, `flexConcs`, `ratioIncr` and `frequence`, sorted by descending `ratioIncr`. The entry `prot_pool` is added when the protein pool exchange was relaxed.
+
+Output in the `full_ecModel` tutorial, whose proteomics and flux data reach 0.0129 /h before the relaxation (the last lines; eight enzymes are relaxed):
+
+```
+Protein P46367 UB adjusted. Grow: 0.032826
+No (more) limiting enzymes have been found. Attempting to increase protein pool exchange...
+Protein pool exchange was also not limiting. Inability to reach growth rate is not related to
+enzyme constraints. Maximum growth rate is 0.032826.
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -118,13 +127,15 @@ from geckopy import flexibilize_enz_concs
 flex_result = flexibilize_enz_concs(ec_model, exp_growth=0.1, fold_change=10.0)
 ```
 
-`flexibilize_enz_concs` mutates `ec_model` in place and returns a `FlexEnzResult` with the parallel arrays `uniprot_ids`, `old_concs`, `flex_concs`, `ratio_incr` and `frequence`, the equivalent of `flexEnz` in MATLAB. `ec_model.ec.concs` is unchanged.
+`flexibilize_enz_concs` mutates `ec_model` in place and returns a `FlexEnzResult` with the parallel arrays `uniprot_ids`, `old_concs`, `flex_concs`, `ratio_incr` and `frequence`, the equivalent of `flexEnz` in MATLAB. `ec_model.ec.concs` is unchanged. In the `full_ecModel` tutorial, the function relaxes eight enzymes, logs `protein pool was not limiting either. Maximum growth reachable: 0.0328262` and leaves the model at 0.0327 /h, the same values as in MATLAB.
 :::
 ::::
 
 The enzymes in the result are the modified ones. Flexibilizing a concentration is a response to imprecise protein measurement. When the same enzyme is flexibilized repeatedly, its $k_{cat}$ may cause the shortfall; check the $k_{cat}$ and consider a custom value (see [Applying kcat values](applying-kcats.md) and [Tuning against experimental data](tuning-against-experimental-data.md)). An enzyme that is picked more often than `iterPerEnzyme` (Python: `iter_per_enzyme`, default 5) stops the loop with a warning.
 
-:::{tip} Many enzymes flexibilized
+:::{admonition} Many enzymes flexibilized
+:class: tip
+
 If the result contains many enzymes, lower-quality proteomics data is the likely cause, and constraining individual enzyme levels sharply reduces the solution space. The total protein amount should stay realistic, and low-quality concentrations should be filtered out before loading (`loadProtData` / `load_prot_data` has several filtering parameters, such as a maximum relative standard deviation). With stricter filtering, the highest-certainty enzyme levels are constrained directly, and the other enzymes draw from the overall protein pool.
 :::
 
@@ -141,6 +152,12 @@ model = constrainFluxData(model, fluxData);
 sol = solveLP(model);
 fprintf('Growth rate that is reached: %f /hour\n', abs(sol.f))
 ```
+
+Output in the `full_ecModel` tutorial:
+
+```
+Growth rate that is reached: 0.088037 /hour
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -148,7 +165,9 @@ fprintf('Growth rate that is reached: %f /hour\n', abs(sol.f))
 ```python
 from geckopy import apply_flux_data_constraints
 
-apply_flux_data_constraints(model, flux_data)
+apply_flux_data_constraints(
+    model, flux_data, bio_rxn=params.bio_rxn, c_source=params.c_source,
+)
 sol = model.optimize()
 print(f"Growth rate that is reached: {sol.objective_value:.4f} /hour")
 ```

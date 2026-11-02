@@ -118,7 +118,9 @@ sol = pfba(ec_model)
 :::
 ::::
 
-:::::{tip} GECKO 4: enzyme-aware pFBA
+:::::{admonition} GECKO 4: enzyme-aware pFBA
+:class: tip
+
 Both languages also offer a variant that minimizes total *enzyme* usage, the L1 norm of the `usage_prot_*` fluxes, in place of the total flux of all reactions. It is not part of the original Nature Protocols procedure, and it serves the [enzyme-usage inspection](enzyme-usage-and-bottlenecks.md) done during simulation and analysis. It is not available for light ecModels, which have no `usage_prot_*` reactions to minimize.
 
 ::::{tab-set}

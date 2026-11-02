@@ -121,22 +121,22 @@ An ecModel without individual concentrations in `ec.concs` shows an empty `highC
 
 ### Example output
 
-The top ten enzyme usages at a fixed growth rate of 0.25 /h, minimising glucose uptake:
+The top ten enzyme usages at a fixed growth rate of 0.25 /h, minimising glucose uptake, in the tuned `full_ecModel` tutorial model (MATLAB and Python give the same values). An enzyme that catalyses several reactions has one summed row followed by one row per reaction in `topAbsUsage` (Python: `top_abs_usage`), which the table shows as one row:
 
 | Protein | Absolute usage (mg/gDCW) | % of pool | kcat (s⁻¹) | Source | Reaction |
 |---|---|---|---|---|---|
-| P23641 | 8.7 | 7.0 | 12.3 | Standard | Phosphate transport |
-| P0CD90 | 5.0 | 4.0 | 12.3 | Standard | Water diffusion |
-| Q12233 | 4.7 | 3.8 | 120 | Custom | ATP synthase |
-| P36148 | 4.4 | 3.5 | 0.0918 | BRENDA | Glycerol-3-phosphate acyltransferase (16:0), ER membrane |
-| P05694 | 3.6 | 2.9 | 0.33 | BRENDA | 5-Methyltetrahydropteroyltriglutamate-homocysteine S-methyltransferase |
-| P07256 | 3.3 | 2.7 | 50.8 | DLKcat | Ubiquinol:ferricytochrome c reductase |
-| P32895 | 3.3 | 2.6 | 0.66 | BRENDA | Phosphoribosylpyrophosphate synthetase |
-| P00163 | 2.9 | 2.3 | 50.8 | DLKcat | Ubiquinol:ferricytochrome c reductase |
-| P33312 | 2.8 | 2.3 | 0.000667 | BRENDA | 2,5-Diamino-6-ribosylamino-4(3H)-pyrimidinone 5-phosphate reductase (NADPH) |
-| P07257 | 2.7 | 2.1 | 50.8 | DLKcat | Ubiquinol:ferricytochrome c reductase |
+| P07251 | 8.5 | 7.2 | 120 | custom | ATP synthase |
+| P00830 | 7.9 | 6.7 | 120 | custom | ATP synthase |
+| P12695 | 6.7 | 5.7 | 37.9 | brenda (wc=0, origin=2) | pyruvate dehydrogenase |
+| P38858 | 5.9 | 5.0 | 10 | custom | 6-phosphogluconolactonase |
+| P0CD90 | 4.9 | 4.2 | 12.3 | standard | water diffusion (reversible), summed over three reactions |
+| P05694 | 4.0 | 3.4 | 0.33 | brenda (wc=0, origin=1) | methionine synthase |
+| Q12482 | 3.8 | 3.2 | 2.04 | dlkcat | L-glutamate transport |
+| P61829 | 3.7 | 3.2 | 120 | custom | ATP synthase |
+| P38720 | 3.1 | 2.6 | 36.4 | custom | phosphogluconate dehydrogenase |
+| P16387 | 2.4 | 2.1 | 37.9 | brenda (wc=0, origin=2) | pyruvate dehydrogenase |
 
-Two entries (P23641, P0CD90) carry the standard $k_{cat}$ value, the fallback that GECKO assigns to reactions without a gene association or without any kcat, as a median per subsystem or over all kcats (see [Applying kcat values](applying-kcats.md) and [Kcat assignment](../gecko4-kcat-assignment.md)). A standard $k_{cat}$ near the top of the usage ranking means that the model's estimate of the cost of that enzyme is a fallback, so a literature or BRENDA value for it supersedes a placeholder that carries a large weight in the result.
+One entry (P0CD90) carries the standard $k_{cat}$ value, the fallback that GECKO assigns to reactions without a gene association or without any kcat, as a median per subsystem or over all kcats (see [Applying kcat values](applying-kcats.md) and [Kcat assignment](../gecko4-kcat-assignment.md)). A standard $k_{cat}$ near the top of the usage ranking means that the model's estimate of the cost of that enzyme is a fallback, so a literature or BRENDA value for it supersedes a placeholder that carries a large weight in the result.
 
 ## Ranking bottlenecks by gain of the objective
 
@@ -209,7 +209,7 @@ solution = pfba_enzymes(ec_model, fraction_of_optimum=0.9)
 :::
 ::::
 
-`fractionOfOptimum` / `fraction_of_optimum` (default 1.0) fixes the objective at that fraction of its optimal value, multiplied by 0.999999, before minimising enzyme usage; a value below 1.0 accepts a lower objective value in return for a lower total enzyme mass where one exists. The objective is the current objective of the model, or the reaction given by `rxnId` (Python: the argument `objective`). The MATLAB function returns a structure with the fields `x`, `enzymeUsage`, `objectiveValue` and `stat`; the Python function returns a `cobra.Solution`.
+`fractionOfOptimum` / `fraction_of_optimum` (default 1.0) lets the objective fall from its optimum by `1 - fractionOfOptimum * 0.999999` times the magnitude of the optimum before minimising enzyme usage, for a negative optimum (such as the glucose exchange maximised above) as for a positive one; a value below 1.0 accepts a lower objective value in return for a lower total enzyme mass where one exists. The objective is the current objective of the model, or the reaction given by `rxnId` (Python: the argument `objective`). The MATLAB function returns a structure with the fields `x`, `enzymeUsage`, `objectiveValue` and `stat`; the Python function returns a `cobra.Solution`.
 
 Both implementations require the `usage_prot_<id>` reactions to run forward (`lb = 0`, the layout of a GECKO 4 ecModel). A reaction that was changed to allow reverse flux is handled in Python (its reverse variable is included in the minimised sum) and raises an error in MATLAB, since minimising the raw flux there would not minimise `|flux|` for that reaction.
 

@@ -80,7 +80,9 @@ The data are prepared before loading:
 - `data/proteomics.tsv` holds the UniProt identifier in the first column and one column per replicate after it, for one or more experimental conditions.
 - Low-certainty measurements are filtered out: low concentrations, proteins with a high relative standard deviation across replicates, and proteins absent from most replicates.
 
-:::{tip} Absolute quantitative data is not the sole option
+:::{admonition} Absolute quantitative data is not the sole option
+:class: tip
+
 Proteomics measurements are not always performed with external standards for absolute quantification. Label-free mass spectrometry needs neither external standards nor stable isotope labelling, and has been used with GECKO ecModels.
 :::
 
@@ -105,7 +107,7 @@ Proteomics measurements are not always performed with external standards for abs
 % one experiment with three replicates
 protData = loadProtData(3);
 
-% two experiments with three replicates each
+% two experiments with three replicates each (a file with six replicate columns)
 protData = loadProtData([3, 3]);
 ```
 

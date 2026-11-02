@@ -251,8 +251,10 @@ complexInfo = getComplexData();
 MATLAB prints the number of full and proposed matches:
 
 ```
-A total of 206 complex have full match, and 17 proposed.
+A total of 238 complex have full match, and 22 proposed.
 ```
+
+The counts depend on the Complex Portal release that `getComplexData` downloads. The `data/ComplexPortal.json` file shipped with the tutorial gives 208 full matches and 17 proposed complexes.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -278,11 +280,15 @@ get_complex_data(
 
 Complex data is integrated for a reaction when its ecModel gene association fully (100 %) matches a Complex Portal complex. `applyComplexData` changes `ec.rxnEnzMat`; the coefficients in the stoichiometric matrix follow from `applyKcatConstraints` (see [Applying kcat values](applying-kcats.md)). For a reaction with more than one enzyme and no full match, complexes with a partial match are proposed (MATLAB: in `proposedComplex`; Python: in the log). A complex is proposed when at least 75 % of the ecModel genes of the reaction match a Complex Portal complex that has no more subunits than the ecModel gene set, or when all genes match and the Complex Portal complex contains more subunits. Inspect the proposed complexes and consider whether curating the ecModel gene association is appropriate; this may need further literature study.
 
-:::{note} Example output
-In the `full_ecModel` tutorial, applying Complex Portal data finds 206 complexes with a full match and 17 proposed complexes. One proposed match: reaction `r_0505_EXP_2` could match complex CPX-1293, the mitochondrial 2-oxoglutarate dehydrogenase complex. In the ecModel this reaction is annotated with proteins P20967 (KGD1, subunit E1), P19262 (KGD2, subunit E2) and P09624 (LPD1, subunit E3), while CPX-1293 also includes P19955 (YMR31), the 37S ribosomal protein. Literature confirms that P19955, also called KGD4 or subunit E4, is an essential subunit for a stable complex, so the gene association of reaction `r_0505` in the starting GEM could be curated to include it, which would give a full match.
+:::{admonition} Example output
+:class: note
+
+In the `full_ecModel` tutorial, applying the Complex Portal data file shipped with the tutorial finds 208 complexes with a full match and 17 proposed complexes (MATLAB and Python agree). One proposed match: reaction `r_0505_EXP_2` could match complex CPX-1293, the mitochondrial 2-oxoglutarate dehydrogenase complex. In the ecModel this reaction is annotated with proteins P20967 (KGD1, subunit E1), P19262 (KGD2, subunit E2) and P09624 (LPD1, subunit E3), while CPX-1293 also includes P19955 (YMR31), the 37S ribosomal protein. Literature confirms that P19955, also called KGD4 or subunit E4, is an essential subunit for a stable complex, so the gene association of reaction `r_0505` in the starting GEM could be curated to include it, which would give a full match.
 :::
 
-:::{note} Complex data is missing for some or all complexes
+:::{admonition} Complex data is missing for some or all complexes
+:class: note
+
 The Complex Portal does not contain every complex; some are missing in most organisms. Uncertainty in kcat values is a larger source of error than uncertainty in complex stoichiometry, so skipping this step and keeping the default stoichiometry of one for every subunit is a reasonable option. `ComplexPortal.json` can be complemented manually with complex information from other databases or the literature.
 :::
 
@@ -363,7 +369,9 @@ Converting a conventional GEM into an empty ecModel runs up to twelve operations
 Step 5's new reaction identifiers: reaction `r_0001` catalysed by two isozymes becomes `r_0001_EXP_1` and `r_0001_EXP_2`; a backward reaction `r_0001_REV` becomes `r_0001_REV_EXP_1` and `r_0001_REV_EXP_2`. Light ecModels keep the original identifiers in the model, and the rows of `ec.rxns` carry the prefix `001_`, `002_` and so on, one per isozyme. Step 9's example: *S. cerevisiae* enolase gene YHR174W, UniProt identifier P00925, appears as pseudo-metabolite `prot_P00925`. Step 11's identifiers are `usage_` followed by the enzyme metabolite identifier, for example `usage_prot_P00925`. See [the ec structure](applying-kcats.md#the-ec-structure) for what step 6 populates later, and [GECKO light and full ecModels](gecko-light.md) for what the skipped steps change.
 :::
 
-:::{tip} Usage and pool exchange reactions run forward
+:::{admonition} Usage and pool exchange reactions run forward
+:class: tip
+
 `usage_prot_<id>` consumes `prot_pool` to produce `prot_<id>`, and `prot_pool_exchange` supplies `prot_pool`, both with bounds from 0 to 1000 at the build. An ecModel of GECKO 3 defines both reactions in the reverse direction with negative flux (see [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md)). The direction determines which bound relaxes a constraint and which objective coefficient minimises usage; the worked example is in [Growth-rate tuning](growth-rate-tuning.md#protein-pool-constraint).
 :::
 

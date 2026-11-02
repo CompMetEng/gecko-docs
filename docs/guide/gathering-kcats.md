@@ -144,7 +144,9 @@ If the starting GEM's EC annotations are not trusted, skip `fill_eccodes_from_ge
 :::
 ::::
 
-:::{note} Difficulties finding EC numbers for the reactions
+:::{admonition} Difficulties finding EC numbers for the reactions
+:class: note
+
 BRENDA matching and the EC tree require EC numbers. EC numbers can be entered manually in the model's EC annotation field, based on any species-specific information available, and loaded with the functions above. DLKcat and OpenKineticsPredictor do not require EC numbers, so a predictor can be the sole kcat source when EC numbers are hard to find.
 :::
 
@@ -181,7 +183,9 @@ Each BRENDA kcat is divided by the coefficient of the substrate that it was meas
 
 The kcat list documents which kcat was assigned to each reaction and how precise the match is: the number of EC wildcards used, and whether the match agreed on substrate and organism. A full match often does not exist, even for model organisms such as *S. cerevisiae*, and a partial organism or substrate match is returned. For each EC number, the levels of organism and substrate are tried in the order of the origin values 1, 2, 3, 5, 4 and 6 (see the example output below). When no level matches, the rightmost EC level is replaced by a wildcard and the levels are tried again. EC 2.4.2.3 (uridine phosphorylase), for example, becomes 2.4.2.- (pentosyltransferase). With a wildcard, the levels that require a matching substrate (origin 1 and 2) are skipped, because the last digits of the EC number carry the substrate specificity. When a reaction has several EC numbers, the match with the fewest wildcards and the earliest level is selected, and among those the highest kcat.
 
-:::{note} Example output
+:::{admonition} Example output
+:class: note
+
 In the `full_ecModel` tutorial, the fuzzy `kcatList` documents, per reaction: the substrates and EC numbers matched against BRENDA, the proposed kcat, `wildcardLvl` (Python: `wildcard_level`; 0: `w.x.y.z`, 1: `w.x.y.-`, 2: `w.x.-.-`, 3: `w.-.-.-`, 4: `-.-.-.-`), and `origin`, the specificity level of the match reached (1: correct organism and substrate; 2: closest related organism, correct substrate; 3: correct organism, any substrate; 4: closest related organism, any substrate; 5: correct organism, specific activity; 6: closest related organism, specific activity).
 :::
 
@@ -253,7 +257,7 @@ MATLAB prints the progress and result:
 
 ```
 Check for local SMILES database... done.
-SMILES could be found for 64% of the unique metabolite names.
+SMILES could be found for 66% of the unique metabolite names.
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -269,8 +273,10 @@ find_met_smiles(ec_model, cache_path=params.path / "data" / "smilesDB.tsv")
 :::
 ::::
 
-:::{note} Example output
-In the `full_ecModel` tutorial, a SMILES annotation is found for 64 % of the unique metabolite names, after checking the local SMILES database and querying PubChem for the rest.
+:::{admonition} Example output
+:class: note
+
+In the `full_ecModel` tutorial, a SMILES annotation is found for 66 % of the unique metabolite names, after checking the local SMILES database and querying PubChem for the rest.
 :::
 
 ## Predict kcats with DLKcat
@@ -368,7 +374,9 @@ These steps do not write `data/kcats/dlkcat.tsv`. `kcatsFromDLKcat(ecModel)` wit
 
 OpenKineticsPredictor (OKP) shares its input with DLKcat: protein sequences and single-substrate SMILES, gathered in the section on SMILES annotations. It needs no Docker. The method is set by the option `method` or, without it, by `[okp] method` of `model_adapter.toml` (default CataPro). The methods are CataPro, CatPred, CatRange, DLKcat, EITLEM, KinForm-H, KinForm-L, OmniESI, OmniESI-O2DENet, TurNup and UniKP. `kcatsFromOKP` submits enzyme-substrate pairs and raises an error for CatPred and TurNup, which read whole reactions.
 
-:::{warning} Storage of the API key
+:::{admonition} Storage of the API key
+:class: warning
+
 OKP requires a personal Bearer API key (looks like `ak_...`). Get one free, no registration required, at [predictor.openkinetics.org/api-docs](https://predictor.openkinetics.org/api-docs) (the "API key generator" section; the key is shown once, and can be revoked and regenerated from the same page). Keys are tied to the requesting IP and carry a daily prediction quota that resets at midnight UTC.
 
 Because the model adapter is shared and committed to version control, the key is not stored there. Both languages resolve it the same way, checked in this order: an explicit function argument; the `OKP_API_KEY` environment variable; or a plain-text `data/okpApiKey.txt` file in the adapter folder (a filename already git-ignored by GECKO).

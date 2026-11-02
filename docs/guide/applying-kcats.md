@@ -213,7 +213,9 @@ fill_kcats_from_isozymes(ec_model)
 
 This step does not apply to light ecModels, where the most efficient isozyme sets the cost; `getKcatAcrossIsozymes` raises an error on a light ecModel (Python: `fill_kcats_from_isozymes` raises `NotImplementedError`).
 
-:::{note} Example output
+:::{admonition} Example output
+:class: note
+
 `ec.kcat` is updated so every isozymic reaction with at least one kcat has a value, with `ec.source` for those reactions reading `isozymes`. The stoichiometric coefficients are unaffected until the constraints are applied below.
 :::
 
@@ -273,7 +275,9 @@ This modifies the stoichiometric coefficients of the ecModel (the S-matrix in MA
 
 In a light ecModel, the cost of a reaction is the lowest MW/kcat across its isozymes, written to the `prot_pool` row of the reaction.
 
-:::{note} Example output
+:::{admonition} Example output
+:class: note
+
 Every stoichiometric coefficient added or changed above is applied to the ecModel. The coefficient of an enzyme pseudo-metabolite is:
 
 $$ \frac{MW}{k_{cat} \times 3600} \times (\text{complex stoichiometry}) $$
@@ -335,11 +339,15 @@ set_prot_pool_size(ec_model, f=f)
 :::
 ::::
 
-:::{note} Values to define the total protein pool are missing
+:::{admonition} Values to define the total protein pool are missing
+:class: note
+
 sigma, $P_{tot}$ and f each have the standard value 0.5 when no better estimate exists. If the resulting maximum growth rate is too small or too large, adjusting sigma manually is a reasonable way to reach a more plausible value; see [Growth-rate tuning](growth-rate-tuning.md#protein-pool-constraint).
 :::
 
-:::{note} Example output
+:::{admonition} Example output
+:class: note
+
 With $P_{tot}$ = 0.5, f = 0.5 and sigma = 0.5, the upper bound of `prot_pool_exchange` becomes 125 mg/gDCW.
 :::
 
