@@ -144,7 +144,6 @@ Classical parsimonious FBA (pFBA) picks, among all flux distributions that reach
 :sync: matlab
 
 ```matlab
-ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);
 solution = getPfbaEnzymes(ecModel);
 solution = getPfbaEnzymes(ecModel, 'fractionOfOptimum', 0.9);
 ```
@@ -155,14 +154,13 @@ solution = getPfbaEnzymes(ecModel, 'fractionOfOptimum', 0.9);
 ```python
 from geckopy import pfba_enzymes
 
-ec_model.objective = params.bio_rxn
 solution = pfba_enzymes(ec_model)
 solution = pfba_enzymes(ec_model, fraction_of_optimum=0.9)
 ```
 :::
 ::::
 
-`fractionOfOptimum` / `fraction_of_optimum` (default 1.0) fixes the objective at that fraction of its optimal value, multiplied by 0.999999, before minimising enzyme usage; a value below 1.0 accepts a lower objective value in return for a lower total enzyme mass where one exists. The objective is the current objective of the model (it needs a positive optimum, such as growth: for a negative optimum, such as the glucose exchange maximised above, the bound at 0.999999 of the optimum lies above the optimum and the problem is infeasible), or the reaction given by `rxnId` (Python: the argument `objective`). The MATLAB function returns a structure with the fields `x`, `enzymeUsage`, `objectiveValue` and `stat`; the Python function returns a `cobra.Solution`.
+`fractionOfOptimum` / `fraction_of_optimum` (default 1.0) lets the objective fall from its optimum by `1 - fractionOfOptimum * 0.999999` times the magnitude of the optimum before minimising enzyme usage, for a negative optimum (such as the glucose exchange maximised above) as for a positive one; a value below 1.0 accepts a lower objective value in return for a lower total enzyme mass where one exists. The objective is the current objective of the model, or the reaction given by `rxnId` (Python: the argument `objective`). The MATLAB function returns a structure with the fields `x`, `enzymeUsage`, `objectiveValue` and `stat`; the Python function returns a `cobra.Solution`.
 
 Both implementations require the `usage_prot_<id>` reactions to run forward (`lb = 0`, the layout of a GECKO 4 ecModel). A reaction that was changed to allow reverse flux is handled in Python (its reverse variable is included in the minimised sum) and raises an error in MATLAB, since minimising the raw flux there would not minimise `|flux|` for that reaction.
 
