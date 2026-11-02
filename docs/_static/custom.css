@@ -122,12 +122,25 @@ html[data-theme="dark"] .site-logo-dark { display: inline; }
   height: auto !important;
 }
 
-/* Button-style link that downloads a diagram as PDF. */
-.workflow-pdf { margin: 0.5rem 0 0; }
+/* Icon-only link that downloads a diagram as PDF; the link text stays in the
+   page for assistive technology. */
+.workflow-pdf { text-align: right; margin: 0 0 0.5rem; }
 .workflow-pdf a.download {
   display: inline-block;
-  padding: 0.35rem 0.8rem;
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  overflow: hidden;
+  font-size: 0;
   border: 1px solid currentColor;
   border-radius: 0.3rem;
   text-decoration: none;
+}
+.workflow-pdf a.download::before {
+  content: "";
+  position: absolute;
+  inset: 0.4rem;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12M7 10l5 5 5-5M4 20h16'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12M7 10l5 5 5-5M4 20h16'/%3E%3C/svg%3E") center / contain no-repeat;
 }

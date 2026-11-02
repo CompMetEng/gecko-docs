@@ -2,11 +2,16 @@
 
 <!-- docs-site: concept-page -->
 
-The diagram orders the functions that build, parameterise, tune and analyse an ecModel, with the parts that run in parallel and the alternatives. Each stage is a guide page. A solid arrow connects functions that run one after another, a dashed arrow an optional preview or an alternative way to reach the next step, a diamond a choice between paths, and a dashed outline an optional step. The button in the corner of a diagram opens it in full screen, where the mouse wheel zooms and a drag pans. In the page, the wheel zooms with Ctrl (Cmd on macOS) held. Each tab offers its diagram as a PDF.
+The diagram orders the functions that build, parameterise, tune and analyse an ecModel, with the parts that run in parallel and the alternatives. Each stage is a guide page. A solid arrow connects functions that run one after another, a dashed arrow an optional preview or an alternative way to reach the next step, a diamond a choice between paths, and a dashed outline an optional step. The button in the corner of a diagram opens it in full screen, where the mouse wheel zooms and a drag pans. In the page, the wheel zooms with Ctrl (Cmd on macOS) held. The download icon at the top of each tab saves its diagram as a PDF.
 
 :::::{tab-set}
 ::::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
+
+
+:::{div} workflow-pdf
+{download}`Download the MATLAB diagram as PDF <../_static/workflow-matlab.pdf>`
+:::
 
 ```{mermaid}
 flowchart TB
@@ -66,13 +71,14 @@ flowchart TB
   RD --> I1
   RD --> I2
 ```
-
-:::{div} workflow-pdf
-{download}`Download the MATLAB diagram as PDF <../_static/workflow-matlab.pdf>`
-:::
 ::::
 ::::{tab-item} 🐍 Python
 :sync: python
+
+
+:::{div} workflow-pdf
+{download}`Download the Python diagram as PDF <../_static/workflow-python.pdf>`
+:::
 
 ```{mermaid}
 flowchart TB
@@ -135,10 +141,6 @@ flowchart TB
   RD --> I1
   RD --> I2
 ```
-
-:::{div} workflow-pdf
-{download}`Download the Python diagram as PDF <../_static/workflow-python.pdf>`
-:::
 ::::
 :::::
 
