@@ -124,7 +124,9 @@ html[data-theme="dark"] .site-logo-dark { display: inline; }
 
 /* Icon-only link that downloads a diagram as PDF; the link text stays in the
    page for assistive technology. */
-.workflow-pdf { text-align: right; margin: 0 0 0.5rem; }
+/* The icon sits in the row of the tab labels, outside the box of the tab. */
+.sd-tab-content:has(> .workflow-pdf) { position: relative; }
+.workflow-pdf { position: absolute; top: -2.5rem; right: 0; margin: 0; }
 .workflow-pdf a.download {
   display: inline-block;
   position: relative;
