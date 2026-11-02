@@ -123,7 +123,9 @@ id = ""
 
 The UniProt database is the source of the molecular weights and the amino acid sequences of the enzymes and is essential. KEGG can assign EC number annotations and is optional. The query parameters select data with the same style of gene identifier as the starting GEM. A mismatch means that enzyme data cannot be matched to the genes of the model.
 
-:::{warning} UniProt proteome and taxonomy identifiers
+:::{admonition} UniProt proteome and taxonomy identifiers
+:class: warning
+
 UniProt data are identified by proteome or by taxonomy. The proteome is preferred, because it avoids redundant matches between gene and protein identifiers.
 :::
 
@@ -183,7 +185,9 @@ Other organisms can need another source for the conversion table. For human-GEM,
 
 If an organism is in neither UniProt nor KEGG, the database files are built manually. `data/kegg.tsv` and `data/uniprot.tsv` of the `full_ecModel` tutorial are templates for the column layout. Artificial UniProt and KEGG identifiers work in these files, and the molecular weight and the sequence of each protein must be accurate for the rest of the reconstruction.
 
-:::{note} Example output
+:::{admonition} Example output
+:class: note
+
 A new project has empty `data`, `models` and `output` subfolders (MATLAB also creates `code`) and a template `model_adapter.toml`. After the model adapter is filled in, MATLAB `loadDatabases` creates `data/uniprot.tsv` and `data/kegg.tsv` with queries of UniProt and KEGG. In Python, `geckopy uniprot-download` and `geckopy kegg-download` create the two files. When no UniProt or KEGG parameters are identified for the organism, `data/uniprotConversion.tsv`, `data/kegg.tsv` and `data/uniprot.tsv` are built by hand, as described above.
 :::
 

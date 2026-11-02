@@ -8,7 +8,9 @@ $$ \sigma \times f \times P_{tot} $$
 
 where sigma is the average in vivo saturation of every enzyme in the model, f is the mass fraction occupied by metabolic enzymes in the total proteome, and $P_{tot}$ is the total protein mass in grams per gram cell dry weight. When one or more factors are unknown, a default of 0.5 for each gives a default maximum constraint of $0.5 \times 0.5 \times 0.5 = 0.125$.
 
-:::{note} When no physiological data are available
+:::{admonition} When no physiological data are available
+:class: note
+
 Tuning requires physiological data, particularly growth rate. Without it, for example in large-scale reconstruction across many cell lines, the result is a draft ecModel: it may not simulate realistic fluxes, because the upper bound of the protein pool is undefined, but it can still compare cellular parameters such as protein costs. Even with no experimental data, a functional ecModel is reachable by assuming an arbitrary protein pool value and increasing low kcat values until simulations become reasonable.
 :::
 
@@ -114,7 +116,9 @@ Setting `.objective` to a reaction id maximizes it by default; there is no separ
 :::
 ::::
 
-:::{note} Example output
+:::{admonition} Example output
+:class: note
+
 In the `full_ecModel` tutorial, the growth rate right after applying enzyme constraints is about 0.12 h^-1. Because nutrient uptake is not limiting, this is the maximum the ecModel can reach. A rate substantially below 0.41 h^-1, the experimentally observed maximum growth rate of this organism (`params.gR_exp` in MATLAB, `params.gr_exp` in Python), indicates that the model needs tuning.
 :::
 
@@ -160,7 +164,9 @@ print(f"Growth rate: {sol.fluxes[params.bio_rxn]:.4f} /hour")
 
 If the conventional GEM also cannot reach the maximum growth rate, the stoichiometry or the constraints of the starting GEM contain errors that should be resolved before an ecModel is reconstructed from it.
 
-:::{note} Example output
+:::{admonition} Example output
+:class: note
+
 Without a constraint on carbon uptake, the conventional GEM in the `full_ecModel` tutorial reaches a growth rate of about 19.9 h^-1. This growth rate is biologically unrealistic given the unconstrained carbon uptake, but it confirms that the stoichiometry of the conventional GEM can reach 0.41 h^-1, so the enzyme constraints cause the shortfall above.
 :::
 
@@ -187,7 +193,9 @@ ec_model.reactions.prot_pool_exchange.upper_bound = 1000
 :::
 ::::
 
-:::{tip} GECKO 4: direction of prot_pool_exchange
+:::{admonition} GECKO 4: direction of prot_pool_exchange
+:class: tip
+
 In GECKO 4 and geckopy, `prot_pool_exchange` is a forward reaction that produces `prot_pool`, with a lower bound of 0 and an upper bound of 1,000 by default (see [Building an empty ecModel](building-ec-model.md#extension-of-a-conventional-gem)). Relaxing the protein pool therefore raises its upper bound, and minimizing its usage is an ordinary minimization. The GECKO 3 protocol used the opposite (negative-flux) direction, where relaxing lowered the lower bound to -1,000 and minimizing usage required maximizing with coefficient `1`; see [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md).
 :::
 
@@ -255,7 +263,9 @@ ec_model.objective_direction = "max"
 
 This yields an ecModel that reaches the intended growth rate whenever the conventional GEM can, but it often sets the protein pool usage to an unrealistic protein content. Increasing the kcat values of some reactions keeps the protein pool at the sigma, f and Ptot values of the model and is covered next.
 
-:::{note} Example output
+:::{admonition} Example output
+:class: note
+
 Setting the upper bound of `prot_pool_exchange` to 1,000 mg/gDCW implies that the whole cell is 100 % protein. While unrealistic, this often avoids overconstraining. In the `full_ecModel` tutorial, the predicted protein pool usage is 407 mg/gDCW. With a total protein content (Ptot) of 500 mg/gDCW, this implies that the cell consists of 81.4 % protein. Assuming full enzyme saturation, a more realistic (lower) sigma would push the simulated total protein content above 100 %, so the recommended fix is a different one than releasing the protein pool constraint.
 :::
 
@@ -320,7 +330,9 @@ Both toolboxes also provide a CMA-ES-based kcat tuning (`cmaesKcatTuning` in MAT
 
 `tunedKcats` (Python `tuning_result`) documents which kcat values were changed, with their previous value, source and the catalysed reaction. It is inspected to check whether a changed value was gathered incorrectly from a kcat source. In a full ecModel, `ec.source` of a tuned reaction reads `sensitivityTuning`, and `ec.notes` holds the kcat before the tuning and its source (`preTuneKcat=<value> | source:<source>`). A reaction that an earlier run has tuned keeps the notes of that run. In a light ecModel, `ec.source` and `ec.notes` are not changed. Python `TunedKcatsResult.corrections()` returns the changes as the list of corrections that [Tuning against experimental data](tuning-against-experimental-data.md#read-the-result) describes.
 
-:::{note} Many kcat values are changed during tuning
+:::{admonition} Many kcat values are changed during tuning
+:class: note
+
 Some kcat values changing is expected; the `full_ecModel` tutorial tunes 6. If a much larger fraction changes, check the following before assuming that the tuning itself is at fault:
 
 - No constraint is set on any nutrient uptake; the protein pool should be the sole limit.
@@ -328,7 +340,9 @@ Some kcat values changing is expected; the `full_ecModel` tutorial tunes 6. If a
 - The starting GEM can simulate the intended growth rate on its own, to rule out the network stoichiometry as the limiting factor (see [Network stoichiometry](#network-stoichiometry) above).
 :::
 
-:::{note} Example output
+:::{admonition} Example output
+:class: note
+
 In the `full_ecModel` tutorial, iterative tuning raises the growth rate from 0.125 h^-1 in the first iteration to 0.422 h^-1 in the eighth, above the target of 0.41 h^-1.
 
 The tuned `ec.kcat` entries appear in the tuned kcat output (see [Example tuned kcat output](#example-tuned-kcat-output) below). Transferring the changes into `data/kcats/custom.tsv` (see [Applying kcats](applying-kcats.md#provide-custom-kcat-values)) keeps them documented.

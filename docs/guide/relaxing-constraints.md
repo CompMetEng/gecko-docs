@@ -74,7 +74,9 @@ flex_result = flexibilize_enz_concs(ec_model, exp_growth=0.1, fold_change=10.0)
 
 The enzymes in the result are the modified ones. Flexibilizing a concentration is a response to imprecise protein measurement. When the same enzyme is flexibilized repeatedly, its $k_{cat}$ may cause the shortfall; check the $k_{cat}$ and consider a custom value (see [Applying kcat values](applying-kcats.md) and [Tuning against experimental data](tuning-against-experimental-data.md)). An enzyme that is picked more often than `iterPerEnzyme` (Python: `iter_per_enzyme`, default 5) stops the loop with a warning.
 
-:::{tip} Many enzymes flexibilized
+:::{admonition} Many enzymes flexibilized
+:class: tip
+
 If the result contains many enzymes, lower-quality proteomics data is the likely cause, and constraining individual enzyme levels sharply reduces the solution space. The total protein amount should stay realistic, and low-quality concentrations should be filtered out before loading (`loadProtData` / `load_prot_data` has several filtering parameters, such as a maximum relative standard deviation). With stricter filtering, the highest-certainty enzyme levels are constrained directly, and the other enzymes draw from the overall protein pool.
 :::
 

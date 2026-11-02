@@ -140,7 +140,9 @@ geckopy installs the command-line tool `geckopy` with the subcommands `init` (ne
 
 MATLAB reaches the solvers through RAVEN and the COBRA Toolbox, Python through cobrapy.
 
-:::{tip} Avoid GLPK
+:::{admonition} Avoid GLPK
+:class: tip
+
 GLPK, the default solver of RAVEN, is not recommended for GECKO: ecModels are larger and more numerically demanding than the conventional GEMs for which GLPK is adequate. Configure Gurobi, or in MATLAB SCIP, before working with an ecModel of genome scale.
 :::
 
@@ -148,7 +150,9 @@ GLPK, the default solver of RAVEN, is not recommended for GECKO: ecModels are la
 
 `runDLKcat` (Python: `run_dlkcat`) runs DLKcat in a Docker container from the image `ghcr.io/sysbiochalmers/dlkcat-gecko:0.1`. Installation instructions are at [docs.docker.com/get-started/get-docker](https://docs.docker.com/get-started/get-docker/).
 
-:::{tip} kcat prediction without Docker
+:::{admonition} kcat prediction without Docker
+:class: tip
+
 `kcatsFromOKP` (Python: `kcats_from_okp`) predicts kcat values with the hosted [OpenKineticsPredictor](https://predictor.openkinetics.org/) service. The service needs an API key and no Docker installation (see [Kcat assignment](../gecko4-kcat-assignment.md)).
 :::
 

@@ -164,7 +164,9 @@ mapped_flux, enz_usage_flux, usage_enz = (
 
 `mappedFlux` (Python: `mapped_flux`) has the length and the order of a flux vector of the conventional GEM and is used as any other conventional flux vector. `enzUsageFlux` (Python: `enz_usage_flux`) holds the fluxes of the `usage_prot_*` reactions and of `prot_pool_exchange`, which are absent from `mappedFlux`, and `usageEnz` (Python: `usage_enz`) holds their labels (`pool` for the protein pool exchange). These fluxes are positive, because the usage reactions run forward.
 
-:::{warning} Reaction mapping to the conventional GEM
+:::{admonition} Reaction mapping to the conventional GEM
+:class: warning
+
 `mapRxnsToConv` matches reactions by identifier and does not check that the underlying chemical reaction is the same. A stoichiometric change beyond the enzyme and proteomics constraints, such as a flipped directionality or a new reaction, breaks the correspondence without an error. `mapRxnsToConv` raises an error when a reaction of the conventional GEM is missing from the ecModel.
 :::
 
@@ -231,7 +233,9 @@ The ranges are visualised as a cumulative distribution (`plotEcFVA` or a project
 
 ## Sampling the solution space
 
-:::{tip} Sampler choice
+:::{admonition} Sampler choice
+:class: tip
+
 FVA reports the extremes that each reaction reaches one at a time. Flux sampling draws many feasible flux vectors and reports their distribution, which shows what the model does as well as what it can do. RAVEN, the base of GECKO, and raven-toolbox, the base of geckopy, offer two Markov-chain Monte Carlo samplers through the entry point for conventional GEMs: ACHR (Artificially Centered Hit-and-Run) and CHRR (Coordinate Hit-and-Run with Rounding). The call is `randomSampling(model, ..., 'method', 'achr'|'chrr')` in MATLAB and `random_sampling(model, method="achr"|"chrr")` in Python. The choice of the sampler matters for an ecModel.
 :::
 
@@ -239,7 +243,9 @@ ACHR is the default. The documentation of the `chrr` method in both toolboxes (t
 
 The [convergence study of raven-docs](https://github.com/edkerk/raven-docs/blob/main/docs/parameter-tuning/studies/sampling-convergence-calibration.md) measured both methods on a conventional GEM; it has no ecModel. At genome scale on yeast-GEM, the default settings of ACHR were not converged: the median Gelman-Rubin R-hat was 1.17 across four chains, and two in three reactions failed even the loose threshold of 1.1. CHRR converged on a small model (`e_coli_core`, 95 reactions: the worst R-hat dropped from 1.30 to 1.02) and took about 20 times longer there. A bounded probe at yeast-GEM scale measured roughly 80 minutes of fixed rounding cost per chain before the first sample, comparable to a full ACHR run of 300 samples. The probe had too few samples for a stable R-hat, so the convergence of CHRR at genome scale is untested.
 
-:::{warning} Sampled ranges at genome scale
+:::{admonition} Sampled ranges at genome scale
+:class: warning
+
 The study concludes that no cheap, validated solution exists yet at that scale. The `chrr` call below is therefore not a validated recipe: sampled flux ranges from either method are provisional at genome scale until they are checked, for example by an R-hat close to 1 on the reactions of interest across independent chains. The fixed rounding cost per chain of CHRR is part of the time budget.
 :::
 
