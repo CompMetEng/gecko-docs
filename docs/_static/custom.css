@@ -104,15 +104,22 @@ html[data-theme="dark"] .site-logo-dark { display: inline; }
 
 /* ===== Mermaid flowcharts ============================================= */
 /* The workflow overview is a tall flowchart. Scaled to the text column it is
-   unreadable, so it keeps a minimum width and the frame scrolls sideways when
-   the column is narrower. The small diagrams on the guide pages (marked by
-   the option align: left) keep their natural size. */
+   unreadable, so it keeps a fixed scale of its natural size and the frame
+   scrolls sideways when the column is narrower. A fixed scale gives the
+   MATLAB and the Python diagram the same font size, which a width that is
+   fixed instead of the scale would not, because the natural widths differ.
+   The small diagrams on the guide pages (marked by the option align: left)
+   keep their natural size. */
 .mermaid-container:not(.mermaid-container-fullscreen) > pre:not(.align-left) {
   overflow-x: auto;
 }
 .mermaid-container:not(.mermaid-container-fullscreen) > pre:not(.align-left) > svg {
-  width: max(100%, 1250px) !important;
+  width: auto !important;
+  height: auto !important;
   max-width: none !important;
+  zoom: 0.85;
+  display: block;
+  margin: 0 auto;
 }
 .mermaid-container:not(.mermaid-container-fullscreen) > pre.align-left {
   overflow-x: auto;

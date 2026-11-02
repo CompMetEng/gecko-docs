@@ -14,6 +14,8 @@ The diagram orders the functions that build, parameterise, tune and analyse an e
 :::
 
 ```{mermaid}
+:config: {"flowchart": {"useMaxWidth": false}}
+
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   A["<b>Getting started</b><br/>createGECKOproject<br/>Fill model_adapter.toml"]
@@ -81,6 +83,8 @@ flowchart TB
 :::
 
 ```{mermaid}
+:config: {"flowchart": {"useMaxWidth": false}}
+
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   A["<b>Getting started</b><br/>geckopy init<br/>Fill model_adapter.toml"]
