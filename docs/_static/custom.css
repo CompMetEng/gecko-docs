@@ -121,3 +121,13 @@ html[data-theme="dark"] .site-logo-dark { display: inline; }
   width: auto !important;
   height: auto !important;
 }
+
+/* Button-style link that downloads a diagram as PDF. */
+.workflow-pdf { margin: 0.5rem 0 0; }
+.workflow-pdf a.download {
+  display: inline-block;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid currentColor;
+  border-radius: 0.3rem;
+  text-decoration: none;
+}

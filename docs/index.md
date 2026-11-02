@@ -105,18 +105,18 @@ fprintf('Growth rate: %.4f h-1\n', sol.f);
 
 ::::{grid} 1 2 2 2
 
-:::{grid-item-card} Guide
-:link: guide/index
+:::{grid-item-card} Workflow overview
+:link: guide/workflow
 :link-type: doc
 
-Task-focused pages covering the full ecModel pipeline, MATLAB and Python side by side.
+The order of the functions from model construction to analysis, with the alternative paths, as MATLAB and Python diagrams.
 :::
 
-:::{grid-item-card} API reference
-:link: api/index
+:::{grid-item-card} Upgrade a GECKO 3 project
+:link: gecko3-upgrade-project
 :link-type: doc
 
-Function reference for both GECKO (MATLAB) and geckopy (Python).
+Convert a GECKO 3 project and its ecModel to project format 4 with `upgradeGECKOproject` or `geckopy upgrade`.
 :::
 
 :::{grid-item-card} Installation
