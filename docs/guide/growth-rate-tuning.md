@@ -14,6 +14,61 @@ where sigma is the average in vivo saturation of every enzyme in the model, f is
 Tuning requires physiological data, particularly growth rate. Without it, for example in large-scale reconstruction across many cell lines, the result is a draft ecModel: it may not simulate realistic fluxes, because the upper bound of the protein pool is undefined, but it can still compare cellular parameters such as protein costs. Even with no experimental data, a functional ecModel is reachable by assuming an arbitrary protein pool value and increasing low kcat values until simulations become reasonable.
 :::
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional and dotted boxes are neighbouring pages.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Applying kcats"]):::ctx
+  PV --> SI["solveLP"] --> SE["sensitivityTuning<br/>Evaluate the tuned kcats"] --> SG["sigmaFitter"] --> SV["saveEcModel"]
+  AL(["Alternative: Tuning against experimental data"]):::ctx
+  SI -.-> AL
+  AL -.-> SV
+  NX(["Next: Proteomics integration"]):::ctx
+  SV --> NX
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Applying kcats"]):::ctx
+  PV --> SI["model.optimize"] --> SE["sensitivity_tuning<br/>Evaluate the tuned kcats"] --> SG["fit_sigma"] --> SV["save_ec_model"]
+  AL(["Alternative: Tuning against experimental data"]):::ctx
+  SI -.-> AL
+  AL -.-> SV
+  NX(["Next: Proteomics integration"]):::ctx
+  SV --> NX
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

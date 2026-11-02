@@ -2,6 +2,63 @@
 
 The kcat source files gathered on [Gathering kcats](gathering-kcats.md) become one kcat per reaction in `ec.kcat`, the kcats become enzyme constraints in the stoichiometry, and the protein pool exchange reaction gets a bound. The product is a draft ecModel with active enzyme constraints. Its growth rate depends on the sigma, $P_{tot}$ and f parameters, and [Growth-rate tuning](growth-rate-tuning.md) covers making it functional.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional and dotted boxes are neighbouring pages.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Gathering kcats"]):::ctx
+  CU["data/kcats/custom.tsv"]:::opt
+  AS["assignKcats<br/>preview: collectKcats"]
+  PV --> AS
+  CU --> AS
+  AS --> IS["getKcatAcrossIsozymes<br/>getStandardKcat (optional)"]:::opt --> AK["applyKcatConstraints<br/>setProtPoolSize"]
+  NX(["Next: Growth-rate tuning"]):::ctx
+  AK --> NX
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Gathering kcats"]):::ctx
+  CU["data/kcats/custom.tsv"]:::opt
+  AS["assign_kcats<br/>preview: collect_kcats"]
+  PV --> AS
+  CU --> AS
+  AS --> IS["fill_kcats_from_isozymes<br/>assign_standard_kcat (optional)"]:::opt --> AK["apply_kcat_constraints<br/>set_prot_pool_size"]
+  NX(["Next: Growth-rate tuning"]):::ctx
+  AK --> NX
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

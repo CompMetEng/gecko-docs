@@ -6,6 +6,55 @@ A full ecModel simulation reports the amount of each enzyme that a flux distribu
 `getEnzymeUsage` / `enzyme_usage`, `getPfbaEnzymes` / `pfba_enzymes` and `getEnzymeBottlenecks` require a full ecModel; see [GECKO light and full ecModels](gecko-light.md).
 :::
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional and dotted boxes are neighbouring pages.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Simulation and analysis"]):::ctx
+  PV --> A["getEnzymeUsage<br/>reportEnzymeUsage"]
+  PV --> B["getEnzymeBottlenecks"]
+  PV --> C["getPfbaEnzymes"]
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Simulation and analysis"]):::ctx
+  PV --> A["enzyme_usage<br/>report_enzyme_usage"]
+  PV --> B["get_enzyme_bottlenecks"]
+  PV --> C["pfba_enzymes"]
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

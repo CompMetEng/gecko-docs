@@ -4,6 +4,63 @@ An empty ecModel has the structure to carry enzyme constraints but no kcat value
 
 Not every enzymatic reaction has a reported measurement. BRENDA kcats are matched to a reaction by EC number and by the substrates of the reaction. DLKcat and OpenKineticsPredictor predict a kcat from the enzyme sequence and the substrate structure, independent of the EC number, which covers organisms with few measurements and reactions without an EC number. [Kcat assignment](../gecko4-kcat-assignment.md) describes how the source files are combined into one kcat per reaction, and [Applying kcats](applying-kcats.md) the steps after that.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional and dotted boxes are neighbouring pages.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Building an empty ecModel"]):::ctx
+  PV --> A["EC numbers<br/>getECfromGEM or getECfromDatabase"] --> A2["kcatsFromBrenda<br/>kcatsFromECTree"]
+  PV --> C["Metabolite SMILES<br/>findMetSmiles"] --> C2["kcatsFromDLKcat<br/>kcatsFromOKP"]
+  PV --> E["kcatsFromHomologs"]
+  NX(["Next: Applying kcats"]):::ctx
+  A2 --> NX
+  C2 --> NX
+  E --> NX
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Building an empty ecModel"]):::ctx
+  PV --> A["EC numbers<br/>fill_eccodes_from_gem or fill_eccodes_from_database"] --> A2["kcats_from_brenda<br/>kcats_from_ec_tree"]
+  PV --> C["Metabolite SMILES<br/>find_met_smiles"] --> C2["kcats_from_dlkcat<br/>kcats_from_okp"]
+  PV --> E["kcats_from_homologs"]
+  NX(["Next: Applying kcats"]):::ctx
+  A2 --> NX
+  C2 --> NX
+  E --> NX
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

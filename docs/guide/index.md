@@ -14,6 +14,12 @@ Task pages show both languages in tabs: GECKO (MATLAB), built on RAVEN, and geck
 Text outside a MATLAB or Python tab reads the same in both languages. Where it refers to the enzyme data of a model, `ec.kcat` stands for `ecModel.ec.kcat` in MATLAB and `ec_model.ec.kcat` in Python. The field names are identical in both languages except `rxnEnzMat` (Python: `rxn_enz_mat`) and `ec.geckoLight` (Python: `gecko_light`).
 :::
 
+## Workflow
+
+[![Flowchart of the workflow: project, ecModel, kcat sources, assignment, growth-rate tuning, proteomics, relaxation and analysis](../_static/workflow-overview.png){width=200px .no-scaled-link}](workflow.md)
+
+The [workflow overview](workflow.md) shows the order of the stages, the kcat sources that run in parallel and the alternative paths, with the functions of each stage in MATLAB and Python.
+
 ## Pages
 
 Start:
@@ -81,6 +87,7 @@ introduction
 :hidden:
 :caption: Guide
 
+workflow
 getting-started
 building-ec-model
 gathering-kcats

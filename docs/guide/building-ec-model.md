@@ -2,6 +2,63 @@
 
 Building an ecModel expands a conventional GEM so that enzyme constraints can be added to it later. Reversible reactions split into forward and backward copies, because enzyme kinetics depend on direction. Reactions catalysed by isozymes split into one reaction per isozyme, because each has its own kinetics and molecular weight. The protein pool, together with the enzyme pseudo-metabolites that draw from it, is added to the network. The result is an **empty ecModel**: the structure that carries the enzyme constraints exists, and no constraints are applied yet. The empty ecModel is saved as a YAML file at the end.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional and dotted boxes are neighbouring pages.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Getting started"]):::ctx
+  PV --> B1["ModelAdapterManager.setDefault<br/>loadConventionalGEM"] --> B3{"Full or light?"}
+  B3 -->|full| B4["makeEcModel"]
+  B3 -->|light| B5["makeEcModel, light"]
+  B4 --> B6["getComplexData, applyComplexData (optional)<br/>saveEcModel"]
+  B5 --> B6
+  NX(["Next: Gathering kcats"]):::ctx
+  B6 --> NX
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Getting started"]):::ctx
+  PV --> B1["ModelAdapter.from_folder<br/>load_conventional_gem"] --> B3{"Full or light?"}
+  B3 -->|full| B4["make_ec_model"]
+  B3 -->|light| B5["make_ec_model, light"]
+  B4 --> B6["get_complex_data, apply_complex_data (optional)<br/>save_ec_model"]
+  B5 --> B6
+  NX(["Next: Gathering kcats"]):::ctx
+  B6 --> NX
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

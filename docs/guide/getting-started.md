@@ -7,6 +7,53 @@ The reconstruction of an ecModel starts from a curated conventional genome-scale
 This guide follows the structure of the published GECKO 3.0 Nature Protocols pipeline (Chen et al., 2024; see [Citations](../references.md)) and describes GECKO 4. The differences from GECKO 3 are in [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md).
 :::
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional and dotted boxes are neighbouring pages.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  A1["createGECKOproject<br/>Fill model_adapter.toml"] --> A2["loadDatabases('kegg')"]:::opt
+  NX(["Next: Building an empty ecModel"]):::ctx
+  A2 --> NX
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  A1["geckopy init<br/>Fill model_adapter.toml"] --> A2["geckopy kegg-download"]:::opt
+  NX(["Next: Building an empty ecModel"]):::ctx
+  A2 --> NX
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | |
