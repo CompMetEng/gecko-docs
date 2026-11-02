@@ -97,7 +97,7 @@ html_theme_options = {
         "image_dark": "_static/gecko-logo-white.png",
     },
     "announcement": (
-        "This site documents GECKO <strong>4.0.0b1</strong> "
+        "This site documents GECKO <strong>4.0.0b2</strong> "
         "(MATLAB and Python), a pre-release version. The API may still "
         "change before the stable 4.0.0 release."
     ),
