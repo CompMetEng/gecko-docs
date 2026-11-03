@@ -76,7 +76,7 @@ flowchart TB
 
 ## Setup
 
-The ecModel has `ec.concs` filled and applied as bounds on the `usage_prot_<id>` reactions (`fillEnzConcs` and `constrainEnzConcs`, see [Proteomics integration](proteomics-integration.md)), and an intended growth rate is known. `flexibilizeEnzConcs` reads the growth rate from `gR_exp` of the model adapter when `expGrowth` is not given (Python: `gr_exp` and `exp_growth`).
+The ecModel has `ec.concs` filled and applied as bounds on the `usage_prot_<id>` reactions (`fillEnzConcs` and `constrainEnzConcs`, see [Proteomics integration](proteomics-integration.md)), and an intended growth rate is known. An enzyme with a concentration of 0 (see [Measured zeros](proteomics-integration.md#measured-zeros-and-unmeasured-enzymes)) is not raised by `flexibilizeEnzConcs`, because the upper bound is raised as a factor of the concentration. The function warns and lists the enzymes (MATLAB warning `flexibilizeEnzConcs:measuredZero`, Python: logged warning). `relaxProteomicsGreedy` treats such an enzyme as any other enzyme with a bound below the default and can set its bound back to the default. `flexibilizeEnzConcs` reads the growth rate from `gR_exp` of the model adapter when `expGrowth` is not given (Python: `gr_exp` and `exp_growth`).
 
 ## Choice of algorithm
 
@@ -178,7 +178,7 @@ If the conventional GEM reaches the same ceiling, the exchange flux data are the
 
 ## Relaxation of complexes
 
-When the concentrations were levelled with `levelComplexConcs` / `level_complex_concs` (see [Proteomics integration](proteomics-integration.md)), all subunits of a complex have one abundance and bind at once, so raising a single subunit does not raise growth. The option `perComplex` of `flexibilizeEnzConcs` (Python: `per_complex`, default false) treats every complex, as grouped by `getComplexFamilies` / `complex_families`, as one enzyme. Enzymes and complexes are ranked by the growth gained when all their usage upper bounds are raised together, every measured subunit of the selected complex is raised by the same factor, iterations are counted per complex, and the final pass keeps one factor per complex, which keeps levelled concentrations levelled. An upper bound is never lowered below its current value. The number of times that a complex was selected is recorded in `frequence` on its first measured subunit.
+When the concentrations were levelled with `levelComplexConcs` / `level_complex_concs` (see [Proteomics integration](proteomics-integration.md)), all subunits of a complex have one abundance and bind at once, so raising a single subunit does not raise growth. The option `perComplex` of `flexibilizeEnzConcs` (Python: `per_complex`, default false) treats every complex, as grouped by `getComplexFamilies` / `complex_families`, as one enzyme. Enzymes and complexes are ranked by the growth gained when all their usage upper bounds are raised together, every measured subunit of the selected complex is raised by the same factor, iterations are counted per complex, and the final pass keeps one factor per complex, which keeps levelled concentrations levelled. An upper bound is never lowered below its current value. The number of times that a complex was selected is recorded in `frequence` on its first subunit with a concentration above 0.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -247,6 +247,7 @@ flex_result = relax_enz_concs(ec_model, exp_growth=0.1)
 | `relaxProteomicsGreedy` raises an error (Python: `RuntimeError`) | `maxIterations` (Python: `max_iterations`, default 100) was reached while candidates remained | Raise `maxIterations`, or use `flexibilizeEnzConcs` |
 | The ecModel is less constrained than the proteomics data require | `relaxProteomicsGreedy` has no tighten-back pass | Use `flexibilizeEnzConcs` / `flexibilize_enz_concs` |
 | Warning that an enzyme or complex reached its iteration limit (MATLAB: "seems to be problematic") | the same enzyme or complex was picked more often than `iterPerEnzyme` allows | Check the $k_{cat}$ of the enzyme |
+| `flexibilizeEnzConcs` warns about enzymes with a concentration of 0 and the growth rate is not reached | the enzymes have an upper bound of 0 that is never raised | Use `relaxProteomicsGreedy`, or load the proteomics data with `zerosAsMeasured` false |
 | `flexibilize_enz_concs` raises `ValueError` | no enzyme has a measured concentration, or `exp_growth` is not given and `gr_exp` is not set | Run `fill_enz_concs` and `constrain_enz_concs`, or pass `exp_growth` |
 
 ## See also
