@@ -137,7 +137,7 @@ The top ten enzyme usages at a fixed growth rate of 0.25 /h, minimising glucose 
 | P38720 | 3.1 | 2.6 | 36.4 | custom | phosphogluconate dehydrogenase |
 | P16387 | 2.4 | 2.1 | 37.9 | brenda (wc=0, origin=2) | pyruvate dehydrogenase |
 
-One entry (P0CD90) carries the standard $k_{cat}$ value, the fallback that GECKO assigns to reactions without a gene association or without any kcat, as a median per subsystem or over all kcats (see [Applying kcat values](applying-kcats.md) and [Kcat assignment](../gecko4-kcat-assignment.md)). A standard $k_{cat}$ near the top of the usage ranking means that the model's estimate of the cost of that enzyme is a fallback, so a literature or BRENDA value for it supersedes a placeholder that carries a large weight in the result.
+One entry (P0CD90) has the standard $k_{cat}$ value, the fallback that GECKO assigns to reactions without a gene association or without any kcat, as a median per subsystem or over all kcats (see [Applying kcat values](applying-kcats.md) and [Kcat assignment](../gecko4-kcat-assignment.md)). A standard $k_{cat}$ near the top of the usage ranking means that the model's estimate of the cost of that enzyme is a fallback, so a literature or BRENDA value for it supersedes a placeholder that has a large weight in the result.
 
 ## Demand over the measured concentrations
 
@@ -170,7 +170,7 @@ usage.demand_ratio_active
 
 ## Ranking bottlenecks by gain of the objective
 
-Usage shows what the current solution spends its enzyme budget on. A heavily used enzyme can have spare capacity, and a lightly used enzyme at its bound can be the reason that the objective cannot rise. `getEnzymeBottlenecks` / `get_enzyme_bottlenecks` answers that question directly. It solves the model, and for each enzyme that runs at its usage bound (`upperBound` above 0 and `capUsage` at least 1 - 1e-6) it raises the upper bound of the `usage_prot_<id>` reaction by `foldChange` (default 2, greater than 1; Python: `fold_change`) and solves again. The enzymes are ranked by `objectiveGain`, the rise of the objective after that solve. An enzyme that is not at its bound has `objectiveGain` 0 without a solve, because raising a bound that does not bind cannot change the optimum.
+Usage shows what the current solution uses the enzyme budget for. A heavily used enzyme can have spare capacity, and a lightly used enzyme at its bound can be the reason that the objective cannot rise. `getEnzymeBottlenecks` / `get_enzyme_bottlenecks` answers that question directly. It solves the model, and for each enzyme that runs at its usage bound (`upperBound` above 0 and `capUsage` at least 1 - 1e-6) it raises the upper bound of the `usage_prot_<id>` reaction by `foldChange` (default 2, greater than 1; Python: `fold_change`) and solves again. The enzymes are ranked by `objectiveGain`, the rise of the objective after that solve. An enzyme that is not at its bound has `objectiveGain` 0 without a solve, because raising a bound that does not bind cannot change the optimum.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -212,11 +212,11 @@ The shadow price does not enter the order. At a degenerate optimum, which is com
 
 When no enzyme is at its usage bound, a warning (MATLAB identifier `getEnzymeBottlenecks:noEnzymeAtBound`; Python: logged) states that no single enzyme limits the objective, every `objectiveGain` is 0 and the rows are in model order. The warning names the protein pool exchange when that is at its bound. `getEnzymeBottlenecks` raises an error on a light ecModel, when `foldChange` is not greater than 1 and when the solve is not optimal. `get_enzyme_bottlenecks` raises a `ValueError` when `fold_change` is not greater than 1 and a `RuntimeError` when the solve is not optimal.
 
-The function is derived from `get_protein_bottlenecks` of the earlier geckopy package ([Carrasco et al., 2023](https://doi.org/10.1128/spectrum.01705-23)). [Relaxing overconstrained proteomics](relaxing-constraints.md) applies the shadow-price signal to a different task: `relaxProteomicsGreedy` / `relax_proteomics_greedy` uses it to pick the next proteomics constraint to loosen, one relaxation step at a time.
+The function is derived from `get_protein_bottlenecks` of the earlier geckopy package ([Carrasco et al., 2023](https://doi.org/10.1128/spectrum.01705-23)). [Relaxing overconstrained proteomics](relaxing-constraints.md) applies the shadow-price signal to a different task: `relaxProteomicsGreedy` / `relax_proteomics_greedy` uses it to select the next proteomics constraint to loosen, one relaxation step at a time.
 
 ## The most parsimonious proteome
 
-Classical parsimonious FBA (pFBA) picks, among all flux distributions that reach the optimum of the objective, the one with the smallest total flux. `getPfbaEnzymes` / `pfba_enzymes` is the enzyme-aware analogue: among the same set of optimal flux distributions, it picks the one with the smallest total enzyme mass, the smallest sum of `usage_prot_*` fluxes. For an ecModel, that usually differs from the answer of classical pFBA, since it optimises the proteome that the flux distribution implies, where classical pFBA optimises the flux magnitudes.
+Classical parsimonious FBA (pFBA) selects, among all flux distributions that reach the optimum of the objective, the one with the smallest total flux. `getPfbaEnzymes` / `pfba_enzymes` is the enzyme-aware analogue: among the same set of optimal flux distributions, it selects the one with the smallest total enzyme mass, the smallest sum of `usage_prot_*` fluxes. For an ecModel, that usually differs from the answer of classical pFBA, since it optimises the proteome that the flux distribution implies, where classical pFBA optimises the flux magnitudes.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -239,7 +239,7 @@ solution = pfba_enzymes(ec_model, fraction_of_optimum=0.9)
 :::
 ::::
 
-`fractionOfOptimum` / `fraction_of_optimum` (default 1.0) lets the objective fall from its optimum by `1 - fractionOfOptimum * 0.999999` times the magnitude of the optimum before minimising enzyme usage, for a negative optimum (such as the glucose exchange maximised above) as for a positive one; a value below 1.0 accepts a lower objective value in return for a lower total enzyme mass where one exists. The objective is the current objective of the model, or the reaction given by `rxnId` (Python: the argument `objective`). The MATLAB function returns a structure with the fields `x`, `enzymeUsage`, `objectiveValue` and `stat`; the Python function returns a `cobra.Solution`.
+`fractionOfOptimum` / `fraction_of_optimum` (default 1.0) allows the objective to fall from its optimum by `1 - fractionOfOptimum * 0.999999` times the magnitude of the optimum before minimising enzyme usage, for a negative optimum (such as the glucose exchange maximised above) as for a positive one; a value below 1.0 accepts a lower objective value in return for a lower total enzyme mass where one exists. The objective is the current objective of the model, or the reaction given by `rxnId` (Python: the argument `objective`). The MATLAB function returns a structure with the fields `x`, `enzymeUsage`, `objectiveValue` and `stat`; the Python function returns a `cobra.Solution`.
 
 Both implementations require the `usage_prot_<id>` reactions to run forward (`lb = 0`, the layout of a GECKO 4 ecModel). A reaction that was changed to allow reverse flux is handled in Python (its reverse variable is included in the minimised sum) and raises an error in MATLAB, since minimising the raw flux there would not minimise `|flux|` for that reaction.
 
@@ -256,5 +256,5 @@ Both implementations require the `usage_prot_<id>` reactions to run forward (`lb
 ## See also
 
 - [Simulation and analysis](simulation-and-analysis.md), the flux distributions that the usage and bottleneck data are computed from.
-- [Relaxing overconstrained proteomics](relaxing-constraints.md), where shadow prices pick the next constraint to relax.
+- [Relaxing overconstrained proteomics](relaxing-constraints.md), where shadow prices determine which constraint to relax next.
 - [GECKO light and full ecModels](gecko-light.md), why `getEnzymeUsage`, `getPfbaEnzymes` and `getEnzymeBottlenecks` do not work on a light ecModel.

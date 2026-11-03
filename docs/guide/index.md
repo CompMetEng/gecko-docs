@@ -33,7 +33,7 @@ Steps, in the order of the work:
 2. [Building an empty ecModel](building-ec-model.md), expand a conventional GEM into the structure of an ecModel.
 3. [Gathering kcats](gathering-kcats.md), collect the kcats of each source.
 4. [Applying kcats](applying-kcats.md), write kcats into the enzyme constraints of the ecModel.
-5. [Growth-rate tuning](growth-rate-tuning.md), close the gap between the growth rate of a new ecModel and that of the organism.
+5. [Growth-rate tuning](growth-rate-tuning.md), reduce the difference between the growth rate of a new ecModel and that of the organism.
 6. [Tuning against experimental data](tuning-against-experimental-data.md), fit and curate the kcats that limit the model.
 7. [Proteomics integration](proteomics-integration.md), constrain the concentrations of individual enzymes with proteomics data.
 8. [Relaxing overconstrained proteomics](relaxing-constraints.md), loosen proteomics constraints that keep the ecModel from its growth rate.

@@ -91,7 +91,7 @@ The ecModel comes from [Building an empty ecModel](building-ec-model.md), and th
 | `dlkcat.tsv` | SMILES of the metabolites; Docker for a DLKcat run |
 | `okp_<method>.tsv` | SMILES of the metabolites; an OpenKineticsPredictor API key |
 
-GECKO does not ship BRENDA data. `fetchBrendaAsset` (Python: `fetch_brenda_asset`) downloads the files of the toolbox-assets release `brenda-2026.1-1` on first use, and a project uses its own files when it has the folder `data/brenda`. DIAMOND is the executable of RAVEN (`getDiamond`), which is downloaded when missing. Reactions that no source covers get custom kcats and the standard kcat, described in [Applying kcats](applying-kcats.md#provide-custom-kcat-values) and [Applying kcats](applying-kcats.md#assign-a-standard-kcat-value-optional).
+GECKO does not include BRENDA data. `fetchBrendaAsset` (Python: `fetch_brenda_asset`) downloads the files of the toolbox-assets release `brenda-2026.1-1` on first use, and a project uses its own files when it has the folder `data/brenda`. DIAMOND is the executable of RAVEN (`getDiamond`), which is downloaded when missing. Reactions that no source covers get custom kcats and the standard kcat, described in [Applying kcats](applying-kcats.md#provide-custom-kcat-values) and [Applying kcats](applying-kcats.md#assign-a-standard-kcat-value-optional).
 
 ## Kcat source files
 
@@ -269,7 +269,7 @@ from geckopy import find_met_smiles
 find_met_smiles(ec_model, cache_path=params.path / "data" / "smilesDB.tsv")
 ```
 
-`find_met_smiles` mutates `ec_model` in place and reads and writes through the `cache_path` TSV. No PubChem network access is needed when every metabolite name is in the cache, as with the cache shipped with the tutorial. Unmatched metabolites are logged rather than returned as a `noSMILES` list: the number of unique metabolite names with a SMILES and the number without are logged at INFO level, counting only the names looked up in PubChem, and each name without a SMILES at DEBUG level. As in MATLAB, curate metabolite names (`metabolite.name`) if a formula suffix or similar naming issue prevents matching.
+`find_met_smiles` mutates `ec_model` in place and reads and writes through the `cache_path` TSV. No PubChem network access is needed when every metabolite name is in the cache, as with the cache included in the tutorial. Unmatched metabolites are logged rather than returned as a `noSMILES` list: the number of unique metabolite names with a SMILES and the number without are logged at INFO level, counting only the names looked up in PubChem, and each name without a SMILES at DEBUG level. As in MATLAB, curate metabolite names (`metabolite.name`) if a formula suffix or similar naming issue prevents matching.
 :::
 ::::
 
@@ -310,7 +310,7 @@ The kcat list is similar in shape to the BRENDA one, but has no EC numbers, wild
 
 ### Write the DLKcat input file
 
-`kcatsFromDLKcat` with `'run', true` replaces `data/DLKcat.tsv`. The input file can also be written, run and read in separate steps. Currency metabolites that occur in pairs (for example ATP versus ADP, NADH versus NAD) are excluded, unless a reaction has no other reactants after removing them, as for ATP synthase. A selection of small molecules (for example Fe2+) is excluded in every reaction. Nonexhaustive exclusion lists ship with the toolbox as `DLKcatCurrencyMets.tsv` and `DLKcatIgnoreMets.tsv` (MATLAB: in `GECKO/databases`; Python: inside the `geckopy.data` package); an ecModel-specific override can be placed under `data/` in the adapter folder with the same filenames. The lists apply to the OpenKineticsPredictor input and to the substrates of the homolog search as well.
+`kcatsFromDLKcat` with `'run', true` replaces `data/DLKcat.tsv`. The input file can also be written, run and read in separate steps. Currency metabolites that occur in pairs (for example ATP versus ADP, NADH versus NAD) are excluded, unless a reaction has no other reactants after removing them, as for ATP synthase. A selection of small molecules (for example Fe2+) is excluded in every reaction. Nonexhaustive exclusion lists are included in the toolbox as `DLKcatCurrencyMets.tsv` and `DLKcatIgnoreMets.tsv` (MATLAB: in `GECKO/databases`; Python: inside the `geckopy.data` package); an ecModel-specific override can be placed under `data/` in the adapter folder with the same filenames. The lists apply to the OpenKineticsPredictor input and to the substrates of the homolog search as well.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB

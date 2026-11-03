@@ -67,7 +67,7 @@ flowchart TB
 | `loadConventionalGEM` | `load_conventional_gem` | load the starting GEM from the path in the adapter |
 | `makeEcModel` | `make_ec_model` | build the empty ecModel, full or light |
 | `getComplexData` / `applyComplexData` | `get_complex_data` / `apply_complex_data` | add enzyme complex subunit stoichiometry |
-| `saveEcModel` / `loadEcModel` | `save_ec_model` / `load_ec_model` | round-trip the ecModel through YAML |
+| `saveEcModel` / `loadEcModel` | `save_ec_model` / `load_ec_model` | write the ecModel to YAML and read it back |
 
 ## Setup
 
@@ -110,7 +110,7 @@ ModelAdapterManager.setDefault(adapterLocation);
 :::{tab-item} 🐍 Python
 :sync: python
 
-geckopy has no session-wide default adapter. An `EcModel` carries its adapter as `model.adapter`, which functions use when no adapter is passed. Load the adapter once and pass it, or its `.params` attribute, to each call:
+geckopy has no session-wide default adapter. An `EcModel` holds its adapter as `model.adapter`, which functions use when no adapter is passed. Load the adapter once and pass it, or its `.params` attribute, to each call:
 
 ```python
 from pathlib import Path
@@ -254,7 +254,7 @@ MATLAB prints the number of full and proposed matches:
 A total of 238 complex have full match, and 22 proposed.
 ```
 
-The counts depend on the Complex Portal release that `getComplexData` downloads. The `data/ComplexPortal.json` file shipped with the tutorial gives 208 full matches and 17 proposed complexes.
+The counts depend on the Complex Portal release that `getComplexData` downloads. The `data/ComplexPortal.json` file included in the tutorial gives 208 full matches and 17 proposed complexes.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -283,7 +283,7 @@ Complex data is integrated for a reaction when its ecModel gene association full
 :::{admonition} Example output
 :class: note
 
-In the `full_ecModel` tutorial, applying the Complex Portal data file shipped with the tutorial finds 208 complexes with a full match and 17 proposed complexes (MATLAB and Python agree). One proposed match: reaction `r_0505_EXP_2` could match complex CPX-1293, the mitochondrial 2-oxoglutarate dehydrogenase complex. In the ecModel this reaction is annotated with proteins P20967 (KGD1, subunit E1), P19262 (KGD2, subunit E2) and P09624 (LPD1, subunit E3), while CPX-1293 also includes P19955 (YMR31), the 37S ribosomal protein. Literature confirms that P19955, also called KGD4 or subunit E4, is an essential subunit for a stable complex, so the gene association of reaction `r_0505` in the starting GEM could be curated to include it, which would give a full match.
+In the `full_ecModel` tutorial, applying the Complex Portal data file included in the tutorial finds 208 complexes with a full match and 17 proposed complexes (MATLAB and Python agree). One proposed match: reaction `r_0505_EXP_2` could match complex CPX-1293, the mitochondrial 2-oxoglutarate dehydrogenase complex. In the ecModel this reaction is annotated with proteins P20967 (KGD1, subunit E1), P19262 (KGD2, subunit E2) and P09624 (LPD1, subunit E3), while CPX-1293 also includes P19955 (YMR31), the 37S ribosomal protein. Literature confirms that P19955, also called KGD4 or subunit E4, is an essential subunit for a stable complex, so the gene association of reaction `r_0505` in the starting GEM could be curated to include it, which would give a full match.
 :::
 
 :::{admonition} Complex data is missing for some or all complexes
@@ -333,7 +333,7 @@ ec_model = load_ec_model(r"C:\path\to\ecModel.yml")
 
 When `ec_model.adapter` is set, `save_ec_model` uses it and the argument `adapter` can be omitted.
 
-geckopy provides no separate SBML export for ecModels: YAML is the sole format that round-trips the `ec` fields, and `save_ec_model` raises a `ValueError` for another extension and for a model whose `ec` is empty. Because `ec_model` is a `cobra.Model`, plain cobrapy SBML I/O still works for interoperating with other tools, with the same limit as MATLAB's `exportModel`: it does not retain the `ec` fields.
+geckopy provides no separate SBML export for ecModels: YAML is the sole format that preserves the `ec` fields on writing and reading, and `save_ec_model` raises a `ValueError` for another extension and for a model whose `ec` is empty. Because `ec_model` is a `cobra.Model`, plain cobrapy SBML I/O still works for interoperating with other tools, with the same limit as MATLAB's `exportModel`: it does not retain the `ec` fields.
 
 ```python
 import cobra

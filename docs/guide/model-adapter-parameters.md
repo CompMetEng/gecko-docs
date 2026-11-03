@@ -27,7 +27,7 @@ adapter = ModelAdapter.from_folder(project_path)
 :::
 ::::
 
-`ModelAdapterManager.setDefault` makes the adapter the default of all GECKO functions that take the option `modelAdapter`. In geckopy, `adapter.params` holds the parameters under the TOML key names, and an ecModel made with `make_ec_model` carries the adapter as `ec_model.adapter`.
+`ModelAdapterManager.setDefault` makes the adapter the default of all GECKO functions that take the option `modelAdapter`. In geckopy, `adapter.params` holds the parameters under the TOML key names, and an ecModel made with `make_ec_model` holds the adapter as `ec_model.adapter`.
 
 The `full_ecModel` tutorial uses these entries:
 
