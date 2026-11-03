@@ -266,7 +266,7 @@ fva_full = ec_fva(ec_model, model)
 fva_prot = ec_fva(ec_model_prot, model)
 ```
 
-`load_conventional_gem` returns a plain `cobra.Model` without the attribute `adapter`, which `apply_flux_data_constraints` reads for the biomass reaction, so the adapter is attached to it first. The ecModels carry their adapter. `bio_rxn` and `c_source` can be passed instead.
+`load_conventional_gem` returns a plain `cobra.Model` without the attribute `adapter`, which `apply_flux_data_constraints` reads for the biomass reaction, so the adapter is attached to it first. The ecModels hold their adapter. `bio_rxn` and `c_source` can be passed instead.
 
 `ec_fva` returns a DataFrame indexed by the reaction identifiers of the conventional model, with the columns `min_flux` and `max_flux`, so no matrix is pre-allocated as in MATLAB. The option `n_proc` sets the number of worker processes (default `cobra.Configuration().processes`).
 

@@ -34,7 +34,7 @@ After the stages, `collectKcats` applies `data/customKcats.tsv` when a stage lis
 
 ## Presets
 
-`[kcat_assignment] preset` sets the stages. The default is `brenda_ec_tree`.
+`[kcat_assignment] preset` defines the stages. The default is `brenda_ec_tree`.
 
 | Preset | Stages |
 | --- | --- |

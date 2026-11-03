@@ -340,7 +340,7 @@ ecModel = setProtPoolSize(ecModel);
 struct2table(tunedKcats)
 ```
 
-`sensitivityTuning` returns the updated ecModel and the `tunedKcats` structure, and with `verbose` at its default (`true`) prints the growth rate of each iteration. It also handles light ecModels. Output for the `full_ecModel` tutorial:
+`sensitivityTuning` returns the updated ecModel and the `tunedKcats` structure, and with `verbose` at its default (`true`) prints the growth rate of each iteration. It also works on light ecModels. Output for the `full_ecModel` tutorial:
 
 ```
 Iteration 1: Growth: 0.12508
@@ -363,7 +363,7 @@ set_prot_pool_size(ec_model)
 tuning_result = sensitivity_tuning(ec_model)
 ```
 
-`sensitivity_tuning` changes `ec_model` in place, with no separate returned model, and returns a `TunedKcatsResult` with the fields `rxns`, `rxn_names`, `enzymes`, `old_kcat`, `new_kcat` and `source`. It sets the growth objective from `params.bio_rxn` of the adapter and targets `params.gr_exp` when no growth rate is given. It also handles light ecModels. With `verbose=True` (the default) it logs the growth rate of each iteration at `INFO` level through the `logging` module.
+`sensitivity_tuning` changes `ec_model` in place, with no separate returned model, and returns a `TunedKcatsResult` with the fields `rxns`, `rxn_names`, `enzymes`, `old_kcat`, `new_kcat` and `source`. It sets the growth objective from `params.bio_rxn` of the adapter and targets `params.gr_exp` when no growth rate is given. It also works on light ecModels. With `verbose=True` (the default) it logs the growth rate of each iteration at `INFO` level through the `logging` module.
 :::
 ::::
 
@@ -392,7 +392,7 @@ Some kcat values changing is expected; the `full_ecModel` tutorial tunes 6. If a
 
 - No constraint is set on any nutrient uptake; the protein pool should be the sole limit.
 - The maximum growth rate specified as `gR_exp`/`gr_exp` in the model adapter is realistic.
-- The starting GEM can simulate the intended growth rate on its own, to rule out the network stoichiometry as the limiting factor (see [Network stoichiometry](#network-stoichiometry) above).
+- The starting GEM can simulate the intended growth rate on its own, to exclude the network stoichiometry as the limiting factor (see [Network stoichiometry](#network-stoichiometry) above).
 :::
 
 :::{admonition} Example output
@@ -501,7 +501,7 @@ After this is repeated for each tuned value, the results are considered overall.
 
 ## Fit the average saturation
 
-`sigmaFitter` (Python `fit_sigma`) sets sigma so that the ecModel reaches the experimental growth rate, after the kcats are tuned. It sizes the protein pool for a series of sigma values from 0.01 to 1 in steps of 0.01 (`n_sigma_steps = 100` in Python), solves the model for each and keeps the value whose growth rate is closest to the target growth rate. `sigmaFitter` returns the smallest sigma whose percent error is within a relative 1e-9 of the smallest error, so a growth plateau is returned at its start on every solver. `fit_sigma` with the default `method="grid"` takes the first grid point with the smallest error and has no tolerance, so solver rounding noise on a plateau can move its pick to a later grid point. `fit_sigma` with `method="bisect"` finds a continuous sigma at 1e-6 resolution that is not on the grid and, for a target that growth cannot reach, the start of the plateau. The objective of the model must be growth. The bounds of the objective reaction are set to `[0, 1000]` before the scan and stay so on the returned model. The protein pool of the returned model is sized for the fitted sigma.
+`sigmaFitter` (Python `fit_sigma`) sets sigma so that the ecModel reaches the experimental growth rate, after the kcats are tuned. It sizes the protein pool for a series of sigma values from 0.01 to 1 in steps of 0.01 (`n_sigma_steps = 100` in Python), solves the model for each and keeps the value whose growth rate is closest to the target growth rate. `sigmaFitter` returns the smallest sigma whose percent error is within a relative 1e-9 of the smallest error, so a growth plateau is returned at its start on every solver. `fit_sigma` with the default `method="grid"` takes the first grid point with the smallest error and has no tolerance, so solver rounding noise on a plateau can move the selected sigma to a later grid point. `fit_sigma` with `method="bisect"` finds a continuous sigma at 1e-6 resolution that is not on the grid and, for a target that growth cannot reach, the start of the plateau. The objective of the model must be growth. The bounds of the objective reaction are set to `[0, 1000]` before the scan and stay so on the returned model. The protein pool of the returned model is sized for the fitted sigma.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -523,7 +523,7 @@ fit = fit_sigma(ec_model)
 print(fit.sigma)
 ```
 
-`fit_sigma` changes `ec_model` in place and returns a `SigmaFitterResult` with the fields `sigma`, `sigma_grid`, `growth_grid` and `error_grid` (the absolute relative error in percent). The keyword arguments `growth_rate`, `p_tot` and `f` default to the values of the model adapter. With `method="grid"` (the default) it scans `n_sigma_steps` (default 100) sigma values `i / n` and takes the first with the smallest error; growth rates that differ by solver noise on a plateau can move the pick to a later grid point. With `method="bisect"` it uses the monotone growth in sigma to find sigma to a resolution of 1e-6 in about 20 solves, and for a growth rate that cannot be reached it returns the start of the plateau (growth within a relative 1e-9 of the growth at sigma 1). `sigma_fitter` is a deprecated alias of `fit_sigma` that raises a `DeprecationWarning`.
+`fit_sigma` changes `ec_model` in place and returns a `SigmaFitterResult` with the fields `sigma`, `sigma_grid`, `growth_grid` and `error_grid` (the absolute relative error in percent). The keyword arguments `growth_rate`, `p_tot` and `f` default to the values of the model adapter. With `method="grid"` (the default) it scans `n_sigma_steps` (default 100) sigma values `i / n` and takes the first with the smallest error; growth rates that differ by solver noise on a plateau can move the selected sigma to a later grid point. With `method="bisect"` it uses the monotone growth in sigma to find sigma to a resolution of 1e-6 in about 20 solves, and for a growth rate that cannot be reached it returns the start of the plateau (growth within a relative 1e-9 of the growth at sigma 1). `sigma_fitter` is a deprecated alias of `fit_sigma` that raises a `DeprecationWarning`.
 :::
 ::::
 
