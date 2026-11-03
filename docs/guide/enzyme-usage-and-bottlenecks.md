@@ -114,6 +114,7 @@ print(report.top_abs_usage.head(10))
 - `topAbsUsage` / `top_abs_usage`, the top-N enzymes by absolute usage. The option `topAbsUsage` (Python: `top_abs_usage`) sets N, default 10, and 0 or `Inf` lists all enzymes. `.head(10)` in Python takes the top ten rows of the table.
 - `highCapUsage` / `high_cap_usage`, every enzyme above a capacity-usage threshold, not limited to a top-N count. The option `highCapUsage` (Python: `high_cap_usage`) sets the threshold, default 0.9.
 - `totalUsageFlux` / `total_usage_flux`, the current upper bound of the protein pool exchange, the denominator of the percentage column.
+- `demandRatio` / `demand_ratio` and `demandRatioActive` / `demand_ratio_active`, the ratios of [Demand over the measured concentrations](#demand-over-the-measured-concentrations), copied from the usage data. They are NaN when the usage data has no `demandRatio` field.
 
 In `topAbsUsage` / `top_abs_usage`, enzymes whose reactions carry no flux are skipped after the top-N cut, so fewer than N enzymes can be listed. `highCapUsage` / `high_cap_usage` skips them in Python and lists them in MATLAB. An enzyme that catalyses several reactions with flux appears as a combined row marked `===`, followed by one row per reaction.
 
@@ -137,6 +138,35 @@ The top ten enzyme usages at a fixed growth rate of 0.25 /h, minimising glucose 
 | P16387 | 2.4 | 2.1 | 37.9 | brenda (wc=0, origin=2) | pyruvate dehydrogenase |
 
 One entry (P0CD90) carries the standard $k_{cat}$ value, the fallback that GECKO assigns to reactions without a gene association or without any kcat, as a median per subsystem or over all kcats (see [Applying kcat values](applying-kcats.md) and [Kcat assignment](../gecko4-kcat-assignment.md)). A standard $k_{cat}$ near the top of the usage ranking means that the model's estimate of the cost of that enzyme is a fallback, so a literature or BRENDA value for it supersedes a placeholder that carries a large weight in the result.
+
+## Demand over the measured concentrations
+
+The usage data compares the solution with the proteomics that constrained the model. `demandRatio` (Python: `demand_ratio`) is the protein that the solution uses of the enzymes with a measured concentration in `ec.concs`, divided by the sum of those concentrations. A ratio above 1 means that the solution uses more of the measured enzymes than was measured, which happens when the usage bounds are above the measurements, for instance after `flexibilizeEnzConcs` (see [Relaxing overconstrained proteomics](relaxing-constraints.md)). A ratio at or below 1 does not exclude that a single enzyme exceeds its measurement, since the sum is over all measured enzymes; the capacity usage gives the ratio per enzyme.
+
+Enzymes without a measured concentration draw from the protein pool and are not counted. The ratio is NaN when no concentration is measured, and Inf when the measured concentrations sum to 0 while the demand is positive. An `ec.concs` that is missing or shorter than `ec.enzymes` counts as unmeasured.
+
+Measured enzymes that carry no flux raise the measured total and can hide a conflict among the active enzymes. `demandRatioActive` (Python: `demand_ratio_active`) restricts both sums to the enzymes with an absolute usage above 1e-7 mg/gDCW. The usage data holds the five values as `measuredProtein`, `measuredProteinActive`, `demandedProtein`, `demandRatio` and `demandRatioActive` (Python: `measured_protein`, `measured_protein_active`, `demanded_protein`, `demand_ratio` and `demand_ratio_active`), in mg/gDCW for the first three. They are computed over all enzymes that have a usage reaction, whatever the value of the option `zero` (Python: `include_zero`).
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+usageData = getEnzymeUsage(ecModel, sol.x);
+usageData.demandRatio
+usageData.demandRatioActive
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+usage = enzyme_usage(ec_model, sol.fluxes)
+usage.demand_ratio
+usage.demand_ratio_active
+```
+:::
+::::
 
 ## Ranking bottlenecks by gain of the objective
 
