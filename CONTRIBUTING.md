@@ -12,6 +12,10 @@ The standard for this site is the `docs-site` plugin of [CompMetEng/skills](http
 3. Established technical shorthand (a domain term, a standard abbreviation) stays.
 4. No mention of AI tools or AI authorship in the repository: not in commits, pull requests, code comments or pages. Branch names do not contain a tool name.
 
+## Branches
+
+`develop` is the default branch. It documents the `develop` branches of GECKO and geckopy, which the submodules track, and the daily submodule update opens a pull request against it. Pull requests target `develop`. `main` documents the released versions: a release of GECKO and geckopy is followed by a pull request from `develop` to `main` that is merged with a merge commit and pins the submodules to the released commits.
+
 ## Building and checking
 
 ```bash
