@@ -68,7 +68,7 @@ flowchart TB
 ## Setup
 
 - An ecModel with a model adapter and the project folders `models/` and `data/` (see [Getting started](getting-started.md) and [Building an empty ecModel](building-ec-model.md)), with kcats assigned (see [Kcat assignment](../gecko4-kcat-assignment.md)).
-- Python: `pip install geckopy[evotune]`. The CMA-ES package `cma` is an optional dependency that the base installation does not include. MATLAB needs no additional package; `cmaesKcatTuning` contains its own separable (diagonal-covariance) CMA-ES.
+- Python: `pip install geckopy` installs the CMA-ES package `cma`. MATLAB needs no additional package; `cmaesKcatTuning` contains its own separable (diagonal-covariance) CMA-ES.
 - Experimental data in at least one of the files `evotuneFluxData.tsv` (measured exchange fluxes per condition) and `evotuneMaxGrowth.tsv` (measured maximum growth rates per carbon source). Both together pin the shape of metabolism (fluxes) and its rate (growth rate). Python raises a `ValueError` when neither file exists.
 
 ## Prepare the experimental data
@@ -289,7 +289,6 @@ open("corrections.tsv", "w").write(corrections_tsv(rows))
 
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
-| `ImportError` that names the `evotune` extra | The package `cma` is not installed | Run `pip install geckopy[evotune]` |
 | Error that `evotune_data` has neither `flux_data` nor `max_grate` | Neither `evotuneFluxData.tsv` nor `evotuneMaxGrowth.tsv` is in `<project>/data/` | Add one of the files, or pass the loaded data |
 | Error `No tunable kcats` | `ec.kcat` is not positive anywhere, or `tunableMask` excludes every kcat with a value | Assign kcats first, or widen the mask |
 | Error `Only 1 free parameter(s) after masking and tying` | The mask and `tie_isozymes` leave fewer than two free parameters | Widen `tunableMask` or raise `targetImpactShare` |

@@ -114,10 +114,10 @@ Verify the install:
 python -c "from importlib.metadata import version; print(version('geckopy'))"
 ```
 
-Optional extras: `geckopy[tutorial]` adds matplotlib for the plots of the tutorial, and `geckopy[evotune]` adds `cma`, which `cmaes_kcat_tuning` needs.
+The extra `geckopy[tutorial]` adds matplotlib for the plots of the tutorial.
 
 ```bash
-pip install --pre "geckopy[tutorial,evotune]"
+pip install --pre "geckopy[tutorial]"
 ```
 
 To remove:
