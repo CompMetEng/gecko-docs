@@ -1,6 +1,6 @@
 # GECKO documentation: design and content guide
 
-This document is the source of intent. It describes how the site should be designed and what it should contain, not the current state of `main`. When the site and this document disagree, the site is brought in line, or the decision is recorded here first. New decisions go in the decisions log; resolved items leave "Open questions".
+This document is the source of intent. It describes how the site should be designed and what it should contain, not the current state of `develop`. When the site and this document disagree, the site is brought in line, or the decision is recorded here first. New decisions go in the decisions log; resolved items leave "Open questions".
 
 The site follows the `docs-site` standard of [CompMetEng/skills](https://github.com/CompMetEng/skills). Differences from the standard are listed in section 6.
 
@@ -8,7 +8,7 @@ Before any work in this repository, fetch all remotes of the repository and of e
 
 ```bash
 git fetch --all --prune
-git checkout main && git pull --ff-only
+git checkout develop && git pull --ff-only
 git submodule sync --recursive
 git submodule update --init --recursive
 ```
@@ -63,7 +63,7 @@ One documentation site for **GECKO**, the MATLAB toolbox, and **geckopy**, its P
 ## 8. Decisions log
 
 - 2026-10-24: the site follows the `docs-site` standard. `requirements-sphinx.txt` is `requirements.txt` and `gen_api_pages_sphinx.py` is `gen_api_pages.py`. The brand colours are `#43684B` for tabs and borders and `#2D6E3B` for links, with `#5F936A` and `#87d398` in dark mode, set as `--pst-color-primary`, `--pst-color-link` and `--site-accent`. Logos and the favicon are in `docs/_static` only, with a white logo for dark mode. The API pages use the numpydoc rendering and show signatures.
-- 2026-10-24: Read the Docs and CI build with `-W`. The submodule update opens a pull request instead of pushing to `main`.
+- 2026-10-24: Read the Docs and CI build with `-W`. The submodule update opens a pull request against `develop` instead of pushing to it.
 - 2026-10-24: `docs/_static/gecko-logo-white.png`, the logo for dark mode, was made from `gecko-logo.png` by making every pixel white and keeping the alpha channel, the way `gecko-icon-white.png` was made. The maintainer accepted it. The unused `gecko-icon-color.png` and `gecko-icon-white.png` of the former `docs/assets` folder were removed and are in the history.
 - 2026-10-24: the language of the code tabs (MATLAB or Python) is remembered in `localStorage` by `docs/_static/language-sync.js`, so it applies to every tab on a page, to the next pages, to new browser tabs and to later visits, and install tabs follow it. sphinx-design alone keeps the choice in `sessionStorage` for one browser tab.
 - **Broken links and code owner:** `.github/workflows/link-issue.yml` checks the external links every Wednesday and keeps one open issue labelled `broken-links` with the broken ones; it closes the issue when none is broken. `.github/CODEOWNERS` names `@edkerk` as the owner of the repository, who is asked to review every pull request.
