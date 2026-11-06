@@ -68,7 +68,7 @@ flowchart TB
 ## Setup
 
 - An ecModel with a model adapter and the project folders `models/` and `data/` (see [Getting started](getting-started.md) and [Building an empty ecModel](building-ec-model.md)), with kcats assigned (see [Kcat assignment](../gecko4-kcat-assignment.md)).
-- Python: `pip install --pre geckopy` installs the CMA-ES package `cma`. MATLAB needs no additional package; `cmaesKcatTuning` contains its own separable (diagonal-covariance) CMA-ES.
+- Python: the development branch of geckopy requires the CMA-ES package `cma`. A geckopy release whose extras list `evotune` needs `pip install --pre "geckopy[evotune]"`. MATLAB needs no additional package; `cmaesKcatTuning` contains its own separable (diagonal-covariance) CMA-ES.
 - Experimental data in at least one of the files `evotuneFluxData.tsv` (measured exchange fluxes per condition) and `evotuneMaxGrowth.tsv` (measured maximum growth rates per carbon source). Both together pin the shape of metabolism (fluxes) and its rate (growth rate). Python raises a `ValueError` when neither file exists.
 
 ## Prepare the experimental data
