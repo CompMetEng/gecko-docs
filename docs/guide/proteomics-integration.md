@@ -253,7 +253,7 @@ flux_data = load_flux_data(params.path / "data" / "fluxData.tsv")
 :::
 ::::
 
-Two choices decide how the constraint is applied:
+Two choices determine how the constraint is applied:
 
 1. **Loose or strict.** With loose constraints, the measured rate is set as the upper bound and the lower bound stays at zero (for a reaction with a negative rate, the lower bound gets the measured value and the upper bound stays at zero). With strict constraints, a percentage between 0 and 100 is passed in place of `'loose'` (Python: a number), and the lower and upper bounds are both set around the measured value; 10 gives 95 % and 105 % of it. Strict constraints force the ecModel to follow the measured fluxes closely, but imprecision in either the fluxes or the enzyme concentrations can then make the model infeasible; if that happens, loosen the constraint.
 2. **Max or min growth.** With `max`, the measured growth rate is the upper bound, the ceiling the ecModel should reach; this suits growth as the objective function. With `min`, the measured growth rate is the lower bound, the floor the ecModel must reach; this suits minimising protein pool usage as the objective (see [Simulation and analysis](simulation-and-analysis.md)).

@@ -63,8 +63,8 @@ flowchart TB
 
 | MATLAB | Python | Note |
 |---|---|---|
-| `assignKcats` | `assign_kcats` | decide one kcat per reaction from the kcat source files and apply the kcat constraints |
-| `collectKcats` | `collect_kcats` | decide the kcats without changing the model |
+| `assignKcats` | `assign_kcats` | determine one kcat per reaction from the kcat source files and apply the kcat constraints |
+| `collectKcats` | `collect_kcats` | determine the kcats without changing the model |
 | `convertCustomKcats` | `convert_custom_kcats` | convert `data/customKcats.tsv` into `data/kcats/custom.tsv` |
 | `applyCustomKcats` | `apply_custom_kcats` | apply the kcats of `data/customKcats.tsv` |
 | `getKcatAcrossIsozymes` | `fill_kcats_from_isozymes` | fill missing kcats with the mean of their isozymes |
@@ -115,7 +115,7 @@ Without `data/kcats/custom.tsv`, `collectKcats` applies `data/customKcats.tsv` i
 [ecModel, rxnUpdated, notMatch] = applyCustomKcats(ecModel);
 ```
 
-This overwrites existing values in `ecModel.ec.kcat` for matching reactions, on the assumption that custom values carry higher confidence. The stoichiometry changes when `applyKcatConstraints` runs.
+This overwrites existing values in `ecModel.ec.kcat` for matching reactions, on the assumption that custom values have higher confidence. The stoichiometry changes when `applyKcatConstraints` runs.
 
 Custom values that fail to match: if `notMatch` contains reactions, their values were not successfully applied, because the gene association between the model and the input file is a partial match: at least 50 %, but not 100 %. A gene association that matches less than 50 % is skipped and does not appear in `notMatch`. Inspect which enzymes are associated with the reaction in the ecModel and curate the input file to resolve it.
 :::
@@ -134,7 +134,7 @@ The same overwrite behaviour and the same gene-match threshold of 50 % apply her
 
 ## Assign kcats from the source files
 
-`assignKcats` decides one kcat per reaction from the kcat source files, writes `ec.kcat` and `ec.source`, and applies the kcat constraints with `applyKcatConstraints`. The order of the sources follows the preset or the stages of `[kcat_assignment]`; [Kcat assignment](../gecko4-kcat-assignment.md) describes the presets, the stages and the gathering of missing source files with `updateKcatSources`. Kcats that the model had are replaced, because the source files are the input of the assignment. After the stages, `assignKcats` fills reactions without a kcat from their isozymes for full ecModels when `isozymes` is true, and gives the remaining reactions the standard kcat when `standard` is true; both options are true by default.
+`assignKcats` determines one kcat per reaction from the kcat source files, writes `ec.kcat` and `ec.source`, and applies the kcat constraints with `applyKcatConstraints`. The order of the sources follows the preset or the stages of `[kcat_assignment]`; [Kcat assignment](../gecko4-kcat-assignment.md) describes the presets, the stages and the gathering of missing source files with `updateKcatSources`. Kcats that the model had are replaced, because the source files are the input of the assignment. After the stages, `assignKcats` fills reactions without a kcat from their isozymes for full ecModels when `isozymes` is true, and gives the remaining reactions the standard kcat when `standard` is true; both options are true by default.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -221,7 +221,7 @@ This step does not apply to light ecModels, where the most efficient isozyme set
 
 ## Assign a standard kcat value (optional)
 
-Reactions without genes associated in the starting GEM (empty gene-reaction rules) cannot carry enzyme constraints, for lack of enzyme data. For such reactions, excluding exchange, spontaneous, transport and pseudo-reactions (reaction names that contain `pseudoreaction` or `SLIME rxn`, and the reactions in `data/pseudoRxns.tsv`), a standard kcat and a standard pseudo-enzyme (`prot_standard`) constrain catalytic capacity instead. The standard kcat is the median of the kcat values of the reactions in the same subsystem, when the subsystem has at least 10 reactions with a kcat (the option `threshold`), and the median of every kcat in `ec.kcat` otherwise. The standard molecular weight is the median across every protein in the organism, and a `usage_prot_standard` reaction is added.
+Reactions without genes associated in the starting GEM (empty gene-reaction rules) cannot get enzyme constraints, for lack of enzyme data. For such reactions, excluding exchange, spontaneous, transport and pseudo-reactions (reaction names that contain `pseudoreaction` or `SLIME rxn`, and the reactions in `data/pseudoRxns.tsv`), a standard kcat and a standard pseudo-enzyme (`prot_standard`) constrain catalytic capacity instead. The standard kcat is the median of the kcat values of the reactions in the same subsystem, when the subsystem has at least 10 reactions with a kcat (the option `threshold`), and the median of every kcat in `ec.kcat` otherwise. The standard molecular weight is the median across every protein in the organism, and a `usage_prot_standard` reaction is added.
 
 Reactions that are annotated with an enzyme but have a kcat of 0 or `NaN` receive the standard kcat as well and keep their enzyme. Earlier standard assignments (`standard` in `ec.source`) are removed when the function runs again.
 

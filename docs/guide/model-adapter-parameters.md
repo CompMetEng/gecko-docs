@@ -139,7 +139,7 @@ When `[evotune]` has no `source_groups`, the groups are `dlkcat`, `brenda` and `
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
 | `okp.method` | `okp.method` | `"CataPro"` | OpenKineticsPredictor method |
-| `okp.handle_long_sequences` | `okp.handleLongSequences` | `"truncate"` | How OpenKineticsPredictor handles sequences that are too long |
+| `okp.handle_long_sequences` | `okp.handleLongSequences` | `"truncate"` | Action of OpenKineticsPredictor on sequences that are too long |
 | `okp.include_similarity_columns` | `okp.includeSimilarityColumns` | `true` | Return the similarity to the training data of the method |
 | `okp.canonicalize_substrates` | `okp.canonicalizeSubstrates` | `true` | Canonicalise substrate SMILES before the prediction |
 
@@ -157,7 +157,7 @@ geckopy ignores the `[matlab]` section. The functions are searched on the MATLAB
 
 ## Adapter classes
 
-A GECKO 3 adapter class keeps working. It sets `obj.params` with the MATLAB names of the tables above, and `ModelAdapterManager.setDefault` takes the path of its `.m` file. `convertAdapterToToml` writes the parameters of a class as `model_adapter.toml` and lists the methods that the class overrides and the file cannot carry. The option `'adapterFormat','class'` of `createGECKOproject` creates a project with a class.
+A GECKO 3 adapter class keeps working. It sets `obj.params` with the MATLAB names of the tables above, and `ModelAdapterManager.setDefault` takes the path of its `.m` file. `convertAdapterToToml` writes the parameters of a class as `model_adapter.toml` and lists the methods that the class overrides and the file cannot express. The option `'adapterFormat','class'` of `createGECKOproject` creates a project with a class.
 
 A class that needs code beyond the file can read its parameters from the file in the constructor:
 

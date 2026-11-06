@@ -2,13 +2,13 @@
 
 <!-- docs-site: concept-page -->
 
-GECKO 4 assigns the kcat of each reaction from kcat source files, in an order that `model_adapter.toml` sets. `collectKcats` decides the kcats and does not change the model. `assignKcats` applies the decisions and the kcat constraints. [Gathering kcats](guide/gathering-kcats.md) describes how the sources are gathered, and [Applying kcats](guide/applying-kcats.md) the steps after the assignment.
+GECKO 4 assigns the kcat of each reaction from kcat source files, in an order that `model_adapter.toml` sets. `collectKcats` determines the kcats and does not change the model. `assignKcats` applies the decisions and the kcat constraints. [Gathering kcats](guide/gathering-kcats.md) describes how the sources are gathered, and [Applying kcats](guide/applying-kcats.md) the steps after the assignment.
 
 ## Functions
 
 | MATLAB | Python | Note |
 | --- | --- | --- |
-| `collectKcats` | `collect_kcats` | decides one kcat per reaction and writes `output/<model id>_kcatDecisions.tsv` |
+| `collectKcats` | `collect_kcats` | determines one kcat per reaction and writes `output/<model id>_kcatDecisions.tsv` |
 | `assignKcats` | `assign_kcats` | applies the decisions and the kcat constraints. Kcats that the model had are replaced |
 | `updateKcatSources` | `update_kcat_sources` | gathers the source files that the configuration needs and that are missing or outdated |
 | `kcatAssignmentConfig` | `kcat_assignment_config` | returns the settings with the preset expanded into stages |
@@ -28,7 +28,7 @@ A source is the name of a file in `data/kcats` (`custom`, `ec_tree`, `homologs`,
 
 ## Stages
 
-A stage decides the reactions that are still open. The action `select` takes the first listed source that has a value. The action `combine` takes all listed sources that have a value, corrects each for the bias of the source and weights it by 1 divided by its error variance. The error variance depends on the evidence of the source for the reaction: for the EC tree the measurements of the EC number and of its EC class, for an OKP method the similarity of the enzyme to the training sequences of the method. The parameters are in `kcatCombineParams.tsv` of the BRENDA files. `model.ec.source` reads `combined (sd=<log10 sd>, n=<sources>)` for a combined value.
+A stage determines the kcat of the reactions that are still open. The action `select` takes the first listed source that has a value. The action `combine` takes all listed sources that have a value, corrects each for the bias of the source and weights it by 1 divided by its error variance. The error variance depends on the evidence of the source for the reaction: for the EC tree the measurements of the EC number and of its EC class, for an OKP method the similarity of the enzyme to the training sequences of the method. The parameters are in `kcatCombineParams.tsv` of the BRENDA files. `model.ec.source` reads `combined (sd=<log10 sd>, n=<sources>)` for a combined value.
 
 After the stages, `collectKcats` applies `data/customKcats.tsv` when a stage lists `custom` and `data/kcats/custom.tsv` does not exist. With `isozymes = true`, a reaction without a kcat in a full ecModel takes one from its isozymes. With `standard = true`, the remaining reactions get the standard kcat.
 

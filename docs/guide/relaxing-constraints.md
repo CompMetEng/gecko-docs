@@ -131,7 +131,7 @@ flex_result = flexibilize_enz_concs(ec_model, exp_growth=0.1, fold_change=10.0)
 :::
 ::::
 
-The enzymes in the result are the modified ones. Flexibilizing a concentration is a response to imprecise protein measurement. When the same enzyme is flexibilized repeatedly, its $k_{cat}$ may cause the shortfall; check the $k_{cat}$ and consider a custom value (see [Applying kcat values](applying-kcats.md) and [Tuning against experimental data](tuning-against-experimental-data.md)). An enzyme that is picked more often than `iterPerEnzyme` (Python: `iter_per_enzyme`, default 5) stops the loop with a warning.
+The enzymes in the result are the modified ones. Flexibilizing a concentration is a response to imprecise protein measurement. When the same enzyme is flexibilized repeatedly, its $k_{cat}$ may cause the shortfall; check the $k_{cat}$ and consider a custom value (see [Applying kcat values](applying-kcats.md) and [Tuning against experimental data](tuning-against-experimental-data.md)). An enzyme that is selected more often than `iterPerEnzyme` (Python: `iter_per_enzyme`, default 5) stops the loop with a warning.
 
 :::{admonition} Many enzymes flexibilized
 :class: tip
@@ -246,7 +246,7 @@ flex_result = relax_enz_concs(ec_model, exp_growth=0.1)
 | `relaxProteomicsGreedy` returns `converged = false` with a warning (Python: `converged=False`) | the eligible enzymes ran out before the target growth rate was reached | Apply the exchange flux constraints to the conventional GEM; the target may be unreachable for reasons other than enzyme constraints |
 | `relaxProteomicsGreedy` raises an error (Python: `RuntimeError`) | `maxIterations` (Python: `max_iterations`, default 100) was reached while candidates remained | Raise `maxIterations`, or use `flexibilizeEnzConcs` |
 | The ecModel is less constrained than the proteomics data require | `relaxProteomicsGreedy` has no tighten-back pass | Use `flexibilizeEnzConcs` / `flexibilize_enz_concs` |
-| Warning that an enzyme or complex reached its iteration limit (MATLAB: "seems to be problematic") | the same enzyme or complex was picked more often than `iterPerEnzyme` allows | Check the $k_{cat}$ of the enzyme |
+| Warning that an enzyme or complex reached its iteration limit (MATLAB: "seems to be problematic") | the same enzyme or complex was selected more often than `iterPerEnzyme` allows | Check the $k_{cat}$ of the enzyme |
 | `flexibilize_enz_concs` raises `ValueError` | no enzyme has a measured concentration, or `exp_growth` is not given and `gr_exp` is not set | Run `fill_enz_concs` and `constrain_enz_concs`, or pass `exp_growth` |
 
 ## See also

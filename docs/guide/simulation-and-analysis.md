@@ -410,5 +410,5 @@ The growth rate of the unconstrained context-specific model (149.97 /h) has no b
 - [GECKO light and full ecModels](gecko-light.md), the runtime and accuracy trade-off between the two ecModel layouts.
 - [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md), the analyses of `getEnzymeUsage`, `getPfbaEnzymes` and `getEnzymeBottlenecks` that the usage reactions of a full ecModel allow.
 - [Proteomics integration](proteomics-integration.md), the construction of the proteomics-constrained ecModel of the solution space comparison.
-- [Growth-rate tuning](growth-rate-tuning.md), the kcat values that decide the growth rate of the simulation.
+- [Growth-rate tuning](growth-rate-tuning.md), the kcat values that determine the growth rate of the simulation.
 - [API reference](../api/index.md) and [MATLAB vs Python](../matlab-vs-python.md), the signature of every function in the table.

@@ -1,6 +1,6 @@
 # Building an empty ecModel
 
-Building an ecModel expands a conventional GEM so that enzyme constraints can be added to it later. Reversible reactions split into forward and backward copies, because enzyme kinetics depend on direction. Reactions catalysed by isozymes split into one reaction per isozyme, because each has its own kinetics and molecular weight. The protein pool, together with the enzyme pseudo-metabolites that draw from it, is added to the network. The result is an **empty ecModel**: the structure that carries the enzyme constraints exists, and no constraints are applied yet. The empty ecModel is saved as a YAML file at the end.
+Building an ecModel expands a conventional GEM so that enzyme constraints can be added to it later. Reversible reactions split into forward and backward copies, because enzyme kinetics depend on direction. Reactions catalysed by isozymes split into one reaction per isozyme, because each has its own kinetics and molecular weight. The protein pool, together with the enzyme pseudo-metabolites that draw from it, is added to the network. The result is an **empty ecModel**: the structure that holds the enzyme constraints exists, and no constraints are applied yet. The empty ecModel is saved as a YAML file at the end.
 
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
@@ -366,7 +366,7 @@ Converting a conventional GEM into an empty ecModel runs up to twelve operations
 | 11 | Add `usage_prot_<uniprot ID>` reactions for each enzyme pseudo-metabolite, from `prot_pool` to the enzyme (bounds 0 and 1000) | ✅ | -- |
 | 12 | Add the `prot_pool_exchange` reaction, which supplies `prot_pool` (bounds 0 and 1000) | ✅ | ✅ |
 
-Step 5's new reaction identifiers: reaction `r_0001` catalysed by two isozymes becomes `r_0001_EXP_1` and `r_0001_EXP_2`; a backward reaction `r_0001_REV` becomes `r_0001_REV_EXP_1` and `r_0001_REV_EXP_2`. Light ecModels keep the original identifiers in the model, and the rows of `ec.rxns` carry the prefix `001_`, `002_` and so on, one per isozyme. Step 9's example: *S. cerevisiae* enolase gene YHR174W, UniProt identifier P00925, appears as pseudo-metabolite `prot_P00925`. Step 11's identifiers are `usage_` followed by the enzyme metabolite identifier, for example `usage_prot_P00925`. See [the ec structure](applying-kcats.md#the-ec-structure) for what step 6 populates later, and [GECKO light and full ecModels](gecko-light.md) for what the skipped steps change.
+Step 5's new reaction identifiers: reaction `r_0001` catalysed by two isozymes becomes `r_0001_EXP_1` and `r_0001_EXP_2`; a backward reaction `r_0001_REV` becomes `r_0001_REV_EXP_1` and `r_0001_REV_EXP_2`. Light ecModels keep the original identifiers in the model, and the rows of `ec.rxns` have the prefix `001_`, `002_` and so on, one per isozyme. Step 9's example: *S. cerevisiae* enolase gene YHR174W, UniProt identifier P00925, appears as pseudo-metabolite `prot_P00925`. Step 11's identifiers are `usage_` followed by the enzyme metabolite identifier, for example `usage_prot_P00925`. See [the ec structure](applying-kcats.md#the-ec-structure) for what step 6 populates later, and [GECKO light and full ecModels](gecko-light.md) for what the skipped steps change.
 :::
 
 :::{admonition} Usage and pool exchange reactions run forward
