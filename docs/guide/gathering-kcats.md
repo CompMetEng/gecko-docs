@@ -1,6 +1,6 @@
 # Gathering kcats
 
-An empty ecModel has the structure to carry enzyme constraints but no kcat values. Kcats are gathered from each source into a kcat source file in `data/kcats`: [BRENDA](https://www.brenda-enzymes.org/) by fuzzy matching, the EC tree, measured homologs, DLKcat and OpenKineticsPredictor. At the end, every source that the project uses has a source file that `assignKcats` can read.
+An empty ecModel has the structure to hold enzyme constraints but no kcat values. Kcats are gathered from each source into a kcat source file in `data/kcats`: [BRENDA](https://www.brenda-enzymes.org/) by fuzzy matching, the EC tree, measured homologs, DLKcat and OpenKineticsPredictor. At the end, every source that the project uses has a source file that `assignKcats` can read.
 
 Not every enzymatic reaction has a reported measurement. BRENDA kcats are matched to a reaction by EC number and by the substrates of the reaction. DLKcat and OpenKineticsPredictor predict a kcat from the enzyme sequence and the substrate structure, independent of the EC number, which covers organisms with few measurements and reactions without an EC number. [Kcat assignment](../gecko4-kcat-assignment.md) describes how the source files are combined into one kcat per reaction, and [Applying kcats](applying-kcats.md) the steps after that.
 
@@ -181,7 +181,7 @@ The option `aggregation` (`'max'` or `'median'`) of `kcatsFromBrenda` (Python: `
 
 Each BRENDA kcat is divided by the coefficient of the substrate that it was measured on, so a reaction that consumes two molecules of that substrate gets a kcat per molecule of the substrate ([GECKO 3 to GECKO 4](../gecko3-to-gecko4.md) describes the change from GECKO 3).
 
-The kcat list documents which kcat was assigned to each reaction and how precise the match is: the number of EC wildcards used, and whether the match agreed on substrate and organism. A full match often does not exist, even for model organisms such as *S. cerevisiae*, and a partial organism or substrate match is returned. For each EC number, the levels of organism and substrate are tried in the order of the origin values 1, 2, 3, 5, 4 and 6 (see the example output below). When no level matches, the rightmost EC level is replaced by a wildcard and the levels are tried again. EC 2.4.2.3 (uridine phosphorylase), for example, becomes 2.4.2.- (pentosyltransferase). With a wildcard, the levels that require a matching substrate (origin 1 and 2) are skipped, because the last digits of the EC number carry the substrate specificity. When a reaction has several EC numbers, the match with the fewest wildcards and the earliest level is selected, and among those the highest kcat.
+The kcat list documents which kcat was assigned to each reaction and how precise the match is: the number of EC wildcards used, and whether the match agreed on substrate and organism. A full match often does not exist, even for model organisms such as *S. cerevisiae*, and a partial organism or substrate match is returned. For each EC number, the levels of organism and substrate are tried in the order of the origin values 1, 2, 3, 5, 4 and 6 (see the example output below). When no level matches, the rightmost EC level is replaced by a wildcard and the levels are tried again. EC 2.4.2.3 (uridine phosphorylase), for example, becomes 2.4.2.- (pentosyltransferase). With a wildcard, the levels that require a matching substrate (origin 1 and 2) are skipped, because the last digits of the EC number encode the substrate specificity. When a reaction has several EC numbers, the match with the fewest wildcards and the earliest level is selected, and among those the highest kcat.
 
 :::{admonition} Example output
 :class: note
@@ -323,7 +323,7 @@ writeDLKcatInput(ecModel);
 `writeDLKcatInput` raises an error when `data/DLKcat.tsv` exists; the option `'overwrite', true` replaces the file and discards the predictions that it holds.
 
 `DLKcat.tsv` is specific to either the full or the light version of the ecModel, because
-it carries reaction identifiers from `ec.rxns` needed when loading the predicted values back into the ecModel. Build separate `DLKcat.tsv` files for the two ecModel versions. The source file `dlkcat.tsv` is keyed by the conventional reaction and applies to both.
+it holds reaction identifiers from `ec.rxns` needed when loading the predicted values back into the ecModel. Build separate `DLKcat.tsv` files for the two ecModel versions. The source file `dlkcat.tsv` is keyed by the conventional reaction and applies to both.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -377,7 +377,7 @@ OpenKineticsPredictor (OKP) shares its input with DLKcat: protein sequences and 
 :::{admonition} Storage of the API key
 :class: warning
 
-OKP requires a personal Bearer API key (looks like `ak_...`). Get one free, no registration required, at [predictor.openkinetics.org/api-docs](https://predictor.openkinetics.org/api-docs) (the "API key generator" section; the key is shown once, and can be revoked and regenerated from the same page). Keys are tied to the requesting IP and carry a daily prediction quota that resets at midnight UTC.
+OKP requires a personal Bearer API key (looks like `ak_...`). Get one free, no registration required, at [predictor.openkinetics.org/api-docs](https://predictor.openkinetics.org/api-docs) (the "API key generator" section; the key is shown once, and can be revoked and regenerated from the same page). Keys are tied to the requesting IP and have a daily prediction quota that resets at midnight UTC.
 
 Because the model adapter is shared and committed to version control, the key is not stored there. Both languages resolve it the same way, checked in this order: an explicit function argument; the `OKP_API_KEY` environment variable; or a plain-text `data/okpApiKey.txt` file in the adapter folder (a filename already git-ignored by GECKO).
 :::

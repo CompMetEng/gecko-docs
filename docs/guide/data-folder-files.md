@@ -33,7 +33,7 @@ The `data` folder of a GECKO 4 project holds the input data of the reconstructio
 | `DLKcatIgnoreMets.tsv`, `DLKcatCurrencyMets.tsv` | Optional project copies of the lists of metabolites that are left out of the DLKcat and OKP input: names with SMILES, and pairs of currency metabolites. Without them, the files of the toolbox are used | `writeDLKcatInput`, `writeOpenKineticsPredictorInput` | [Gathering kcats](gathering-kcats.md) |
 | `OKP.csv` | Input of an OpenKineticsPredictor job | `writeOpenKineticsPredictorInput`, `submitOpenKineticsPredictor` | [Gathering kcats](gathering-kcats.md) |
 | `OKP_job_<method>.txt`, `OKP_output_<method>.csv` | The job and the result of one OKP method | `kcatsFromOKP` (Python: `kcats_from_okp`) | [Gathering kcats](gathering-kcats.md) |
-| `OKP_job.txt`, `OKP_output.csv` | The job and the result of a job that `submitOpenKineticsPredictor` and `fetchOpenKineticsPredictor` handle. `kcatsFromOKP` adopts them for its method when no job of that method exists | `submitOpenKineticsPredictor`, `fetchOpenKineticsPredictor` | [Gathering kcats](gathering-kcats.md) |
+| `OKP_job.txt`, `OKP_output.csv` | The job and the result of a job, written by `submitOpenKineticsPredictor` and `fetchOpenKineticsPredictor`. `kcatsFromOKP` adopts them for its method when no job of that method exists | `submitOpenKineticsPredictor`, `fetchOpenKineticsPredictor` | [Gathering kcats](gathering-kcats.md) |
 | `okpApiKey.txt` | The API key of OpenKineticsPredictor, an alternative to the argument `apiKey` and to the environment variable `OKP_API_KEY` | `submitOpenKineticsPredictor`, `fetchOpenKineticsPredictor` | [Gathering kcats](gathering-kcats.md) |
 
 ## Proteomics, flux data and tuning data

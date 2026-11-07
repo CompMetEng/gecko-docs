@@ -373,7 +373,7 @@ The options are the same in both toolboxes (MATLAB name first):
 | --- | --- | --- | --- |
 | `desiredGrowthRate` | `desired_growth_rate` | `params.gR_exp` (Python `params.gr_exp`) | growth rate at which the tuning stops |
 | `foldChange` | `fold_change` | `10` | factor by which each iteration raises a kcat |
-| `protToIgnore` | `prot_to_ignore` | none | UniProt IDs whose enzymes are not picked as the limiting enzyme |
+| `protToIgnore` | `prot_to_ignore` | none | UniProt IDs whose enzymes are not selected as the limiting enzyme |
 | `verbose` | `verbose` | `true` | reports the growth rate of each iteration |
 | `modelAdapter` | | default model adapter | model adapter that supplies the parameters (Python reads `ec_model.adapter`) |
 | | `max_iterations` | `1000` | upper limit of the iterations |

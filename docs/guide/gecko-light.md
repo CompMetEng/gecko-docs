@@ -53,7 +53,7 @@ Functions that read `ec.kcat` and `ec.mw`, or edit the LP directly, work on a li
 
 ## Reconstruction time and simulation accuracy
 
-The comparison below builds a light and a full ecModel of yeast-GEM, populated with kcat values from BRENDA fuzzy matching alone, and runs FBA with growth maximised on each. Both toolboxes ship the comparison script (`plotlightVSfull` and `plot_light_vs_full`). It sets the lower bound of the glucose uptake reaction `r_1714` to -1000 and the growth reaction `r_2111` as the objective:
+The comparison below builds a light and a full ecModel of yeast-GEM, populated with kcat values from BRENDA fuzzy matching alone, and runs FBA with growth maximised on each. Both toolboxes include the comparison script (`plotlightVSfull` and `plot_light_vs_full`). It sets the lower bound of the glucose uptake reaction `r_1714` to -1000 and the growth reaction `r_2111` as the objective:
 
 | Measure | Light | Full |
 |---|---|---|

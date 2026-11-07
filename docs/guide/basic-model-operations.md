@@ -183,7 +183,7 @@ print(sol.fluxes[exchange_ids][sol.fluxes[exchange_ids] != 0])
 
 ## Export results and models
 
-Export the results to a spreadsheet. The file does not carry content from the `ec` structure and helps to find reaction identifiers quickly:
+Export the results to a spreadsheet. The file does not contain content from the `ec` structure and helps to find reaction identifiers quickly:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB

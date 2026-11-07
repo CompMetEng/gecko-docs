@@ -1,6 +1,6 @@
 # Upgrade a GECKO 3 project
 
-An existing GECKO 3 project is converted to [project format 4](gecko4-project-format.md) in one call that first lists its steps and then carries them out. The function is `upgradeGECKOproject` in MATLAB and `geckopy upgrade` (`upgrade_project`) in Python.
+An existing GECKO 3 project is converted to [project format 4](gecko4-project-format.md) in one call that first lists its steps and then performs them. The function is `upgradeGECKOproject` in MATLAB and `geckopy upgrade` (`upgrade_project`) in Python.
 
 ## Functions
 
@@ -13,10 +13,10 @@ An existing GECKO 3 project is converted to [project format 4](gecko4-project-fo
 
 ## Steps of the upgrade
 
-`upgradeGECKOproject` carries out these steps for a project made with GECKO 3 or with an earlier GECKO 4:
+`upgradeGECKOproject` performs these steps for a project made with GECKO 3 or with an earlier GECKO 4:
 
-1. Adapter: in MATLAB, an adapter class without `model_adapter.toml` gets one (`convertAdapterToToml`), and the methods that the class overrides are listed, because they need to be carried over by hand. The class stays. `geckopy upgrade` lists the adapter as a step to do by hand and skips steps 2 and 3 for such a project.
-2. Custom kcats: `data/customKcats.tsv` becomes `data/kcats/custom.tsv` (`convertCustomKcats`). The kcats are those that `applyCustomKcats` gives the ecModel, including which of two entries for the same reaction applies. The column `stoicho` is not carried over, because the complex stoichiometry comes from `applyComplexData`.
+1. Adapter: in MATLAB, an adapter class without `model_adapter.toml` gets one (`convertAdapterToToml`), and the methods that the class overrides are listed, because they need to be converted by hand. The class stays. `geckopy upgrade` lists the adapter as a step to do by hand and skips steps 2 and 3 for such a project.
+2. Custom kcats: `data/customKcats.tsv` becomes `data/kcats/custom.tsv` (`convertCustomKcats`). The kcats are those that `applyCustomKcats` gives the ecModel, including which of two entries for the same reaction applies. The column `stoicho` is not copied, because the complex stoichiometry comes from `applyComplexData`.
 3. Stored predictions: `data/DLKcat.tsv` and stored OpenKineticsPredictor results become kcat source files (`kcatsFromDLKcat`, and `kcatsFromOKP` with `'useStored'`). No prediction is run.
 4. Saved ecModels: The ecModels in `models/*.yml` made with GECKO 3 get their protein usage and pool reactions turned forward (`upgradeEcModel`).
 5. Project format: `project_format = 4` is written to `model_adapter.toml`.

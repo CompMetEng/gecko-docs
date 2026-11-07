@@ -156,9 +156,9 @@ screen.drop(columns="_positions").head(20)
 :::
 ::::
 
-The result is a table with one row per kcat or tied group, ranked by leverage weighted by trust: the reaction ID (`rxnId`, Python `rxn_id`), the number of isozyme copies, the source group, the current value, the leverage, and `cumLeverageShare` (Python `cum_leverage_share`), the running fraction of the total combined ranking value (leverage weighted by trust) carried by the row and all rows above it. Leverage is the largest change of the plain RMSE caused by one of the two perturbations. A hidden column (`positions`, Python `_positions`) holds the indices into `ec.rxns` that `selectTunableMask` needs.
+The result is a table with one row per kcat or tied group, ranked by leverage weighted by trust: the reaction ID (`rxnId`, Python `rxn_id`), the number of isozyme copies, the source group, the current value, the leverage, and `cumLeverageShare` (Python `cum_leverage_share`), the running fraction of the total combined ranking value (leverage weighted by trust) contributed by the row and all rows above it. Leverage is the largest change of the plain RMSE caused by one of the two perturbations. A hidden column (`positions`, Python `_positions`) holds the indices into `ec.rxns` that `selectTunableMask` needs.
 
-The top rows are what a curator can look at first, whether or not a tuning search follows. In one study on ecYeastGEM (not reproduced from the repository), a few kcats carried most of what a tuning run can achieve, and they tended to be implausible database values.
+The top rows are what a curator can look at first, whether or not a tuning search follows. In one study on ecYeastGEM (not reproduced from the repository), a few kcats accounted for most of what a tuning run can achieve, and they tended to be implausible database values.
 
 The screen costs one simulation per condition and per kcat group (two probes per group plus a baseline), which is comparable to the budget of a full tuning run. On the `full_ecModel` tutorial the screen runs 8413 simulations (4206 kcat groups, two probes each, and a baseline). With `nProc` and `n_proc` set to 8, the Python screen took 2.8 h. In MATLAB a simulation took 3.6 s with eight processes, an estimate of 8.4 h for the full screen. Both runs used Gurobi; the difference between the two was not investigated. `nProc` (Python `n_proc`) parallelises it as it does the tuning; in MATLAB, values above 1 need the Parallel Computing Toolbox.
 
@@ -208,7 +208,7 @@ print(findings_tsv(findings))
 
 Each finding names a reaction, its checks (`no-ec-evidence`, `repeated-value`, `ec-maximum`, `magnitude`, `custom-duplicate`) and a `detail` in words. Checks that need `ecStats` are skipped when it is absent. Isozyme copies that the assignment could not distinguish, the grouping of `tie_isozymes`, are reported once. Standard fallbacks (`standard-fallback`) and tied groups (`tied-isozymes`) are deliberate choices and are reported when `include` lists them.
 
-Findings are ranked by `leverage` when it is given: the per-kcat effect from the screen, expanded from tie groups to the individual positions of `ec.rxns` through the position column of the screen. Without `leverage` the findings stay in input order. `coverage` (a share of the total leverage of the flagged rows) or `top` (a number of rows) truncates the report. `coverage` adapts to the model, since it keeps as many rows as carry that share of the flagged leverage, where a fixed `top` does not. In the same study the checks flagged around 1,900 of 4,834 kcats before truncation, which is too long a report to read. Stricter check thresholds do not shorten it as well as truncation by leverage, since looking odd (what the checks measure) and mattering (what leverage measures) are unrelated, so a stricter threshold removes high-leverage entries as readily as low-leverage ones.
+Findings are ranked by `leverage` when it is given: the per-kcat effect from the screen, expanded from tie groups to the individual positions of `ec.rxns` through the position column of the screen. Without `leverage` the findings stay in input order. `coverage` (a share of the total leverage of the flagged rows) or `top` (a number of rows) truncates the report. `coverage` adapts to the model, since it keeps as many rows as hold that share of the flagged leverage, where a fixed `top` does not. In the same study the checks flagged around 1,900 of 4,834 kcats before truncation, which is too long a report to read. Stricter check thresholds do not shorten it as well as truncation by leverage, since looking odd (what the checks measure) and mattering (what leverage measures) are unrelated, so a stricter threshold removes high-leverage entries as readily as low-leverage ones.
 
 ## Tune
 
@@ -257,7 +257,7 @@ Growth that needs special handling for the organism, such as forced anaerobic co
 The final RMSE alone does not show whether a tuned kcat can be trusted:
 
 1. **Number and size of the changes.** A result that moves nearly every kcat by a little has not identified anything. `n_changed` (MATLAB `nChanged`) counts the kcats that differ from the prior by more than a relative tolerance (default 0.02). The module `geckopy.kcat_tuning.evotune.parsimony` also has `fold_change` and `source_movement`; `parsimony_frontier` and `best_parsimonious` (MATLAB `parsimonyFrontier`, `bestParsimonious`) trade the number of changed kcats against the fit.
-2. **Impact share.** `parsimony.impact_share` reports the fraction of the total achievable improvement that the changed kcats carry. It separates few, large and consequential changes from sparsity. It is unweighted, unlike the trust-weighted `cum_leverage_share` of the screen.
+2. **Impact share.** `parsimony.impact_share` reports the fraction of the total achievable improvement that the changed kcats account for. It separates few, large and consequential changes from sparsity. It is unweighted, unlike the trust-weighted `cum_leverage_share` of the screen.
 3. **Reproducibility.** A run with another `seed` should give large corrections (beyond about two-fold) in the same direction and within a small factor of each other. Otherwise the search has found a flat direction, and `prior_penalty_weight` is the first setting to adjust.
 4. **Generalisation.** Data that were not fitted score the tuned and the untuned model. A large improvement on the fitted conditions without an improvement elsewhere indicates overfitting to a thin dataset.
 
@@ -283,7 +283,7 @@ rows = result.corrections(
 open("corrections.tsv", "w").write(corrections_tsv(rows))
 ```
 
-`cumulative_share` of a row is the running fraction of the total leverage that the list has accounted for. The total is summed over the searched kcats, and each isozyme copy carries the leverage of its group, so a tied group counts once per copy. The reading can stop once the value stops climbing. This is the tuning-time counterpart of `review_assignment`: the review flags the kcats that need curation before a run, and the corrections list the kcats that the run changed and how far each change can be trusted.
+`cumulative_share` of a row is the running fraction of the total leverage that the list has accounted for. The total is summed over the searched kcats, and each isozyme copy has the leverage of its group, so a tied group counts once per copy. The reading can stop once the value stops climbing. This is the tuning-time counterpart of `review_assignment`: the review flags the kcats that need curation before a run, and the corrections list the kcats that the run changed and how far each change can be trusted.
 
 ## Troubleshooting
 

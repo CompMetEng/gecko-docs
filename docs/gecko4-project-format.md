@@ -34,7 +34,7 @@ The file holds the parameters that an adapter class sets in GECKO 3. Paths are r
 | `[matlab]` | names of MATLAB functions for the anaerobic model and the protein content of the biomass. GECKO alone reads this section |
 | `[matlab.params]` | parameters that GECKO uses and geckopy does not use |
 
-`ModelAdapterManager.getAdapter` and `ModelAdapterManager.setDefault` take the project folder or the TOML file and return a `TomlAdapter`. A class that needs more code can subclass `TomlAdapter`. In geckopy, `ModelAdapter.from_folder` reads the folder. An adapter class of GECKO 3 keeps working, and `convertAdapterToToml` writes it as `model_adapter.toml` and lists the methods it cannot carry over.
+`ModelAdapterManager.getAdapter` and `ModelAdapterManager.setDefault` take the project folder or the TOML file and return a `TomlAdapter`. A class that needs more code can subclass `TomlAdapter`. In geckopy, `ModelAdapter.from_folder` reads the folder. An adapter class of GECKO 3 keeps working, and `convertAdapterToToml` writes it as `model_adapter.toml` and lists the methods it cannot convert.
 
 ## Kcat source files
 
@@ -59,7 +59,7 @@ A kcat source file stores the kcats of one source. Each row is keyed by the conv
 
 ## BRENDA data
 
-GECKO does not ship BRENDA data. `fetchBrendaAsset` downloads the files `kcat.tsv`, `sa.tsv`, `mw.tsv` and `measurements.tsv` of the toolbox-assets release `brenda-2026.1-1` (BRENDA 2026.1, CC BY 4.0) on first use, checks them against the checksums of the toolbox-assets manifest, and unpacks them into `databases/brenda-2026.1-1` in the GECKO folder. The release also holds `sequences.fasta`, `substrates.tsv` and `kcatCombineParams.tsv`. geckopy reads the same release (`fetch_brenda_asset`).
+GECKO does not include BRENDA data. `fetchBrendaAsset` downloads the files `kcat.tsv`, `sa.tsv`, `mw.tsv` and `measurements.tsv` of the toolbox-assets release `brenda-2026.1-1` (BRENDA 2026.1, CC BY 4.0) on first use, checks them against the checksums of the toolbox-assets manifest, and unpacks them into `databases/brenda-2026.1-1` in the GECKO folder. The release also holds `sequences.fasta`, `substrates.tsv` and `kcatCombineParams.tsv`. geckopy reads the same release (`fetch_brenda_asset`).
 
 `kcat.tsv` and `sa.tsv` record a maximum and a median per EC number, substrate and organism. `kcat_aggregate_brenda = "max"` (default) or `"median"` selects the value for `fuzzyKcatMatching` and `loadBRENDAdata`, and `'kcatAggregation'` sets it for one call.
 
