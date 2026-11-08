@@ -383,7 +383,7 @@ MATLAB accepts the options as name-value pairs (`sensitivityTuning(ecModel, 'fol
 
 Both toolboxes also provide a CMA-ES-based kcat tuning (`cmaesKcatTuning` in MATLAB, `cmaes_kcat_tuning` in Python), described in [Tuning against experimental data](tuning-against-experimental-data.md).
 
-`tunedKcats` (Python `tuning_result`) documents which kcat values were changed, with their previous value, source and the catalysed reaction. It is inspected to check whether a changed value was gathered incorrectly from a kcat source. In a full ecModel, `ec.source` of a tuned reaction reads `sensitivityTuning`, and `ec.notes` holds the kcat before the tuning and its source (`preTuneKcat=<value> | source:<source>`). A reaction that an earlier run has tuned keeps the notes of that run. In a light ecModel, `ec.source` and `ec.notes` are not changed. Python `TunedKcatsResult.corrections()` returns the changes as the list of corrections that [Tuning against experimental data](tuning-against-experimental-data.md#read-the-result) describes.
+`tunedKcats` (Python `tuning_result`) documents which kcat values were changed, with their previous value, source and the catalysed reaction. It is inspected to check whether a changed value was gathered incorrectly from a kcat source. `ec.source` of a tuned reaction keeps its origin and detail and gains the tuning status, for example `brenda (wc=0, origin=1) | tuned=sensitivity (prior=0.05)`, where the prior is the kcat before the first tuning (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). A reaction that an earlier run has tuned keeps the prior of that run and adds no second `sensitivity`. A source that is empty is written as `unknown`. `ec.notes` is not changed. In a light ecModel the status is added to every ec row of the tuned reaction. Python `TunedKcatsResult.corrections()` returns the changes as the list of corrections that [Tuning against experimental data](tuning-against-experimental-data.md#read-the-result) describes.
 
 :::{admonition} Many kcat values are changed during tuning
 :class: note
@@ -472,7 +472,7 @@ print(conv_kcat)
 :::
 ::::
 
-The converted kcat is 5.3358, rounded to 5.34. The value in the ecModel is replaced with the new literature value, either documented in `data/kcats/custom.tsv` (see [Applying kcats](applying-kcats.md#provide-custom-kcat-values)) or applied directly. `setKcatForReactions` (Python `set_kcat_for_reactions`) sets `ec.kcat` and `ec.source` (`setKcatForReactions`) of the reaction, and `applyKcatConstraints` (Python `apply_kcat_constraints`) transfers the new value to the stoichiometric matrix:
+The converted kcat is 5.3358, rounded to 5.34. The value in the ecModel is replaced with the new literature value, either documented in `data/kcats/custom.tsv` (see [Applying kcats](applying-kcats.md#provide-custom-kcat-values)) or applied directly. `setKcatForReactions` (Python `set_kcat_for_reactions`) sets `ec.kcat` of the reaction and `ec.source` to `manual`, and `applyKcatConstraints` (Python `apply_kcat_constraints`) transfers the new value to the stoichiometric matrix:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
