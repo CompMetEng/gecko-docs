@@ -36,14 +36,14 @@ The loop stops in one of four cases:
 
 - The target growth rate is reached.
 - No enzyme limits growth. The function then raises the upper bound of `prot_pool_exchange` to the usage needed for the highest growth rate that the pool allows, and this growth rate becomes the target.
-- An enzyme is selected more than `iterPerEnzyme` times (default 5; 0 removes the limit). The loop stops with a warning, and the target is not reached.
-- The total number of iterations exceeds (`iterPerEnzyme` + 1) times the number of measured enzymes, with 1000 for `iterPerEnzyme` when it is 0. The loop stops with a warning, and the target is not reached.
+- An enzyme is selected more than `iterPerEnzyme` times (default 5; 0 removes the limit). The loop stops and prints a message (MATLAB: a printed line that starts with `WARNING:`, not a MATLAB warning; Python: a logged warning), and the target is not reached.
+- The total number of iterations exceeds (`iterPerEnzyme` + 1) times the number of measured enzymes, with 1000 for `iterPerEnzyme` when it is 0. The loop stops and prints such a message, and the target is not reached.
 
 In the first two cases, a final pass minimises the protein pool usage at the target growth rate (± 0.25 %), sets each raised bound to the usage in that solution, and restores the measured concentration where the usage is lower. The function also raises the upper bound of the biomass reaction to the target when it is lower. `ec.concs` keeps the measured values.
 
 With `perComplex`, the measured subunits of a complex form one unit. Units are ranked by the reduced costs of their usage reactions, and the subunits of a unit are raised and lowered by the same factor, so levelled concentrations stay levelled. The limit of `iterPerEnzyme` counts per complex.
 
-When the ecModel has no solution before the relaxation, the function warns (MATLAB: `flexibilizeEnzConcs:infeasible`) and returns an empty result.
+When the ecModel has no solution before the relaxation, the function warns (MATLAB: `flexibilizeEnzConcs:infeasible`) and returns an empty result (MATLAB: a `flexEnz` structure with empty fields).
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB

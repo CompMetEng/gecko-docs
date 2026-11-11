@@ -49,7 +49,7 @@ Build a full ecModel unless the size of the full model makes the simulations too
 | Add reactions to an ecModel | `addNewRxnsToEC` raises an error | `add_new_rxns_to_ec` raises a `NotImplementedError` |
 | Convert `customKcats.tsv` to `custom.tsv` | `convertCustomKcats` raises an error | `convert_custom_kcats` raises a `ValueError` |
 
-On a light ecModel, `assignKcats` and `collectKcats` skip the step that fills kcats from other isozymes. A `custom.tsv` written from a full ecModel applies to a light ecModel too. `applyKcatConstraints`, `applyCustomKcats`, `getStandardKcat`, `applyComplexData`, `sensitivityTuning` and `getSubsetEcModel` work on both structures.
+On a light ecModel, `assignKcats` and `collectKcats` skip the step that fills kcats from other isozymes. A `custom.tsv` written from a full ecModel applies to a light ecModel too. `applyKcatConstraints`, `getStandardKcat`, `applyComplexData`, `sensitivityTuning` and `getSubsetEcModel` work on both structures.
 
 The tutorial script `tutorials/full_ecModel/code/plotlightVSfull.m` of GECKO builds a light and a full ecModel of yeast-GEM with the same kcats, maximises growth in both, and plots the two flux distributions mapped to the reactions of the GEM.
 

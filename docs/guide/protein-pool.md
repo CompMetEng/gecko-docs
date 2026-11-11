@@ -178,7 +178,7 @@ fit = fit_sigma(ec_model)
 print(fit.sigma)
 ```
 
-`fit_sigma` changes `ec_model` in place and returns a `SigmaFitterResult` with `sigma`, and the arrays `sigma_grid`, `growth_grid` and `error_grid` (the error in percent) for a plot. The keywords `growth_rate`, `p_tot` and `f` replace the adapter values; a `growth_rate` of 0 raises a `ValueError`. The keyword `method` selects the search:
+`fit_sigma` changes `ec_model` in place and returns a `SigmaFitterResult` with `sigma`, and the arrays `sigma_grid`, `growth_grid` and `error_grid` (the error in percent) for a plot. The keywords `growth_rate`, `p_tot` and `f` replace the adapter values; a `growth_rate` that is not above 0 raises a `ValueError`. The keyword `method` selects the search:
 
 - `method="grid"` (default) tests $\sigma$ = 1/n, 2/n, ..., 1 with n = `n_sigma_steps` (default 100, the same values as `sigmaFitter`) and selects the first $\sigma$ with the smallest error. It has no tolerance: when the growth rates on a plateau differ by rounding errors of the solver, the result can be a later $\sigma$ of the plateau.
 - `method="bisect"` uses that the growth rate does not decrease when $\sigma$ increases. It searches the smallest $\sigma$ at which the growth rate reaches the target, to a resolution of $10^{-6}$, so the result is in general not a multiple of 0.01. When the growth rate at $\sigma$ 1 is below the target, it searches the smallest $\sigma$ at which the growth rate is within a relative $10^{-9}$ of the growth rate at $\sigma$ 1, the start of the plateau. The arrays of the result contain the $\sigma$ values that were tested.
@@ -208,7 +208,7 @@ A fitted $\sigma$ close to 1 means that the enzymes work at their maximum rate o
 | Error `setProtPoolSize:noPoolExchange` (Python: `ValueError`) that the model has no `prot_pool_exchange` | the model is a conventional GEM, or the reaction was removed after `makeEcModel` | build the ecModel with `makeEcModel` |
 | `calculateFfactor` prints a warning and returns 0.5 | there is no `data/paxDB.tsv` and no `protData` was given | add the file, give `protData`, or keep the adapter value of $f$ |
 | $f$ is 0 or close to 0 | the protein identifiers of the data do not match `ec.enzymes` | map the identifiers of the data to UniProt identifiers |
-| Error `sigmaFitter:growthRate` (Python: `ValueError` for a growth rate of 0) | the target growth rate, given or read from `gr_exp`, is not above 0 | set `gr_exp`, or give the growth rate |
+| Error `sigmaFitter:growthRate` (Python: `ValueError`) | the target growth rate, given or read from `gr_exp`, is not above 0 | set `gr_exp`, or give the growth rate |
 | `fit_sigma` raises a `ValueError` that `model.adapter` is None | the ecModel has no adapter attached, and `growth_rate`, `p_tot` or `f` is not given | attach the adapter, or give `growth_rate`, `p_tot` and `f` |
 | The fitted $\sigma$ is 1, or the error is large at every $\sigma$ | the kcats, the nutrient constraints or the network limit growth | see [Fit sigma or tune the kcats](#fit-sigma-or-tune-the-kcats) |
 | The growth rate is free after `sigmaFitter` or `fit_sigma`, although its bounds were fixed before | both set the bounds of the objective reaction to 0 and 1000, and the returned ecModel keeps them | set the bounds of the growth reaction again |

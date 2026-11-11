@@ -361,3 +361,7 @@ abc_max
 getcarbonnum
 getrSample
 updateprior
+findMaxValue
+find_max_value
+anaerobicModel_GECKO
+changeMedia

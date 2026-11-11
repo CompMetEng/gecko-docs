@@ -183,7 +183,7 @@ r_0079	P38972	5.3357625	custom	specific activity 2.15 umol/min/mg, MW 148905 g/m
 | Many kcats are tuned, or one kcat is raised several times | The target growth rate is too high, a nutrient uptake is constrained, or the GEM cannot reach the growth rate | Check `gR_exp`, the uptake bounds and the growth rate of the conventional GEM |
 | Python `sensitivity_tuning` stops at `max_iterations` | Raising kcats alone does not reach the target growth rate | Check the target growth rate and the bounds |
 | `ValueError` that `prot_to_ignore` has no usage reaction for a protein (Python, full ecModel) | The model has no usage reaction for this UniProt ID | Correct the ID |
-| Error `sigmaFitter:growthRate` (MATLAB), or `ValueError` that `growth_rate` is 0 (Python) | The target growth rate is not above 0 (MATLAB) or is 0 (Python) | Set `gR_exp` (Python `gr_exp`) in the model adapter, or give the growth rate |
+| Error `sigmaFitter:growthRate` (Python: `ValueError`) | The target growth rate is not above 0 | Set `gR_exp` (Python `gr_exp`) in the model adapter, or give the growth rate |
 | A curated kcat is gone after `assignKcats` | The value was set with `setKcatForReactions`, and `assignKcats` replaced it with the value from the kcat source files | Add the value to `custom.tsv` |
 
 ## See also

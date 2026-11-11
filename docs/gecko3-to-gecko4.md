@@ -11,10 +11,9 @@ A GECKO 3 script keeps running after each change in this box and returns a diffe
 - `fuzzyKcatMatching` divides a BRENDA kcat by the coefficient of the substrate the kcat was measured on. GECKO 3 divided by the smallest coefficient in the reaction.
 - `assignKcats` and `collectKcats` use the preset `brenda_ec_tree` when `model_adapter.toml` sets no other.
 - `calculateFfactor` averages each protein over the samples in which it is measured.
-- `sigmaFitter` returns the smallest sigma whose growth rate differs from the target by at most the smallest difference plus 1e-9 times the growth rate at the smallest difference. The 1e-9 tolerance is not part of GECKO 3. geckopy `fit_sigma` takes the first grid point with the smallest error (default `method="grid"`) or a continuous sigma (`method="bisect"`).
+- `sigmaFitter` returns the smallest sigma within a tolerance of the smallest error, and the returned ecModel has the protein pool of that sigma (see below the first table).
 - `flexibilizeEnzConcs` keeps an upper bound that is higher than the new bound, and stops after a total number of iterations.
 
-The calls in [Changes that raise an error](#changes-that-raise-an-error) stop a GECKO 3 script: `runDLKcat` and `writeDLKcatInput` always, and `sigmaFitter`, `setProtPoolSize`, `getConcControlCoeffs` and `loadConventionalGEM` under the conditions listed there.
 :::
 
 ## Changes by consequence
@@ -29,11 +28,13 @@ The calls in [Changes that raise an error](#changes-that-raise-an-error) stop a 
 | Protein fraction `f` | `calculateFfactor` averages over all samples, so a protein missing in one sample is left out of both totals | the average is over the samples in which the protein is measured | Recalculate `f` when the proteomics file has missing values |
 | Enzyme bounds of `flexibilizeEnzConcs` | the new upper bound of an enzyme replaces the old bound, also when the old bound is higher; the iterations have no total limit | an upper bound is never lowered, and the iterations have a total limit (see below the table) | Check the warnings and `flexEnz` |
 | File name of `loadConventionalGEM` | `.xml` is appended to every name | a name ending in `.yml` is loaded as YAML; `.xml` is appended to a name without `.xml` or `.yml` | none |
-| Sigma fit | `sigmaFitter` returns the sigma with the smallest error | it returns the smallest sigma within a tolerance of the smallest error (see below the table) | Refit when the growth rate is flat over a range of sigma |
+| Sigma fit | `sigmaFitter` returns the sigma with the smallest error, and an ecModel whose protein pool is set for sigma 1 | it returns the smallest sigma within a tolerance of the smallest error (see below the table), and an ecModel whose protein pool is set for that sigma | Refit when the growth rate is flat over a range of sigma; a script that called `setProtPoolSize` after `sigmaFitter` gets the same pool |
 
-`flexibilizeEnzConcs` stops with a warning after a total of (`iterPerEnzyme` + 1) × (number of measured enzymes) iterations, with 1000 for `iterPerEnzyme` when it is 0. On an infeasible input model, it raises the warning `flexibilizeEnzConcs:infeasible` and returns an empty `flexEnz`. `sigmaFitter` returns the smallest sigma whose growth rate differs from the target by at most the smallest difference plus 1e-9 times the growth rate at the smallest difference; geckopy `fit_sigma` has no tolerance in its default grid.
+`flexibilizeEnzConcs` stops and prints a message after a total of (`iterPerEnzyme` + 1) × (number of measured enzymes) iterations, with 1000 for `iterPerEnzyme` when it is 0. On an infeasible input model, it warns with the identifier `flexibilizeEnzConcs:infeasible` and returns `flexEnz` with empty fields. `sigmaFitter` returns the smallest sigma whose growth rate differs from the target by at most the smallest difference plus 1e-9 times the growth rate at the smallest difference; geckopy `fit_sigma` has no tolerance in its default grid.
 
 ### Changes that raise an error
+
+The changes in this table, and calls of removed functions (see [Removed](#removed)), stop a GECKO 3 script.
 
 | Change | Condition | Action |
 | --- | --- | --- |
@@ -41,18 +42,17 @@ The calls in [Changes that raise an error](#changes-that-raise-an-error) stop a 
 | `loadEcModel` checks the ecModel format | `gecko_format` in the file is higher than 4 | Update GECKO |
 | Adapter keys | `model_adapter.toml` has a key that is not in `adapterParameters.tsv` | Remove or rename the key, or place a key that GECKO uses and geckopy does not use under `[matlab.params]` |
 | Options of `assignKcats` and `upgradeGECKOproject` | an option name that the function does not have | Correct the option name |
-| `runDLKcat`, `writeDLKcatInput` | every call: the functions are deprecated and raise an error | Use `kcatsFromDLKcat(ecModel, 'via', 'docker')` |
+| `runDLKcat`, `writeDLKcatInput` | every call in MATLAB: the functions are deprecated and raise an error (geckopy `run_dlkcat` and `write_dlkcat_input` warn and still run) | Use `kcatsFromDLKcat(ecModel, 'via', 'docker')` |
 | `sigmaFitter` raises `sigmaFitter:growthRate` | the target growth rate is not above 0 | Give a growth rate above 0 |
 | `setProtPoolSize` raises `setProtPoolSize:noPoolExchange` | the model has no `prot_pool_exchange` (GECKO 3 left the model unchanged) | Give an ecModel made by `makeEcModel` |
 | `getConcControlCoeffs` raises `getConcControlCoeffs:infeasible` | the model has no optimal solution | Make the model feasible first |
-| `loadConventionalGEM` raises `loadConventionalGEM:extension` | `convGEM` of the model adapter ends neither in `.xml` nor in `.yml` | Give the extension in `convGEM` |
 | `collectKcats` and `assignKcats` raise `collectKcats:legacyCustomKcats` | a stage lists `custom`, `data/kcats/custom.tsv` does not exist, and `data/customKcats.tsv` does | Run `convertCustomKcats(ecModel)` |
 
 ### Changes of the project
 
 A GECKO 3 project is configured by an adapter class and keeps its kcats in `data/DLKcat.tsv`, `data/customKcats.tsv` and in the variables of the script. A GECKO 4 project is configured by `model_adapter.toml`, keeps each kcat source in its own file in `data/kcats`, and records the ecModel format in the saved model. `assignKcats` writes its decisions to `output/<model id>_kcatDecisions.tsv`, with column names in `snake_case` (`ec_rxn`, `spread_log10`, `sd_log10`); the table that `collectKcats` returns keeps `camelCase` names. [Project format 4](gecko4-project-format.md) describes the files, and [Upgrade a GECKO 3 project](gecko3-upgrade-project.md) the steps that convert a project.
 
-Adapter classes keep working, but they are deprecated as a project format (see [Deprecated](#deprecated)). Functions with name-value arguments also take them positionally, in the GECKO 3 order: `loadEcModel(filename, modelAdapter)` and `loadEcModel('filename', filename)` are equivalent. A call uses one of the two forms for all its optional arguments.
+Functions with name-value arguments also take them positionally, in the GECKO 3 order: `loadEcModel(filename, modelAdapter)` and `loadEcModel('filename', filename)` are equivalent. A call uses one of the two forms for all its optional arguments.
 
 ### Adapter classes
 
@@ -95,7 +95,8 @@ kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, thr
 | --- | --- |
 | BRENDA files in `databases/` | `fetchBrendaAsset` downloads the files of the toolbox-assets release `brenda-2026.1-1` into `databases/brenda-2026.1-1` on first use. A project keeps its own files in `data/brenda` |
 | `truncateValues` | none; no function of GECKO 4 calls it |
-| `bayesianSensitivityTuning` and its helpers `abc_max`, `getcarbonnum`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels) | `cmaesKcatTuning`, the advanced kcat tuning, with the data files `data/evotune*.tsv` (see [Tune kcats against experimental data](guide/advanced-tuning.md)). A stub in `src/deprecated` raises an error that names it. |
+| `findMaxValue` | none; geckopy keeps a port as `find_max_value` |
+| `bayesianSensitivityTuning` and its helpers `abc_max`, `getcarbonnum`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels); `anaerobicModel_GECKO` and `changeMedia` of the same folder are now in `tutorials/full_ecModel/code` | `cmaesKcatTuning`, the advanced kcat tuning, with the data files `data/evotune*.tsv` (see [Tune kcats against experimental data](guide/advanced-tuning.md)). A stub in `src/deprecated` raises an error that names it. |
 | `submitOpenKineticsPredictor`, `fetchOpenKineticsPredictor`, `writeOpenKineticsPredictorInput`, `readOpenKineticsPredictorOutput` (public in GECKO 4 pre-releases) | `kcatsFromOKP` |
 
 ## Deprecated
