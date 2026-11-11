@@ -1,12 +1,12 @@
 # Set custom kcats
 
-A project keeps the kcats that it curates in `data/kcats/custom.tsv`, for example a value from the literature or a value kept after [kcat tuning](kcat-tuning.md). At the end of this page, the project has a `custom.tsv` that `assignKcats` reads before all other sources, and the ecModel has the custom kcats applied.
+`data/kcats/custom.tsv` holds the curated kcats of a project, for example a value from the literature or a value kept after [kcat tuning](kcat-tuning.md). The result is a `custom.tsv` that `assignKcats` reads before all other sources, and an ecModel with the custom kcats applied.
 
 ## Functions
 
 | MATLAB | Python | Note |
 | --- | --- | --- |
-| `assignKcats` | `assign_kcats` | decide the kcats, with the custom kcats first, and apply them; the report lists the rows that were not applied |
+| `assignKcats` | `assign_kcats` | determine the kcats, with the custom kcats first, and apply them; the report lists the rows that were not applied |
 | `convertCustomKcats` | `convert_custom_kcats` | convert `data/customKcats.tsv` of a GECKO 3 project into `data/kcats/custom.tsv` |
 | `setKcatForReactions` | `set_kcat_for_reactions` | change `ec.kcat` of named reactions in the model |
 | `applyKcatConstraints` | `apply_kcat_constraints` | apply `ec.kcat` to the stoichiometry |
@@ -22,7 +22,7 @@ The file is tab-separated. It needs the columns `kcat` and `source`, and `rxn`, 
 | `rxn` | the identifier of the reaction in the conventional GEM, with `_REV` for the reverse direction. Without `enzymes`, the row applies to every isozyme of the reaction |
 | `enzymes` | the UniProt accessions of the enzyme, joined by ` + ` in any order. Without `rxn`, the row applies to every reaction with exactly this enzyme set |
 | `kcat` | the kcat in s^-1 |
-| `source` | where the value comes from, for example `custom`; `ec.source` holds it in lower case |
+| `source` | where the value comes from, for example `custom`; `ec.source` holds it in lower case, with each run of characters other than letters and digits replaced by `_` |
 | `note` | free text, for example the reference |
 
 ```text
@@ -65,30 +65,7 @@ A row in `partial` shares at least half of its enzymes with a reaction of the ec
 
 ## Convert the custom kcats of a GECKO 3 project
 
-A GECKO 3 project keeps its custom kcats in `data/customKcats.tsv`. `convertCustomKcats` writes them as `data/kcats/custom.tsv`, one row per reaction, with the notes of the entry in `note`. When two entries are for the same reaction, the entry that `applyCustomKcats` would apply is kept. The function needs the full ecModel, and it does not overwrite an existing `custom.tsv`. Without `custom.tsv`, `collectKcats` applies `data/customKcats.tsv` directly. [Upgrade a GECKO 3 project](../gecko3-upgrade-project.md) describes the other steps of an upgrade.
-
-::::{tab-set}
-:::{tab-item} Ⓜ️ MATLAB
-:sync: matlab
-
-```matlab
-[file, report] = convertCustomKcats(ecModel);
-```
-
-`report.rows` is the number of rows written, and `report.partial` lists the reactions whose enzymes match an entry in part.
-:::
-:::{tab-item} 🐍 Python
-:sync: python
-
-```python
-from geckopy import convert_custom_kcats
-
-path, report = convert_custom_kcats(ec_model)
-```
-
-`report["rows"]` is the number of rows written.
-:::
-::::
+`convertCustomKcats` (Python: `convert_custom_kcats`) writes the custom kcats of `data/customKcats.tsv` as `data/kcats/custom.tsv`; it needs the full ecModel and does not overwrite an existing `custom.tsv`. [Upgrade a GECKO 3 project](../gecko3-upgrade-project.md) describes this conversion with the other steps of an upgrade.
 
 ## Change kcats by hand
 

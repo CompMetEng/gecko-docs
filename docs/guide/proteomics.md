@@ -13,11 +13,15 @@ Load the absolute proteomics data and the exchange fluxes of one experiment, bou
 | `getIsozymeCoverage` | `get_isozyme_coverage` | lists the reactions with a measured and an unmeasured isozyme |
 | `zeroUnmeasuredIsozymes` | `zero_unmeasured_isozymes` | lowers the usage bound of the unmeasured isozymes of these reactions |
 | `calculateFfactor` | `calculate_f_factor` | calculates f from the proteomics data |
-| `setProtPoolSize` | `set_prot_pool_size` | sets the upper bound of `prot_pool_exchange` to Ptot × f × sigma |
+| `setProtPoolSize` | `set_prot_pool_size` | sets the upper bound of `prot_pool_exchange` to $P_{tot} \cdot f \cdot \sigma \cdot 1000$ mg/gDCW |
 | `loadFluxData` | `load_flux_data` | reads `fluxData.tsv` |
 | `constrainFluxData` | `apply_flux_data_constraints` | sets the bounds of the growth rate and the exchange reactions of one condition |
 
-## Choices
+## Setup
+
+A full ecModel with kcats and a protein pool (see [Build an ecModel](first-ecmodel.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python), and the files `data/proteomics.tsv` and `data/fluxData.tsv` of the project. In MATLAB, the model adapter of the project is the default adapter; in Python, the examples read the project folder from `params = ec_model.adapter.params`. The examples assume a `proteomics.tsv` with two conditions of three replicates each, and select the first condition in both files.
+
+## Choose the options
 
 | Choice | Options | Criteria |
 | --- | --- | --- |
@@ -33,14 +37,14 @@ Start with `'loose'` and `'max'`. The ecModel then has a solution also when the 
 
 `data/proteomics.tsv` is tab-delimited with one header row. The first column holds the UniProt identifiers, and every following column holds one replicate, in mg/gDCW. The replicates of the first condition come first, then those of the second condition, and so on. The header must have one column more than the total number of replicates; otherwise `loadProtData` raises the error `loadProtData:replicateMismatch` (Python: `ValueError`). A cell with `NA`, `na`, `NaN`, `#VALUE!` or no value is not measured, and a row without an identifier is removed. Relative proteomics data cannot be used: a concentration in another unit gives wrong bounds and no error.
 
-`data/fluxData.tsv` is tab-delimited with one header row and one row per condition. The columns are the condition name, the total protein content Ptot (g/gDCW), the growth rate (1/h), and then one column per exchange reaction, in mmol/gDCW/h, negative for uptake and positive for excretion. The header of an exchange column has the form `<metabolite> (<reaction id>)`. Optional columns `evotuneRMSEweight` and `source` can be at any position. A line with a different number of cells than the header raises an error. The `full_ecModel` tutorial of GECKO uses yeast-GEM, where `r_1714` is the glucose exchange:
+`data/fluxData.tsv` is tab-delimited with one header row and one row per condition. The columns are the condition name, the total protein content Ptot (g/gDCW), the growth rate (1/h), and then one column per exchange reaction, in mmol/gDCW/h, negative for uptake and positive for excretion. The header of an exchange column has the form `<metabolite> (<reaction id>)`. Optional columns `evotuneRMSEweight` and `source` can be at any position. A line with a different number of cells than the header raises an error. The first columns of `fluxData.tsv` of the `full_ecModel` tutorial of GECKO, which uses yeast-GEM, where `r_1714` is the glucose exchange (the file has 11 columns):
 
 ```text
 Condition	Ptot	grRate	glucose (r_1714)	CO2 (r_1672)	oxygen (r_1992)	ethanol (r_1761)
 Std	0.4228	0.1	-1.1	2.7	-2.5	1.00E-05
 ```
 
-See [Files in the data folder](data-folder-files.md) for the other files of the project.
+The `proteomics.tsv` of the same tutorial has one condition with three replicates, so it is loaded with `loadProtData(3)`; the `[3, 3]` of the examples below raises `loadProtData:replicateMismatch` on it. See [Files in the data folder](data-folder-files.md) for the other files of the project.
 
 ## Load the proteomics data
 
@@ -140,7 +144,7 @@ The option `removeConstraints` (Python: `remove_constraints`) resets all usage b
 
 ## Limit unmeasured isozymes
 
-A reaction can have a measured isozyme and an unmeasured one. The unmeasured isozyme then draws from the protein pool without a bound, and the ecModel can use it in place of the measured one. `getIsozymeCoverage` lists these reactions and does not change the ecModel. `zeroUnmeasuredIsozymes` runs after `constrainEnzConcs` and lowers the usage bound of the enzymes of the unmeasured isozymes. The method `'zero'` (default) sets the bound to 0; `'detectionLimit'` (Python: `"detection_limit"`) sets it to `limit` in mg/gDCW, by default the smallest concentration above 0 in `ec.concs`. An enzyme that also catalyses a reaction without a measured isozyme is not changed. `ec.concs` is not changed, and no other GECKO function calls these two functions.
+A reaction can have a measured isozyme and an unmeasured one. The unmeasured isozyme then draws from the protein pool without a bound, and the ecModel can use it in place of the measured one. `getIsozymeCoverage` lists these reactions and does not change the ecModel. `zeroUnmeasuredIsozymes` runs after `constrainEnzConcs`, calls `getIsozymeCoverage`, and lowers the usage bound of the enzymes of the unmeasured isozymes. The method `'zero'` (default) sets the bound to 0; `'detectionLimit'` (Python: `"detection_limit"`) sets it to `limit` in mg/gDCW, by default the smallest concentration above 0 in `ec.concs`. An enzyme that also catalyses a reaction without a measured isozyme is not changed. `ec.concs` is not changed, and no other GECKO function calls `zeroUnmeasuredIsozymes`.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -167,7 +171,7 @@ changed = zero_unmeasured_isozymes(ec_model, method="detection_limit")
 
 ## Set the protein pool for the condition
 
-The protein pool is Ptot × f × sigma (see [Set the protein pool](protein-pool.md)). Use the Ptot of the condition from `fluxData.tsv`. `calculateFfactor` divides the summed concentrations of the enzymes of the ecModel by the summed concentrations of all proteins in the data. It uses the proteins that `loadProtData` kept, so the filters change f. To calculate f over all measured proteins of one condition, load the data without filters and select the column of the condition. With several columns, `calculateFfactor` averages each protein over the columns in which it is measured. Sigma is read from `model_adapter.toml` when it is not given.
+The upper bound of the protein pool exchange is $P_{tot} \cdot f \cdot \sigma \cdot 1000$ mg/gDCW (see [Set the protein pool](protein-pool.md)). Use the Ptot of the condition from `fluxData.tsv`. `calculateFfactor` divides the summed concentrations of the enzymes of the ecModel by the summed concentrations of all proteins in the data. It uses the proteins that `loadProtData` kept, so the filters change f. To calculate f over all measured proteins of one condition, load the data without filters and select the column of the condition. With several columns, `calculateFfactor` averages each protein over the columns in which it is measured. Sigma is read from `model_adapter.toml` when it is not given.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -246,6 +250,8 @@ With `'max'`, the growth rate cannot exceed the measured one. A growth rate belo
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
 | `loadProtData:replicateMismatch` (Python: `ValueError` from `load_prot_data`) | the replicate numbers do not add up to the number of replicate columns of `proteomics.tsv` | Correct `replPerCond` (Python: `repl_per_cond`) or the header of the file |
+| `fillEnzConcs:negativeAbundance` (Python: `ValueError` from `fill_enz_concs`) | an enzyme of the ecModel has a negative concentration in the selected condition | Correct `proteomics.tsv` |
+| `IndexError` from `fill_enz_concs` | `data_col` is outside the conditions of `prot_data`; it counts from 0 | Use a column index from 0 to the number of conditions minus 1 |
 | `calculateFfactor` returns 0 (Python: with a warning) | the identifiers in `proteomics.tsv` do not match `ec.enzymes` | Use UniProt identifiers in `proteomics.tsv`, as in `ec.enzymes` |
 | A protein with a replicate of 0 is missing or has a higher mean than expected | a 0 is read as not measured | Set `zerosAsMeasured` (Python: `zeros_as_measured`) to true if the 0 is a measurement |
 | The ecModel is infeasible or grows much slower after `constrainEnzConcs` or `zeroUnmeasuredIsozymes` | enzymes with a bound of 0: measured zeros, or isozymes set to 0 | Load with `zerosAsMeasured` false, use `'detectionLimit'`, or relax with `relaxProteomicsGreedy` |

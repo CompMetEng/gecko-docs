@@ -53,7 +53,7 @@ Convert a conventional GEM into an ecModel by bounding reaction rates with enzym
 :::
 
 :::{grid-item-card} Proteomics integration
-Constrain individual enzyme usage with absolute or relative proteomics measurements.
+Constrain the usage of individual enzymes with absolute proteomics measurements.
 :::
 
 :::{grid-item-card} Light ecModels

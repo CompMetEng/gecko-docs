@@ -4,7 +4,7 @@ The guide shows how to build an enzyme-constrained model (ecModel) from a conven
 
 :::{admonition} GECKO 4 pre-release
 :class: important
-GECKO 4 is a pre-release, and the guide describes GECKO 4. A GECKO 3 user finds the changes of results, functions and names, and the steps to upgrade a project, in [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md).
+GECKO 4 is a pre-release, and the guide describes GECKO 4. For GECKO 3 users, [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md) lists the changes.
 :::
 
 :::{admonition} MATLAB and Python
@@ -32,12 +32,14 @@ The decision pages are in the order in which the choices come up during the work
 | [Choose the ecModel structure](ecmodel-structure.md) | full or light ecModel, matching of genes to UniProt and KEGG, enzyme complexes |
 | [Choose the kcat sources](kcat-sources.md) | the kcat assignment preset, and the treatment of isozymes and of reactions without a kcat |
 | [Set custom kcats](custom-kcats.md) | curated kcats that take precedence over the kcat sources |
-| [Set the protein pool](protein-pool.md) | the values of the total protein content, the enzyme fraction `f` and the saturation factor `sigma` |
+| [Set the protein pool](protein-pool.md) | the values of the total protein content, the enzyme fraction $f$ and the saturation factor $\sigma$ |
 | [Choose a kcat tuning](kcat-tuning.md) | standard or advanced kcat tuning, when the ecModel grows too slowly |
 | [Tune kcats against experimental data](advanced-tuning.md) | the data and the settings of the advanced kcat tuning |
 | [Constrain enzymes with proteomics](proteomics.md) | the integration of measured enzyme concentrations |
 | [Relax proteomics constraints](relaxing-proteomics.md) | the method that loosens proteomics constraints that prevent growth |
-| [Analyse an ecModel](analysis.md) | objectives, flux variability, sampling, flux scanning and context-specific ecModels |
+| [Analyse an ecModel](analysis.md) | objectives, flux variability, sampling and the mapping of fluxes to the conventional GEM |
+| [Find engineering targets](engineering-targets.md) | the reactions and genes to change for the production of a compound |
+| [Make a context-specific ecModel](context-ecmodel.md) | an ecModel of a tissue, cell line or strain, trimmed from a generic ecModel |
 | [Enzyme usage and bottlenecks](enzyme-usage.md) | which enzymes a solution uses and which enzymes limit the objective |
 
 ## Background
@@ -87,6 +89,8 @@ advanced-tuning
 proteomics
 relaxing-proteomics
 analysis
+engineering-targets
+context-ecmodel
 enzyme-usage
 ```
 

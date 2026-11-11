@@ -2,7 +2,7 @@
 
 <!-- docs-site: concept-page -->
 
-GECKO 4 assigns the kcat of each reaction from kcat source files, in an order that `model_adapter.toml` sets. `collectKcats` determines the kcats and does not change the model. `assignKcats` applies the decisions and the kcat constraints. [Choose the kcat sources](guide/kcat-sources.md) describes how the sources are gathered, and [Choose the kcat sources](guide/kcat-sources.md) the steps after the assignment.
+GECKO 4 assigns the kcat of each reaction from kcat source files, in an order that `model_adapter.toml` sets. `collectKcats` determines the kcats and does not change the model. `assignKcats` applies the decisions and the kcat constraints. [Choose the kcat sources](guide/kcat-sources.md) describes how the sources are gathered and assigned, and [Set the protein pool](guide/protein-pool.md) the step after the assignment.
 
 ## Functions
 
@@ -86,7 +86,7 @@ decisions, report = assign_kcats(ec_model)   # changes ec_model in place
 :::
 ::::
 
-`updateKcatSources` has the option `dryRun`, which reports what would be gathered without gathering it. A source that needs an OpenKineticsPredictor API key (`okp_<method>`, and `dlkcat` when `data/DLKcat.tsv` does not exist) gets the status `failed` when no key is found. A file is outdated when its header records other settings than `[kcat_sources.<name>]` asks for, or for `brenda`, `ec_tree` and `homologs` another BRENDA release than the files in use. `custom.tsv` and other files it cannot gather are left as they are.
+`updateKcatSources` has the option `dryRun`, which reports what would be gathered without gathering it. A source that needs an OpenKineticsPredictor API key (`okp_<method>`, and `dlkcat` when `data/DLKcat.tsv` does not exist) gets the status `failed` when it is gathered and no key is found. `dryRun` does not check the key. A file is outdated when its header records other settings than `[kcat_sources.<name>]` asks for, or for `brenda`, `ec_tree` and `homologs` another BRENDA release than the files in use. `custom.tsv` and other files it cannot gather are left as they are.
 
 ## Troubleshooting
 

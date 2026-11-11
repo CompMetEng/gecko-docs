@@ -1,6 +1,6 @@
 # Analyse an ecModel
 
-An ecModel has the structure of a conventional GEM, so every method for a conventional GEM runs on it. GECKO adds functions for the questions that the enzyme constraints raise. At the end of this page, you have chosen the analysis that answers your question, set the objective for it, and compared the result with the conventional GEM where the question needs that comparison.
+An ecModel has the structure of a conventional GEM, so every method for a conventional GEM runs on it. GECKO adds functions that take the enzyme constraints into account and map the results to the reactions of the conventional GEM. At the end of this page, you have chosen the analysis that answers your question, set the objective for it, and compared the result with the conventional GEM where the question needs that comparison.
 
 ## Functions
 
@@ -12,10 +12,41 @@ An ecModel has the structure of a conventional GEM, so every method for a conven
 | `ecFVA` | `ec_fva` | flux variability analysis, mapped to the reactions of the conventional GEM |
 | `plotEcFVA` | (none) | plot the cumulative distribution of the flux ranges |
 | `randomSampling` (RAVEN) | `random_sampling` (raven-toolbox) | draw flux vectors from the solution space |
-| `ecFSEOF` | `ec_fseof` | flux scanning with enforced objective function, for engineering targets |
-| `getSubsetEcModel` | `get_subset_ec_model` | trim a generic ecModel to the reactions and genes of a context-specific GEM |
 
-## The choice
+## Setup
+
+The examples use the model adapter parameters `params`, the ecModel, the conventional GEM that the ecModel was made from, and for some sections the flux data of `data/fluxData.tsv` ([Files in the data folder](data-folder-files.md)):
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+adapter  = ModelAdapterManager.setDefault(pwd);
+params   = adapter.getParameters();
+model    = loadConventionalGEM();
+ecModel  = loadEcModel();        % models/ecModel.yml
+fluxData = loadFluxData();       % data/fluxData.tsv
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+from geckopy import ModelAdapter, load_conventional_gem, load_ec_model, load_flux_data
+
+adapter = ModelAdapter.from_folder("ecMyModel")
+params = adapter.params
+model = load_conventional_gem(adapter)
+ec_model = load_ec_model("ecModel.yml", adapter=adapter)
+flux_data = load_flux_data(params.path / "data" / "fluxData.tsv")
+```
+:::
+::::
+
+[Find engineering targets](engineering-targets.md), [Make a context-specific ecModel](context-ecmodel.md) and [Enzyme usage and bottlenecks](enzyme-usage.md) use the same setup.
+
+## Choose an analysis
 
 | Question | Analysis | Needs | Result |
 | --- | --- | --- | --- |
@@ -23,11 +54,11 @@ An ecModel has the structure of a conventional GEM, so every method for a conven
 | Which flux distribution uses the least protein at this growth rate? | minimise `prot_pool_exchange` at fixed growth | a growth rate, measured or from the first objective | the minimum protein pool usage in mg/gDCW and its flux distribution |
 | How far can each reaction vary? | `ecFVA` | the conventional GEM that the ecModel was made from | the minimum and maximum flux of each reaction of the conventional GEM |
 | How are fluxes distributed over the solution space? | random sampling | a convergence check across independent chains | a matrix of flux vectors |
-| Which reactions and genes to change to make a product? | `ecFSEOF` | a production reaction and the carbon source uptake reaction | reaction and gene targets with a suggested action |
+| Which reactions and genes to change to make a product? | `ecFSEOF`, see [Find engineering targets](engineering-targets.md) | a production reaction and the carbon source uptake reaction | reaction and gene targets with a suggested action |
 | How do the fluxes compare with those of the conventional GEM? | `mapRxnsToConv` | the conventional GEM that the ecModel was made from | a flux vector in the reaction order of the conventional GEM |
-| What does a tissue, cell line or strain do? | `getSubsetEcModel` | a context-specific GEM made from the same GEM as the ecModel | a context-specific ecModel |
+| What does a tissue, cell line or strain do? | `getSubsetEcModel`, see [Make a context-specific ecModel](context-ecmodel.md) | a context-specific GEM made from the same GEM as the ecModel | a context-specific ecModel |
 
-[Enzyme usage and bottlenecks](enzyme-usage.md) answers the questions about single enzymes: which enzymes a solution uses, and which enzymes limit the objective.
+[Enzyme usage and bottlenecks](enzyme-usage.md) describes the analyses of single enzymes: which enzymes a solution uses, and which enzymes limit the objective.
 
 For flux ranges, use `ecFVA`. A [convergence study of the samplers of raven-toolbox](https://raven-docs.readthedocs.io/en/latest/parameter-tuning/studies/sampling-convergence-calibration.html) found no setting that gave converged samples on yeast-GEM, a conventional GEM of about 4,100 reactions. The study did not test an ecModel.
 
@@ -58,7 +89,7 @@ max_growth = sol.objective_value
 :::
 ::::
 
-To see the effect of the protein pool constraint, solve a copy of the ecModel with an unlimited pool: `setProtPoolSize(ecModel, Inf)` in MATLAB, and in Python `set_prot_pool_size(ec_model_copy, p_tot=math.inf)` on a copy made with `ec_model.copy()`, because the Python function changes the model in place. Each enzyme usage reaction has an upper bound of 1000 mg/gDCW unless proteomics data constrain it, so the copy has no effective enzyme constraint.
+To see the effect of the protein pool constraint, solve a copy of the ecModel with an unlimited pool: `setProtPoolSize(ecModel, Inf)` in MATLAB, and in Python `set_prot_pool_size(ec_model_copy, p_tot=math.inf)` on a copy made with `ec_model.copy()`, because the Python function changes the model in place. Each enzyme usage reaction has an upper bound of 1000 mg/gDCW unless proteomics data constrain it, so the copy has no effective enzyme constraint. The `full_ecModel` tutorial of GECKO makes this comparison for yeast: its function `code/plotCrabtree.m` simulates the exchange fluxes over a range of growth rates and plots them against measured fluxes, and the tutorial runs it on the ecModel and on a copy with an unlimited pool.
 
 ### Minimise protein pool usage at fixed growth
 
@@ -92,11 +123,11 @@ pool_usage = sol.objective_value   # mg/gDCW
 
 To use a measured growth rate instead of the maximum, call `constrainFluxData` with `maxMinGrowth` set to `'min'` (Python: `apply_flux_data_constraints` with `max_min_growth="min"`): the measured growth rate becomes the lower bound of the biomass reaction. [Constrain enzymes with proteomics](proteomics.md) describes the flux data file.
 
-An ecModel made with GECKO 3 has `prot_pool_exchange` and the `usage_prot_*` reactions in the reverse direction. `loadEcModel` (Python: `load_ec_model`) turns them forward with `upgradeEcModel` (Python: `upgrade_ec_model`) and gives a warning. A model in memory that was not loaded this way needs `upgradeEcModel` before the code above gives the right sign ([GECKO 3 to GECKO 4](../gecko3-to-gecko4.md)).
+If `prot_pool_exchange` or the `usage_prot_*` reactions carry negative flux, the model has these reactions in the reverse direction. `upgradeEcModel` (Python: `upgrade_ec_model`) turns them forward, and `loadEcModel` (Python: `load_ec_model`) does this with a warning when it loads such a model ([GECKO 3 to GECKO 4](../gecko3-to-gecko4.md)).
 
 ## Compare the solution space with the conventional GEM
 
-`ecFVA` minimises and maximises the flux of each reaction of the conventional GEM. It combines the isozyme copies (`_EXP_<n>`) and the reverse copies (`_REV`) of a reaction into one flux, so the result has the reaction order of the conventional GEM. The objective of the model is not used: each reaction varies within the bounds of the model, so set the bounds that define the condition (growth rate, uptake rates) on all models first. `ecFVA` solves two linear problems per reaction of the conventional GEM. It does not report the enzyme usage reactions; run a plain FVA on the ecModel for those.
+`ecFVA` groups the reactions of the ecModel by identifier without the suffixes `_REV` and `_EXP_<n>`, so that the isozyme copies and the reverse copy of a reaction form one group. For each group it minimises and maximises the combined flux, which takes two linear problems per group, the enzyme usage reactions and `prot_pool_exchange` included. The result has the reaction order of the conventional GEM and leaves out the enzyme usage reactions; for those, run a plain FVA on the ecModel (`getAllowedBounds` in RAVEN, `cobra.flux_analysis.flux_variability_analysis` in Python). The objective of the model is not used: each reaction varies within the bounds of the model, so set the bounds that define the condition (growth rate, uptake rates) on all models first. In MATLAB, a conventional GEM that does not match the ecModel raises its error only after all problems are solved.
 
 The example gives the conventional GEM and the ecModel the same exchange constraints from `fluxData` (from `loadFluxData`, Python: `load_flux_data`) and compares the ranges:
 
@@ -134,7 +165,7 @@ ranges["GEM"] = fva_gem["max_flux"] - fva_gem["min_flux"]
 print(ranges.median())
 ```
 
-`ec_fva` returns a DataFrame indexed by the reaction identifiers of the conventional GEM, with the columns `min_flux` and `max_flux`. The option `n_proc` sets the number of worker processes (default `cobra.Configuration().processes`). geckopy has no counterpart of `plotEcFVA`.
+`ec_fva` returns a DataFrame indexed by the reaction identifiers of the conventional GEM, with the columns `min_flux` and `max_flux`. The option `n_proc` sets the number of worker processes (default `cobra.Configuration().processes`). With the default solver GLPK, `ec_fva` is slow on a genome-scale ecModel; a commercial solver (`ec_model.solver = "gurobi"`, if you have a licence) or more worker processes shorten the run. geckopy has no counterpart of `plotEcFVA`.
 :::
 ::::
 
@@ -177,44 +208,6 @@ mapped_samples = map_rxns_to_conv(ec_model, model, samples).mapped_flux
 
 Run several chains with different seeds and compare them, for example with the R-hat statistic, before you use the samples. The [convergence study](https://raven-docs.readthedocs.io/en/latest/parameter-tuning/studies/sampling-convergence-calibration.html) describes the check and the settings it tested.
 
-## Find engineering targets
-
-`ecFSEOF` scans the production of a compound. It first finds the production at maximum growth and the maximum production, then fixes the production reaction at evenly spaced values from the first to 90 % of the second. At each value it maximises growth and then minimises the total flux. A reaction is a target when the absolute Pearson correlation between its absolute flux and the enforced production is at least `corrThreshold` (Python: `correlation_threshold`, default 0.9). Only reactions with a gene rule are scanned, and not those that use the standard enzyme ([Choose the kcat sources](kcat-sources.md)). The `usage_prot_*` reactions take part in the scan and are left out of the result.
-
-The action for a target follows the slope of its absolute flux:
-
-| Slope | Absolute flux at the last step | Action (MATLAB) | Action (Python) |
-| --- | --- | --- | --- |
-| positive | any | `OE` (over-express) | `amplify` |
-| negative | at most 1e-8 | `KO` (knock out) | `knockout` |
-| negative | above 1e-8 | `KD` (knock down) | `knockdown` |
-
-::::{tab-set}
-:::{tab-item} Ⓜ️ MATLAB
-:sync: matlab
-
-```matlab
-fseof = ecFSEOF(ecModel, prodTargetRxn, csRxn, 'nSteps', 16, 'outputFile', true);
-fseof.geneTargets
-```
-
-The fields `rxnTargets`, `transportTargets` and `geneTargets` list the targets; reaction targets are ordered by the product of slope and correlation. A gene with several targets gets one action: `OE` if any of its reactions is `OE`, otherwise `KO` unless the gene is essential, otherwise `KD`. `geneTargets` also reports whether the gene is essential. With `outputFile` set to `true`, the function writes `ecFSEOF_genes.tsv`, `ecFSEOF_rxns.tsv` and `ecFSEOF_transporter.tsv` to the `output` folder of the project. The biomass reaction is read from the model adapter, and the function warns when the lower bound of `csRxn` is tighter than its uptake at maximum growth.
-:::
-:::{tab-item} 🐍 Python
-:sync: python
-
-```python
-from geckopy import ec_fseof
-
-result = ec_fseof(ec_model, prod_target_rxn, cs_rxn, n_steps=16)
-result.targets
-result.gene_targets
-```
-
-`result.targets` is one DataFrame with the reaction targets first and the transport targets after them (column `transport`), each group ordered by `score`, the product of the absolute slope and the absolute correlation. `result.scan` holds the fluxes at each step. `ec_fseof` does not test gene essentiality and does not write files; use `cobra.flux_analysis.single_gene_deletion` and `result.targets.to_csv(...)` for these. The biomass reaction is read from `ec_model.adapter`, or from the argument `bio_rxn`. The default `n_steps` is 10, and 16 in MATLAB.
-:::
-::::
-
 ## Map fluxes to the conventional GEM
 
 A flux vector of an ecModel has more reactions than one of the conventional GEM: isozyme copies, reverse copies and the enzyme usage reactions. `mapRxnsToConv` subtracts the flux of each reverse copy, adds the isozyme copies, and returns the fluxes in the reaction order of the conventional GEM. It also accepts a matrix with one flux vector per column, such as the samples above.
@@ -243,58 +236,20 @@ mapped.mapped_flux, mapped.enz_usage_flux, mapped.usage_enz
 
 `enzUsageFlux` (Python: `enz_usage_flux`) holds the fluxes of the `usage_prot_*` reactions and of `prot_pool_exchange`, and `usageEnz` (Python: `usage_enz`) their labels: the protein identifier, or `pool` for the protein pool exchange. The function matches reactions by identifier only. A reaction of the conventional GEM that is missing from the ecModel raises an error, but a reaction that was changed in the ecModel after `makeEcModel` (another stoichiometry or direction) is mapped without a warning.
 
-## Make a context-specific ecModel
-
-A context-specific GEM of a tissue, cell line or strain is made from a generic GEM with a method such as ftINIT (`ftINIT` in RAVEN, `ftinit` in raven-toolbox). There are two ways to get an ecModel of that context:
-
-| Order | What it needs | Result |
-| --- | --- | --- |
-| make the context-specific GEM, then build an ecModel from it | the full ecModel workflow per context | each context has its own kcat assignment |
-| build one generic ecModel, then trim it with `getSubsetEcModel` | the generic ecModel and the context-specific GEM | all contexts have the kcats of the generic ecModel |
-
-The second way builds the enzyme data once, which saves time when many contexts are made from one generic model, and gives all contexts the same kcats.
-
-`getSubsetEcModel` removes the genes that the context-specific GEM does not have, with the enzymes and reactions that depend on them, and then the reactions whose identifier (without `_REV` and `_EXP_<n>`) is not in the context-specific GEM. The `usage_prot_*` reactions of the remaining enzymes and `prot_pool_exchange` are kept, with their bounds. Both models must come from the same GEM: a reaction of the context-specific GEM that the ecModel does not have raises an error. The function warns when a `usage_prot_*` reaction of the generic ecModel has an upper bound other than 1000, because enzyme concentrations of the generic model may not apply to the context.
-
-::::{tab-set}
-:::{tab-item} Ⓜ️ MATLAB
-:sync: matlab
-
-```matlab
-ecContext = getSubsetEcModel(ecModel, contextGEM);
-ecContext = setProtPoolSize(ecContext, PtotContext);
-```
-:::
-:::{tab-item} 🐍 Python
-:sync: python
-
-```python
-from geckopy import get_subset_ec_model, set_prot_pool_size
-
-ec_context = get_subset_ec_model(ec_model, context_gem)
-set_prot_pool_size(ec_context, p_tot=p_tot_context)
-```
-
-`get_subset_ec_model` returns a new `EcModel`; `ec_model` is not changed.
-:::
-::::
-
-The upper bound of `prot_pool_exchange` is copied from the generic ecModel. Call `setProtPoolSize` with the total protein content of the context when it is different ([Set the protein pool](protein-pool.md)).
-
 ## Troubleshooting
 
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
-| The protein pool usage or the `usage_prot_*` fluxes have the opposite sign | the ecModel was made with GECKO 3 and was not loaded with `loadEcModel` | Run `upgradeEcModel` (Python: `upgrade_ec_model`) |
+| `prot_pool_exchange` or the `usage_prot_*` reactions carry negative flux | the model has these reactions in the reverse direction and was not loaded with `loadEcModel` | Run `upgradeEcModel` (Python: `upgrade_ec_model`) |
 | `mapRxnsToConv` or `ecFVA` raises "Not all reactions from model.rxns can be found in the ecModel" | the conventional GEM is not the one that the ecModel was made from | Pass the GEM that `makeEcModel` started from |
-| `getSubsetEcModel` raises an error that lists reactions | the context-specific GEM was made from another GEM or another version of it | Make the context-specific GEM from the GEM of the ecModel |
 | The `ecFVA` ranges of the ecModel reach 1000 for many reactions | the condition bounds were not set, so only the default bounds limit the fluxes | Set the growth rate and the uptake rates before `ecFVA` |
 | Independent sampling chains give different flux distributions | the chains have not converged | Increase `thinning` and the number of samples, and check again |
-| `ecFSEOF` returns no targets | no reaction reaches `corrThreshold`, or the production at maximum growth is equal to 90 % of the maximum production, so the scan has one level | Lower `corrThreshold`, or check the bounds of the production and carbon source reactions |
 
 ## See also
 
 - [Enzyme usage and bottlenecks](enzyme-usage.md): the enzymes that a solution uses and the enzymes that limit the objective.
+- [Find engineering targets](engineering-targets.md): flux scanning with `ecFSEOF` for the production of a compound.
+- [Make a context-specific ecModel](context-ecmodel.md): trim a generic ecModel to a tissue, cell line or strain.
 - [Basic model operations](basic-model-operations.md): bounds, objectives and flux inspection.
 - [Constrain enzymes with proteomics](proteomics.md): the flux data file and the proteomics-constrained ecModel.
 - [Set the protein pool](protein-pool.md): the upper bound of `prot_pool_exchange`.

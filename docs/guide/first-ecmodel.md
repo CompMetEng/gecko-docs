@@ -16,7 +16,7 @@ The steps below build an enzyme-constrained model (ecModel) from a conventional 
 | `assignKcats` | `assign_kcats` | select one kcat per reaction and apply it |
 | `setProtPoolSize` | `set_prot_pool_size` | set the upper bound of the protein pool |
 | `sensitivityTuning` | `sensitivity_tuning` | raise the kcats that limit growth (standard kcat tuning) |
-| `sigmaFitter` | `fit_sigma` | fit the saturation factor `sigma` to the growth rate |
+| `sigmaFitter` | `fit_sigma` | fit the saturation factor $\sigma$ to the growth rate |
 | `saveEcModel` | `save_ec_model` | save the ecModel as YAML in `models` |
 
 ## Setup
@@ -33,7 +33,7 @@ GECKO or geckopy must be installed (see [Installation](../installation/index.md)
 createGECKOproject('name', 'ecMyModel', 'path', pwd);
 ```
 
-`createGECKOproject` creates the folder `ecMyModel` with the subfolders `code`, `data`, `models` and `output`, and the template `model_adapter.toml`.
+`createGECKOproject` creates the folder `ecMyModel` with the subfolders `code`, `data`, `models` and `output`, and the template `model_adapter.toml`. It then changes the current folder of MATLAB to `ecMyModel`.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -42,7 +42,7 @@ createGECKOproject('name', 'ecMyModel', 'path', pwd);
 geckopy init ecMyModel
 ```
 
-`geckopy init` creates the folder `ecMyModel` with the subfolders `data`, `models` and `output`, the template `model_adapter.toml`, and `adapter.py` for organism-specific code.
+`geckopy init` creates the folder `ecMyModel` with the subfolders `data`, `models` and `output`, the template `model_adapter.toml`, and `adapter.py` for organism-specific code. The current folder does not change.
 :::
 ::::
 
@@ -72,7 +72,7 @@ id = "sce"
 gene_id = "kegg"
 ```
 
-`[uniprot]` selects the UniProt data whose gene identifiers match those of the GEM, and `enzyme_comp` is the name of a compartment of the GEM. [Model adapter parameters](model-adapter-parameters.md) describes each parameter, and [Choose the ecModel structure](ecmodel-structure.md) describes how to find the UniProt and KEGG values of an organism.
+`[uniprot]` selects the UniProt data whose gene identifiers match those of the GEM, and `enzyme_comp` is the name of a compartment of the GEM. [Model adapter parameters](model-adapter-parameters.md) describes each parameter, and [Find the UniProt and KEGG parameters](ecmodel-structure.md#find-the-uniprot-and-kegg-parameters) describes how to find the values of an organism.
 
 ## 2. Make the ecModel
 
@@ -81,19 +81,20 @@ gene_id = "kegg"
 :sync: matlab
 
 ```matlab
-adapter = ModelAdapterManager.setDefault(fullfile(pwd, 'ecMyModel'));
+adapter = ModelAdapterManager.setDefault(pwd);
 params = adapter.getParameters();
 model = loadConventionalGEM();
 [ecModel, noUniprot] = makeEcModel(model);
 ```
 
-`makeEcModel` downloads the UniProt and KEGG data of the organism into `data/uniprot.tsv` and `data/kegg.tsv` when these files do not exist. `noUniprot` lists the genes that neither database matched.
+`pwd` is the project folder, which `createGECKOproject` made the current folder. `makeEcModel` downloads the UniProt and KEGG data of the organism into `data/uniprot.tsv` and `data/kegg.tsv` when these files do not exist. `noUniprot` lists the genes that neither database matched.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
 
 ```python
 from geckopy import ModelAdapter, load_conventional_gem, load_uniprot_tsv, make_ec_model
+from geckopy.databases import load_kegg_tsv
 
 adapter = ModelAdapter.from_folder("ecMyModel")
 params = adapter.params
@@ -104,15 +105,22 @@ uniprot_db = load_uniprot_tsv(
     gene_id_field=params.uniprot.gene_id_field,
     reviewed=params.uniprot.reviewed,
 )
+kegg_db = load_kegg_tsv(
+    params.path / "data" / "kegg.tsv",
+    kegg_id=params.kegg.id,
+    gene_id_field=params.kegg.gene_id,
+)
 model = load_conventional_gem(adapter)
-ec_model = make_ec_model(model, adapter, uniprot_db=uniprot_db)
+ec_model = make_ec_model(model, adapter, uniprot_db=uniprot_db, kegg_db=kegg_db)
 ```
 
-`load_uniprot_tsv` downloads the UniProt data of the organism into `data/uniprot.tsv` when the file does not exist. `make_ec_model` uses `data/kegg.tsv` only when that file exists.
+`load_uniprot_tsv` and `load_kegg_tsv` download the UniProt and KEGG data of the organism into `data/uniprot.tsv` and `data/kegg.tsv` when these files do not exist.
 :::
 ::::
 
 The ecModel is a full ecModel: it has one pseudometabolite and one usage reaction per enzyme, and no kcats yet. [Choose the ecModel structure](ecmodel-structure.md) describes the light ecModel, the matching of genes to UniProt and KEGG, and the data of enzyme complexes.
+
+The model adapter holds the values that `model_adapter.toml` had when it was read (MATLAB: `ModelAdapterManager.setDefault`, Python: `ModelAdapter.from_folder`). After a change to the file, read it again with the same call.
 
 ## 3. Assign kcats
 
@@ -142,7 +150,7 @@ from geckopy import (
 
 fill_eccodes_from_gem(ec_model)
 no_ec = [rxn for rxn, ec in zip(ec_model.ec.rxns, ec_model.ec.eccodes) if not ec]
-fill_eccodes_from_database(ec_model, uniprot_db, ec_rxns=no_ec)
+fill_eccodes_from_database(ec_model, uniprot_db, kegg_db=kegg_db, ec_rxns=no_ec)
 find_met_smiles(ec_model)
 print(update_kcat_sources(ec_model))
 decisions, report = assign_kcats(ec_model)
@@ -154,7 +162,7 @@ decisions, report = assign_kcats(ec_model)
 
 The EC numbers come from the annotation of the GEM, and from UniProt and KEGG for the reactions that the GEM does not annotate. `updateKcatSources` makes the kcat source files in `data/kcats` that the preset needs and prints a table with the status of each source. The BRENDA files are downloaded the first time they are used. `assignKcats` selects one kcat per reaction from the source files, applies the kcats to the model, and writes the decision for each reaction to `output/<model id>_kcatDecisions.tsv`.
 
-The default preset takes kcats from BRENDA measurements of the organism and from the measurements of the same EC number in other organisms. For the reactions that these leave without a kcat, it combines the predictions of the OpenKineticsPredictor (OKP) methods. OKP is a web service that needs an API key, set as the environment variable `OKP_API_KEY` or in the file `data/okpApiKey.txt` (a key is generated at [predictor.openkinetics.org](https://predictor.openkinetics.org/)). The first call of `updateKcatSources` submits one OKP job per method and reports these sources as `pending`; a later call fetches the results. Call `updateKcatSources` again until no source is `pending`, then run `assignKcats`. A source file that does not exist is skipped by `assignKcats`, and a reaction without a kcat from any source gets a kcat from an isozyme or the standard kcat.
+The default preset takes kcats from BRENDA measurements of the organism and from the measurements of the same EC number in other organisms. For the reactions that these leave without a kcat, it combines the predictions of the OpenKineticsPredictor (OKP) methods. OKP is a web service that needs an API key, set as the environment variable `OKP_API_KEY` or in the file `data/okpApiKey.txt` (a key is generated at [predictor.openkinetics.org](https://predictor.openkinetics.org/)). The first call of `updateKcatSources` submits one OKP job per method and reports these sources as `pending`; a later call fetches the results. Call `updateKcatSources` again until no source is `pending`, then run `assignKcats`. A source file that does not exist is skipped by `assignKcats`, and a reaction without a kcat from any source gets a kcat from an isozyme or the standard kcat (`getStandardKcat`, Python: `assign_standard_kcat`).
 
 [Choose the kcat sources](kcat-sources.md) describes the presets and the treatment of reactions without a kcat, and [Set custom kcats](custom-kcats.md) describes curated kcats.
 
@@ -179,7 +187,7 @@ set_prot_pool_size(ec_model)
 :::
 ::::
 
-`setProtPoolSize` sets the upper bound of `prot_pool_exchange` to `p_tot * f * sigma * 1000` mg/gDCW, with the values of `model_adapter.toml`. [Set the protein pool](protein-pool.md) describes how to choose the three values.
+`setProtPoolSize` sets the upper bound of `prot_pool_exchange` to $P_{tot} \cdot f \cdot \sigma \cdot 1000$ mg/gDCW, with the values of `p_tot`, `f` and `sigma` in `model_adapter.toml`. [Set the protein pool](protein-pool.md) describes how to choose the three values.
 
 ## 5. Check the growth rate
 
@@ -237,7 +245,7 @@ sigma = fit_sigma(ec_model).sigma
 :::
 ::::
 
-`sensitivityTuning` selects the enzyme with the highest usage, multiplies the kcat of the reaction that uses the most of this enzyme by 10, and repeats this until the model reaches `gr_exp`. `tunedKcats` lists each changed reaction with its kcat before and after tuning, and `ec.notes` of the reaction records the kcat and the source before tuning. [Choose a kcat tuning](kcat-tuning.md) describes how to check a tuned kcat and the advanced tuning against measured growth rates and fluxes, and [Set the protein pool](protein-pool.md) describes the fit of `sigma`.
+`sensitivityTuning` selects the enzyme with the highest usage, multiplies the kcat of the reaction that uses the most of this enzyme by 10, and repeats this until the model reaches `gr_exp`. `tunedKcats` lists each changed reaction with its kcat before and after tuning, and `ec.notes` of the reaction records the kcat and the source before tuning. [Choose a kcat tuning](kcat-tuning.md) describes how to check a tuned kcat and the advanced tuning against measured growth rates and fluxes, and [Set the protein pool](protein-pool.md) describes the fit of $\sigma$.
 
 ## 7. Save the ecModel
 
@@ -260,14 +268,14 @@ save_ec_model(ec_model, "ecMyModel.yml")
 :::
 ::::
 
-The file is written to the `models` folder of the project. [ecModel YAML format](yaml-format.md) describes the format, which GECKO and geckopy both read.
+The file is written to the `models` folder of the project. [ecModel YAML format](yaml-format.md) describes the format, which GECKO and geckopy both read. An ecModel can also be exported as SBML (MATLAB: `saveEcModel` with a file name that ends in `.xml`, Python: `cobra.io.write_sbml_model`), for use in other constraint-based tools; the SBML file does not keep the `ec` fields, so GECKO and geckopy cannot continue from it.
 
 ## Next
 
 - [Choose the ecModel structure](ecmodel-structure.md): build a light ecModel, match the genes of the GEM to UniProt and KEGG, and add the subunit composition of enzyme complexes.
 - [Choose the kcat sources](kcat-sources.md): select another preset and compare presets before they are applied.
 - [Set custom kcats](custom-kcats.md): give reactions curated kcats from the literature or from measurements.
-- [Set the protein pool](protein-pool.md): calculate `f` from proteomics data and set the protein pool of a condition.
+- [Set the protein pool](protein-pool.md): calculate $f$ from proteomics data and set the protein pool of a condition.
 - [Choose a kcat tuning](kcat-tuning.md): select the standard or the advanced kcat tuning, and check the tuned kcats.
 - [Tune kcats against experimental data](advanced-tuning.md): fit kcats to growth rates and exchange fluxes of one or more conditions.
 - [Constrain enzymes with proteomics](proteomics.md): limit each measured enzyme to its measured concentration.

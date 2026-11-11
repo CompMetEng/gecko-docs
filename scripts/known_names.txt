@@ -338,3 +338,12 @@ sdLog10
 spread_log10
 spreadLog10
 rxnNames
+source_group
+context_gem
+contextGEM
+cs_rxn
+prod_target_rxn
+prodTargetRxn
+target_type
+prot_data
+flex_model

@@ -16,9 +16,13 @@ The functions on this page need a full ecModel. A light ecModel has no `usage_pr
 | `getConcControlCoeffs` | `get_conc_control_coeffs` | rise of the objective per mg/gDCW of added enzyme |
 | `getPfbaEnzymes` | `pfba_enzymes` | the flux distribution with the smallest total enzyme usage at the optimum |
 
-## The choice
+## Setup
 
-Each enzyme draws its protein through a usage reaction `usage_prot_<id>`, which runs forward. Its flux is the usage of the enzyme in mg/gDCW. After `makeEcModel`, every usage reaction draws from the shared protein pool (`prot_pool_exchange`) and has an upper bound of 1000 mg/gDCW, so the pool is the only enzyme constraint that can bind. `constrainEnzConcs` changes the usage reaction of each enzyme with a measured concentration: it no longer draws from the pool, and its upper bound is the measured concentration ([Constrain enzymes with proteomics](proteomics.md)).
+The examples use a full ecModel `ecModel` (Python: `ec_model`) and the model adapter parameters `params`, loaded as in the setup of [Analyse an ecModel](analysis.md#setup). `growthRate` (Python: `growth_rate`) is a growth rate in /hour at which the model is feasible, for example a measured growth rate or 99 % of the maximum.
+
+## Choose a measure
+
+Each enzyme draws its protein from the shared protein pool (`prot_pool_exchange`) through a usage reaction `usage_prot_<id>`, which runs forward. Its flux is the usage of the enzyme in mg/gDCW. After `makeEcModel`, every usage reaction has an upper bound of 1000 mg/gDCW, so the pool is the only enzyme constraint that can bind. `constrainEnzConcs` sets the upper bound of the usage reaction of each enzyme with a measured concentration to that concentration; the enzyme still draws from the pool ([Constrain enzymes with proteomics](proteomics.md)).
 
 | Question | Analysis | Useful when |
 | --- | --- | --- |
@@ -30,7 +34,7 @@ Each enzyme draws its protein through a usage reaction `usage_prot_<id>`, which 
 
 Usage describes one flux distribution. An LP often has several optimal flux distributions, and their enzyme usage can differ. `getPfbaEnzymes` selects one of them by a stated rule (least enzyme mass), so compute the usage from its solution when you compare conditions.
 
-An enzyme with a high usage does not have to limit the objective, and an enzyme with a low usage that runs at its bound can. The bottleneck ranking answers that question: it raises the bound of one enzyme at a time and solves again. If no enzyme has a bound that binds, which is the normal case without proteomics data, the ranking and the control coefficients are 0 for all enzymes, and the protein pool limits the objective.
+An enzyme with a high usage does not have to limit the objective, and an enzyme with a low usage that runs at its bound can. To find the enzymes that limit the objective, the bottleneck ranking raises the bound of one enzyme at a time and solves again. If no enzyme has a bound that binds, which is the normal case without proteomics data, the ranking and the control coefficients are 0 for all enzymes, and the protein pool limits the objective.
 
 ## Compute the enzyme usage
 
@@ -95,9 +99,9 @@ A `demandRatio` above 1 means that the solution uses more of the measured enzyme
 | `totalUsageFlux` / `total_usage_flux` | the upper bound of `prot_pool_exchange`, in mg/gDCW | |
 | `demandRatio`, `demandRatioActive` (Python: `demand_ratio`, `demand_ratio_active`) | copied from the usage data | |
 
-An enzyme that catalyses several reactions with flux has one row with the combined usage, marked `===` in the text columns, followed by one row per reaction. In `topAbsUsage`, enzymes whose reactions carry no flux are left out after the top N are selected, so the table can have fewer than N enzymes.
+An enzyme that catalyses several reactions with flux has one row with the combined usage, marked `===` in the text columns, followed by one row per reaction. In `topAbsUsage`, enzymes whose reactions carry no flux are left out after the top N are selected, so the table can have fewer than N enzymes. In `highCapUsage`, MATLAB lists such an enzyme as a `===` row without reaction rows, and Python leaves it out.
 
-The `source` column shows where the kcat of the reaction came from. An enzyme near the top of `topAbsUsage` with the source `standard` has the standard kcat, a value that GECKO gives to reactions without a kcat from any source ([Choose the kcat sources](kcat-sources.md)). The usage of that enzyme depends on a value that is not specific to it; check the reaction for a measured kcat and put it in `data/kcats/custom.tsv` ([Choose a kcat tuning](kcat-tuning.md)).
+The `source` column shows where the kcat of the reaction came from. An enzyme near the top of `topAbsUsage` with the source `standard` has the standard kcat, a value that GECKO gives to reactions without a kcat from any source ([Choose the kcat sources](kcat-sources.md)). The usage of that enzyme depends on a value that is not specific to it; check the reaction for a measured kcat and put it in `data/kcats/custom.tsv` ([Set custom kcats](custom-kcats.md)).
 
 ## Rank the enzymes that limit the objective
 
@@ -138,7 +142,7 @@ The result is a DataFrame indexed by UniProt identifier. `bottlenecks.attrs["n_r
 | `upperBound` / `upper_bound` | upper bound of the usage reaction, in mg/gDCW |
 | `multipleActive` / `multiple_active` | true when another capacity constraint is active at the same optimum: another enzyme at its bound, or `prot_pool_exchange` at its upper bound |
 
-The shadow price is not used for the order. Enzyme-constrained models often have a degenerate optimum, where several constraints are active and the solver gives the dual value to one of them; the shadow price then depends on the solver and not on the model. Where `multipleActive` is true, the shadow price says little about the single enzyme. `objectiveGain` is computed from a new solve, so it does not depend on the dual values.
+The shadow price is not used for the order. Enzyme-constrained models often have a degenerate optimum, where several constraints are active and the solver gives the dual value to one of them; the shadow price then depends on the solver and not on the model. Where `multipleActive` is true, the shadow price does not describe the effect of the single enzyme. `objectiveGain` is computed from a new solve, so it does not depend on the dual values.
 
 `getEnzymeBottlenecks` maximises the objective. In Python, `objective_gain` is the improvement in the direction of the objective, so it is positive for a maximised objective that rises and for a minimised objective that falls.
 
@@ -187,7 +191,7 @@ solution = getPfbaEnzymes(ecModel, 'fractionOfOptimum', 0.9);
 usageData = getEnzymeUsage(ecModel, solution.x);
 ```
 
-`solution` is the result of `solveLP` with the added fields `enzymeUsage` (the minimised sum of the usage fluxes, mg/gDCW) and `objectiveValue` (the value of the original objective). The help text of the function names the first field `getEnzymeUsage`; the field is `enzymeUsage`.
+`solution` is the result of `solveLP` with the added fields `enzymeUsage` (the minimised sum of the usage fluxes, mg/gDCW) and `objectiveValue` (the value of the original objective).
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -218,12 +222,11 @@ The usage reactions must have a lower bound of 0. MATLAB raises an error when a 
 | `demandRatio` is NaN | `ec.concs` has no measured concentration | Load proteomics data with `fillEnzConcs` |
 | Error that names light ecModels | the ecModel is a light ecModel | Make a full ecModel |
 | `getPfbaEnzymes` raises an error about a negative lower bound | a `usage_prot_<id>` reaction allows reverse flux | Set the lower bound of the usage reactions to 0 |
-| The usage of the `usage_prot_*` reactions is negative | the ecModel was made with GECKO 3 and was not loaded with `loadEcModel` | Run `upgradeEcModel` (Python: `upgrade_ec_model`) |
+| The `usage_prot_*` reactions carry negative flux | the model has these reactions in the reverse direction and was not loaded with `loadEcModel` | Run `upgradeEcModel` (Python: `upgrade_ec_model`) |
 
 ## See also
 
 - [Analyse an ecModel](analysis.md): objectives, flux variability and the other analyses of the flux distribution.
 - [Constrain enzymes with proteomics](proteomics.md): the measured concentrations that give the enzymes their own bounds.
 - [Relax proteomics constraints](relaxing-proteomics.md): `flexibilizeEnzConcs` and `relaxProteomicsGreedy`, which use control coefficients and shadow prices to select the constraints to relax.
-- [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md): the direction of the usage reactions and the ranking rule of `getEnzymeBottlenecks`.
 - [API reference](../api/index.md) and [MATLAB vs Python](../matlab-vs-python.md): the signature of each function in the table.

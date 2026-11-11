@@ -44,7 +44,7 @@ The three parameters are in `model_adapter.toml`:
 
 The factor 1000 converts g/gDCW to mg/gDCW. `calculateFfactor` (Python: `calculate_f_factor`) calculates $f$ from proteomics or PAXdb data, and `sigmaFitter` (Python: `fit_sigma`) selects the $\sigma$ at which the model reaches a given growth rate. [Set the protein pool](protein-pool.md) describes how to choose the three values.
 
-A measured concentration of an enzyme replaces the pool as the limit of that enzyme: `constrainEnzConcs` (Python: `constrain_enz_concs`) sets the upper bound of its usage reaction to the measured value, and the enzyme no longer takes mass from the pool (see [Constrain enzymes with proteomics](proteomics.md)).
+A measured concentration adds a second limit to an enzyme: `constrainEnzConcs` (Python: `constrain_enz_concs`) sets the upper bound of its usage reaction to the measured value. The usage reaction still takes its mass from the pool, so the measured enzymes count toward the protein pool as well (see [Constrain enzymes with proteomics](proteomics.md)).
 
 ## Enzyme data in the model
 

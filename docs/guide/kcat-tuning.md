@@ -1,6 +1,6 @@
 # Choose a kcat tuning
 
-After the kcats are assigned and the protein pool is set, an ecModel often grows much more slowly than the organism. At the end of this page you have chosen between the standard and the advanced kcat tuning, have run the standard tuning, and know how to check a tuned kcat against its source and keep a curated value.
+After the kcats are assigned and the protein pool is set, an ecModel often grows much more slowly than the organism. A kcat tuning raises the kcats that limit growth, so that the ecModel reaches the maximum growth rate of the organism. The result is a tuned ecModel, a list of the changed kcats, and curated values for the changed kcats that the literature supports.
 
 ## Functions
 
@@ -21,7 +21,7 @@ Maximize growth with the uptake of the carbon source unconstrained (see [Basic m
 
 If both hold, some kcats are too low for the enzymes that carry most of the flux, and a kcat tuning raises them.
 
-## The choice
+## Standard or advanced kcat tuning
 
 | | Standard: `sensitivityTuning` | Advanced: `cmaesKcatTuning` |
 | --- | --- | --- |
@@ -77,7 +77,7 @@ pd.DataFrame({"rxn": tuned.rxns, "enzymes": tuned.enzymes,
 | `foldChange` | `fold_change` | `10` | factor by which a selected kcat is multiplied |
 | `protToIgnore` | `prot_to_ignore` | none | UniProt IDs of enzymes that are never selected |
 | `verbose` | `verbose` | `true` | prints (Python: logs at `INFO`) the growth rate of each iteration |
-| `modelAdapter` | | default model adapter | model adapter with the parameters |
+| `modelAdapter` | | default model adapter | model adapter with the parameters; Python reads `ec_model.adapter` |
 | | `max_iterations` | `1000` | maximum number of iterations |
 | | `bio_rxn` | `bio_rxn` of the model adapter | biomass reaction that is set as the objective |
 
@@ -89,7 +89,7 @@ After the standard tuning, `sigmaFitter` (Python `fit_sigma`) fits sigma so that
 
 A tuning raises the kcats that limit growth in the model. It does not check whether the value before tuning was wrong. For each tuned kcat, look up where the value before tuning came from, and search the literature for a measured value.
 
-The note of a tuned reaction gives the kcat and its source before tuning. When the source is a file in `data/kcats` (for example `brenda` or `ec_tree`), `loadKcatSource` returns the rows of that file for the reaction; the `detail` column of a BRENDA row holds the EC wildcard level and the origin of the match. `output/<model id>_kcatDecisions.tsv` lists the stage of the assignment that decided each kcat (see [Choose the kcat sources](kcat-sources.md)).
+The note of a tuned reaction gives the kcat and its source before tuning. When the source is a file in `data/kcats` (for example `brenda` or `ec_tree`), `loadKcatSource` returns the rows of that file for the reaction; the `detail` column of a BRENDA row holds the EC wildcard level and the origin of the match (see [BRENDA origin and wildcard levels](kcat-sources.md#brenda-origin-and-wildcard-levels)). `output/<model id>_kcatDecisions.tsv` lists the stage of the assignment that set each kcat (see [Choose the kcat sources](kcat-sources.md)).
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -117,7 +117,9 @@ kcat_list[kcat_list["rxn_id"] == "r_0079"]
 
 ### Example: a kcat from a specific activity
 
-In the yeast ecModel of the GECKO tutorial `full_ecModel`, `sensitivityTuning` raised the kcat of `r_0079` (5'-phosphoribosylformyl glycinamidine synthetase, enzyme P38972), whose kcat of 0.05 per s came from BRENDA. A specific activity of 2.15 µmol/min/mg protein gives a kcat when it is multiplied by the molecular weight of the enzyme:
+The GECKO tutorial `full_ecModel` assigns the kcats of its yeast ecModel with the preset `gecko_classic`. In that ecModel, `sensitivityTuning` raised the kcat of `r_0079` (5'-phosphoribosylformyl glycinamidine synthetase, enzyme P38972). The kcat before tuning, 0.05 per s, came from a BRENDA match with wildcard level 0 and origin 4 (any organism, any substrate) for EC 6.3.5.3.
+
+[BRENDA](https://www.brenda-enzymes.org/enzyme.php?ecno=6.3.5.3) lists this kcat for *Escherichia coli* with NH4+ as the substrate. The reaction in the model uses glutamine. The paper that reports the value ([Schendel et al. 1989](https://doi.org/10.1021/bi00432a017)) states in its abstract that "NH3 can replace glutamine as a nitrogen donor with a Km = 1 M and a turnover of 3 min-1 (2% glutamine turnover)", so 0.05 per s is the kcat with ammonia, not with glutamine. According to the tutorial, the paper also reports a specific activity, which BRENDA lists; the tutorial uses 2.15 µmol/min/mg protein. A specific activity gives a kcat when it is multiplied by the molecular weight of the enzyme:
 
 - 2.15 µmol/min/mg is 2.15 mmol/min/g;
 - divided by 1000, it is 0.00215 mol/min/g;
@@ -156,7 +158,7 @@ When a measured value supports the kcat before tuning and not the tuned one, the
 
 ## Keep a curated kcat
 
-`assignKcats` replaces every kcat of the model with the values decided from the files in `data/kcats`. A value set with `setKcatForReactions` is therefore lost at the next `assignKcats`. To keep it, add it to `data/kcats/custom.tsv`, which every preset reads first (see [Set custom kcats](custom-kcats.md)). A row for the example above, with the columns `rxn`, `enzymes`, `kcat`, `source` and `note`:
+`assignKcats` replaces every kcat of the model with the values selected from the files in `data/kcats`. A value set with `setKcatForReactions` is therefore lost at the next `assignKcats`. To keep it, add it to `data/kcats/custom.tsv`, which every preset reads first (see [Set custom kcats](custom-kcats.md)). A row for the example above, with the columns `rxn`, `enzymes`, `kcat`, `source` and `note`:
 
 ```text
 rxn	enzymes	kcat	source	note
