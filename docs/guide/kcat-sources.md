@@ -12,6 +12,10 @@ GECKO selects one kcat per enzymatic reaction from the kcat source files in `dat
 | `collectKcats` | `collect_kcats` | determine the kcats without changing the model |
 | `assignKcats` | `assign_kcats` | determine the kcats and apply them as enzyme constraints |
 
+## Setup
+
+The examples start from an ecModel made with `makeEcModel` (Python: `make_ec_model`), full or light ([Choose the ecModel structure](ecmodel-structure.md)). In MATLAB, the project is the default model adapter (`ModelAdapterManager.setDefault`); in Python, `ec_model.adapter` holds the project. The project folder has `data/uniprot.tsv` and `data/kegg.tsv` from making the ecModel. The OKP methods and DLKcat without `data/DLKcat.tsv` need an OpenKineticsPredictor API key ([Prepare the inputs](#prepare-the-inputs)). The BRENDA download, the PubChem queries and OpenKineticsPredictor need internet access.
+
 ## Presets
 
 `[kcat_assignment] preset` selects one of six presets. Each preset is a list of stages, and a stage gives a kcat to the reactions that the earlier stages left without one. Every preset starts with the custom kcats of the project. In the table, "OKP" means the OpenKineticsPredictor methods of `[kcat_sources.okp] methods`; the default methods are CataPro, DLKcat, EITLEM, KinForm-H, KinForm-L, OmniESI, OmniESI-O2DENet and UniKP.
@@ -31,7 +35,7 @@ A project can list its own stages in `[[kcat_assignment.stage]]` tables in place
 
 ### Preset to start with
 
-Against measured kcats hidden from the search, the EC tree was as close as or closer than the BRENDA median at each origin level and with EC wildcards, and the EC tree combined with the OKP methods was slightly closer than the EC tree; in ecModels, however, values combined with predictions set high-turnover enzymes such as ATP synthase too low ([Kcat assignment](../gecko4-kcat-assignment.md#presets)). No other comparison of the presets has been measured. `brenda_ec_tree`, the default, uses predictions only for reactions without a value from measurements, and is the preset to start with.
+Against measured kcats hidden from the search, the EC tree was as close as or closer than the BRENDA median at each origin level and with EC wildcards, and the EC tree combined with the OKP methods was slightly closer than the EC tree; in ecModels, however, values combined with predictions set high-turnover enzymes such as ATP synthase too low ([Kcat assignment](../gecko4-kcat-assignment.md#presets)). No other comparison of the presets has been measured. `brenda_ec_tree`, the default, uses predictions for the reactions without a value from measurements, and is the preset to start with.
 
 ## BRENDA origin and wildcard levels
 
@@ -62,8 +66,8 @@ The sources read different parts of the ecModel and of the project:
 
 | Input | Read by | How to get it |
 | --- | --- | --- |
-| EC numbers in `ec.eccodes` | BRENDA, EC tree | from the GEM, or from UniProt and KEGG (code below) |
-| SMILES of the metabolites | OKP methods, DLKcat | `findMetSmiles` (code below); substrates without a SMILES are left out of a prediction |
+| EC numbers in `ec.eccodes` | BRENDA, EC tree | `getECfromGEM` (from the GEM), `getECfromDatabase` (from UniProt and KEGG) |
+| SMILES of the metabolites | OKP methods, DLKcat | `findMetSmiles`; substrates without a SMILES are left out of a prediction |
 | enzyme sequences in `ec.sequence` | OKP methods, DLKcat, homologs | `makeEcModel` fills them from UniProt ([Choose the ecModel structure](ecmodel-structure.md)) |
 | BRENDA files | BRENDA, EC tree, homologs, combined stages | `fetchBrendaAsset` downloads the release `brenda-2026.1-1` on first use. A project folder `data/brenda` takes precedence. MATLAB needs RAVEN 3 for the download |
 | DIAMOND | homologs | the DIAMOND executable of RAVEN (MATLAB) or raven-toolbox (Python) |
@@ -71,7 +75,7 @@ The sources read different parts of the ecModel and of the project:
 
 GECKO looks for the API key in the environment variable `OKP_API_KEY` and then in the file `data/okpApiKey.txt` of the project. The key is never read from `model_adapter.toml`. Do not commit `data/okpApiKey.txt` to a public repository.
 
-`getECfromDatabase` replaces the EC numbers of the reactions it is given, so the reactions that still have no EC number after `getECfromGEM` are selected. In Python, KEGG is used for reactions without a UniProt EC number only when `kegg_db` is given:
+`getECfromDatabase` replaces the EC numbers of the reactions it is given, so the reactions that still have no EC number after `getECfromGEM` are selected. In Python, KEGG fills the reactions without a UniProt EC number when `kegg_db` is given:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB

@@ -1,6 +1,6 @@
 # Constrain enzymes with proteomics
 
-Load the absolute proteomics data and the exchange fluxes of one experiment, bound the usage of each measured enzyme by its concentration, set the protein pool for the experiment, and constrain the exchange reactions and the growth rate. At the end, the ecModel describes the experiment, and solving it shows whether the ecModel reaches the measured growth rate. Only a full ecModel can take proteomics data: a light ecModel has no usage reaction per enzyme (see [Choose the ecModel structure](ecmodel-structure.md)).
+Load the absolute proteomics data and the exchange fluxes of one experiment, bound the usage of each measured enzyme by its concentration, set the protein pool for the experiment, and constrain the exchange reactions and the growth rate. At the end, the ecModel describes the experiment, and solving it shows whether the ecModel reaches the measured growth rate. Proteomics data require a full ecModel, which has a usage reaction per enzyme; a light ecModel has none (see [Choose the ecModel structure](ecmodel-structure.md)).
 
 ## Functions
 
@@ -25,11 +25,19 @@ A full ecModel with kcats and a protein pool (see [Build an ecModel](first-ecmod
 
 | Choice | Options | Criteria |
 | --- | --- | --- |
-| Complexes | level with `levelComplexConcs`, or keep each subunit as measured | Level when the subunits of a complex are measured at different amounts: a complex bounded subunit by subunit carries no more flux than its least abundant subunit allows. Levelling uses the subunit copies in `ec.rxnEnzMat`, which come from the complex data (`applyComplexData`); without complex data, every subunit counts as one copy. |
-| Unmeasured isozymes | leave them in the pool (default), bound them at the detection limit, or set them to 0 | A protein that is missing from the data can be absent or below the detection limit. A bound of 0 treats it as absent; the detection limit treats it as present at a low amount. Without a bound, the ecModel can use the unmeasured isozyme in place of the measured one. |
-| f | the value in `model_adapter.toml`, or `calculateFfactor` on the proteomics of the condition | f from the same proteomics data describes the same proteome as the concentrations. The value in `model_adapter.toml` is often calculated from PaxDB data or is the default 0.5 (see [Set the protein pool](protein-pool.md)). |
-| Exchange fluxes | `'loose'`, or a percentage around the measured value | `'loose'` bounds each exchange reaction between 0 and the measured value. A percentage forces a flux through the reaction, and an error in the fluxes or in the enzyme data can then make the ecModel infeasible. |
-| Growth rate | `'max'` or `'min'` | `'max'` sets the measured growth rate as upper bound, for growth as objective. `'min'` sets it as lower bound, for the minimal protein pool usage as objective (see [Analyse an ecModel](analysis.md)). |
+| Complexes | level with `levelComplexConcs`, or keep each subunit as measured | Level when the subunits of a complex are measured at different amounts. |
+| Unmeasured isozymes | no bound (default), a bound at the detection limit, or a bound of 0 | A protein that is missing from the data can be absent or below the detection limit. |
+| f | the value in `model_adapter.toml`, or `calculateFfactor` on the proteomics of the condition | f from the same proteomics data describes the same proteome as the concentrations. |
+| Exchange fluxes | `'loose'`, or a percentage around the measured value | A percentage forces a flux through each reaction. |
+| Growth rate | `'max'` or `'min'` | `'max'` suits growth as objective; `'min'` suits the minimal protein pool usage as objective. |
+
+A complex that is bounded subunit by subunit carries no more flux than its least abundant subunit allows. Levelling uses the subunit copies in `ec.rxnEnzMat`, which come from the complex data (`applyComplexData`); without complex data, every subunit counts as one copy.
+
+An unmeasured isozyme without a bound can carry the flux of a measured one. A bound of 0 treats the protein as absent; a bound at the detection limit treats it as present at a low amount.
+
+The f in `model_adapter.toml` is often calculated from PaxDB data, or is the default 0.5 (see [Set the protein pool](protein-pool.md)).
+
+`'loose'` bounds each exchange reaction between 0 and the measured value. With a percentage, an error in the fluxes or in the enzyme data can make the ecModel infeasible. `'max'` sets the measured growth rate as upper bound and `'min'` as lower bound (see [Analyse an ecModel](analysis.md) for the objectives).
 
 Start with `'loose'` and `'max'`. The ecModel then has a solution also when the proteomics limit growth, which `flexibilizeEnzConcs` and `relaxProteomicsGreedy` need (see [Relax proteomics constraints](relaxing-proteomics.md)). With `'min'`, an ecModel that cannot reach the growth rate is infeasible.
 
@@ -37,7 +45,7 @@ Start with `'loose'` and `'max'`. The ecModel then has a solution also when the 
 
 `data/proteomics.tsv` is tab-delimited with one header row. The first column holds the UniProt identifiers, and every following column holds one replicate, in mg/gDCW. The replicates of the first condition come first, then those of the second condition, and so on. The header must have one column more than the total number of replicates; otherwise `loadProtData` raises the error `loadProtData:replicateMismatch` (Python: `ValueError`). A cell with `NA`, `na`, `NaN`, `#VALUE!` or no value is not measured, and a row without an identifier is removed. Relative proteomics data cannot be used: a concentration in another unit gives wrong bounds and no error.
 
-`data/fluxData.tsv` is tab-delimited with one header row and one row per condition. The columns are the condition name, the total protein content Ptot (g/gDCW), the growth rate (1/h), and then one column per exchange reaction, in mmol/gDCW/h, negative for uptake and positive for excretion. The header of an exchange column has the form `<metabolite> (<reaction id>)`. Optional columns `evotuneRMSEweight` and `source` can be at any position. A line with a different number of cells than the header raises an error. The first columns of `fluxData.tsv` of the `full_ecModel` tutorial of GECKO, which uses yeast-GEM, where `r_1714` is the glucose exchange (the file has 11 columns):
+`data/fluxData.tsv` is tab-delimited with one header row and one row per condition. The columns are the condition name, the total protein content Ptot (g/gDCW), the growth rate (1/h), and then one column per exchange reaction, in mmol/gDCW/h, negative for uptake and positive for excretion. The header of an exchange column has the form `<metabolite> (<reaction id>)`. Optional columns `evotuneRMSEweight` and `source` can be at any position. A line with a different number of cells than the header raises an error. The example shows the first 7 of the 11 columns of `fluxData.tsv` in the `full_ecModel` tutorial of GECKO, which uses yeast-GEM; `r_1714` is the glucose exchange of yeast-GEM:
 
 ```text
 Condition	Ptot	grRate	glucose (r_1714)	CO2 (r_1672)	oxygen (r_1992)	ethanol (r_1761)
@@ -60,7 +68,7 @@ The `proteomics.tsv` of the same tutorial has one condition with three replicate
 | `filterData` | `filter_data` | true | false skips the filters above and returns the mean of the replicates |
 | `zerosAsMeasured` | `zeros_as_measured` | false | whether a 0 is a measurement |
 
-A protein that is removed is NaN for that condition, and its enzyme draws from the protein pool without a bound of its own. By default a 0 is read as not measured, because proteomics reports a protein below the detection limit as 0 or as missing. With `zerosAsMeasured` true, a 0 counts as a measured replicate, and a protein measured as 0 in every replicate keeps the concentration 0. `constrainEnzConcs` then sets the usage bound of its enzyme to 0, which removes every flux through the enzyme. Set it to true only when a 0 means that the protein is absent, for example in a deletion strain.
+A protein that is removed is NaN for that condition, and its enzyme draws from the protein pool without a bound of its own. By default a 0 is read as not measured, because proteomics reports a protein below the detection limit as 0 or as missing. With `zerosAsMeasured` true, a 0 counts as a measured replicate, and a protein measured as 0 in every replicate keeps the concentration 0. `constrainEnzConcs` then sets the usage bound of its enzyme to 0, which removes every flux through the enzyme. Set it to true when a 0 means that the protein is absent, for example in a deletion strain.
 
 `fillEnzConcs` writes the concentrations of one condition to `ec.concs` and sets every other enzyme to NaN. The condition index starts at 1 in MATLAB and at 0 in Python.
 

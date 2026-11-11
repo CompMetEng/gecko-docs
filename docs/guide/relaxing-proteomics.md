@@ -1,12 +1,12 @@
 # Relax proteomics constraints
 
-Raise the usage bounds of the enzymes that keep an ecModel constrained with proteomics below the measured growth rate, until it reaches that growth rate. At the end, you have an ecModel that reaches the growth rate, a list of the enzymes whose bounds were raised and by how much, and an indication of whether the shortfall comes from the proteomics data, the kcats, the protein pool or the metabolic network.
+Raise the usage bounds of the enzymes that keep an ecModel constrained with proteomics below the measured growth rate, until it reaches that growth rate. The result is an ecModel that reaches the growth rate, a list of the enzymes whose bounds were raised and by how much, and an indication of whether the shortfall comes from the proteomics data, the kcats, the protein pool or the metabolic network.
 
 ## Functions
 
 | MATLAB | Python | Note |
 | --- | --- | --- |
-| `flexibilizeEnzConcs` | `flexibilize_enz_concs` | raises the bound of the most limiting enzyme step by step, then lowers the bounds that are not needed |
+| `flexibilizeEnzConcs` | `flexibilize_enz_concs` | raises the bound of the most limiting enzyme step by step, then lowers the bounds that the target does not need |
 | `relaxProteomicsGreedy` | `relax_proteomics_greedy` | removes the bound of the enzyme with the largest shadow price, one enzyme at a time |
 | no counterpart | `relax_enz_concs` | finds the smallest total relaxation in one linear program |
 | `constrainFluxData` | `apply_flux_data_constraints` | applies the same exchange fluxes to the conventional GEM, for comparison |
@@ -17,20 +17,30 @@ An ecModel with concentrations applied as bounds and the exchange fluxes of the 
 
 ## Choose a method
 
-| Method | What it changes | Stopping rule | Solves | What it returns |
+| Method | Change to a bound | Enzymes it can raise | Solves | Returns |
 | --- | --- | --- | --- | --- |
-| `flexibilizeEnzConcs` | On each iteration, it computes the control coefficient (growth gained per mg/gDCW added) of every measured enzyme whose usage is above 75 % of its bound, and raises the bound of the enzyme with the largest coefficient to concentration × (1 + `foldChange` × k) on its k-th selection. After the loop, it minimises the protein pool usage at the target growth rate (± 0.25 %), sets each raised bound to the usage in that solution, and restores the measured concentration where the usage is lower. | The target is reached. Or no enzyme limits growth: the protein pool is then raised to the usage needed for the highest growth it allows, and that growth becomes the target. Or an enzyme is selected more than `iterPerEnzyme` times (default 5): the loop stops with a warning, the bounds are not lowered afterwards, and the target is not reached. | one per candidate enzyme on every iteration, to compute the control coefficients | the ecModel and `flexEnz` |
-| `flexibilizeEnzConcs` with `perComplex` | As above, but the measured subunits of a complex form one unit: they are ranked together, raised by the same factor and lowered by the same factor, so levelled concentrations stay levelled. Units are ranked by the reduced costs of their usage reactions. | As above, counted per complex, with an additional limit on the total number of iterations. | one per iteration; one per candidate unit when the solver gives no reduced costs | the ecModel and `flexEnz` |
-| `relaxProteomicsGreedy` | Solves the ecModel, takes the enzyme with the largest absolute shadow price of its `prot_<id>` metabolite among the enzymes with a usage bound below 1000, and sets that bound to 1000. Bounds are never lowered afterwards, and the protein pool is never raised. | The target is checked before each relaxation. The target is reached (`converged` true). Or no candidate is left: a warning, and `converged` false. Or `maxIterations` (default 100) relaxations are done: an error, also when the last relaxation reached the target. | one per relaxed enzyme | `result`; the MATLAB function does not return the ecModel |
-| `relax_enz_concs` (Python only) | Writes the bound of every measured enzyme as b × (1 + x), where b is its current upper bound (the concentration, or a higher bound set by an earlier relaxation) and minimises the sum of the x values under growth ≥ target, in one linear program. The protein pool can be raised too, at `pool_weight` (default 1000) times the price of an enzyme. `weight="absolute"` minimises the mg/gDCW added instead. `per_complex=True` gives the measured subunits of a complex one x. | One solution. When no relaxation reaches the target, it raises `ValueError` and restores the bounds. | one | `FlexEnzResult`, as `flexibilize_enz_concs` |
+| `flexibilizeEnzConcs` | raised in steps, then lowered to the usage that the target needs | enzymes with a concentration above 0 | one per candidate enzyme on every iteration | the ecModel and `flexEnz` |
+| `flexibilizeEnzConcs` with `perComplex` | as above, with one factor per complex | as above | one per iteration; one per candidate complex when the solver gives no reduced costs | the ecModel and `flexEnz` |
+| `relaxProteomicsGreedy` | set to 1000, one enzyme per step | every enzyme with a usage bound below 1000 | one per relaxed enzyme | `result` |
+| `relax_enz_concs` (Python) | raised by the smallest sum of folds, in one linear program | enzymes with a concentration, including 0 | one | the ecModel and a `FlexEnzResult` |
 
-The methods also differ in the enzymes they can raise. `flexibilizeEnzConcs` raises a bound as a factor of the concentration, so an enzyme measured as 0 stays at 0 (the function warns and lists these enzymes). `flexibilizeEnzConcs` and `relax_enz_concs` act on enzymes with a concentration in `ec.concs`; an isozyme lowered by `zeroUnmeasuredIsozymes` has no concentration and is not raised. `relaxProteomicsGreedy` acts on every usage bound below 1000, including both cases.
+`flexibilizeEnzConcs` raises a bound as a factor of the concentration, so an enzyme measured as 0 stays at 0; the function warns and lists these enzymes. An isozyme lowered by `zeroUnmeasuredIsozymes` has no concentration in `ec.concs`, and `relaxProteomicsGreedy` is the method that raises it. `flexibilizeEnzConcs` and `relax_enz_concs` can raise the protein pool when enzymes do not suffice; `relaxProteomicsGreedy` leaves the pool unchanged.
 
-Use `flexibilizeEnzConcs`, with `perComplex` when the concentrations were levelled with `levelComplexConcs`. Its result keeps the measured bound of every enzyme that the final solution does not need to raise. Use `relaxProteomicsGreedy` when enzymes with a bound of 0 limit growth; each enzyme that it relaxes has no bound of its own afterwards. In Python, `relax_enz_concs` gives a result that does not depend on the order in which enzymes become limiting; compare it with the result of `flexibilize_enz_concs`. Both functions change the ecModel in place, so run each on its own copy of the constrained ecModel (`ec_model.copy()`). An enzyme that both methods raise is limiting in the data; a conclusion that depends on an enzyme that only one method raises is uncertain.
+Use `flexibilizeEnzConcs`, with `perComplex` when the concentrations were levelled with `levelComplexConcs`. Its result keeps the measured bound of every enzyme that the final solution does not need to raise. Use `relaxProteomicsGreedy` when enzymes with a bound of 0 limit growth; each enzyme that it relaxes has no bound of its own afterwards. In Python, `relax_enz_concs` gives a result that does not depend on the order in which enzymes become limiting; compare it with the result of `flexibilize_enz_concs`. Both functions change the ecModel in place, so run each on its own copy of the constrained ecModel (`ec_model.copy()`). An enzyme that both methods raise is limiting in the data; a conclusion that depends on an enzyme that one method raises and the other does not is uncertain.
 
 ## Relax with flexibilizeEnzConcs
 
-`foldChange` (default 2) sets the step: with the defaults, the bound of an enzyme is 3, 5, 7, 9 and 11 times its concentration on its first to fifth selection. `iterPerEnzyme` set to 0 removes the limit per enzyme. The function changes the usage bounds, the upper bound of `prot_pool_exchange` when the protein pool limits growth, and the upper bound of the biomass reaction when it is below the target growth rate, which it raises to the target. `ec.concs` keeps the measured values.
+On each iteration, `flexibilizeEnzConcs` computes the control coefficient (growth gained per mg/gDCW added) of every measured enzyme whose usage is above 75 % of its bound. It raises the bound of the enzyme with the largest coefficient to concentration × (1 + `foldChange` × k) on its k-th selection. With the default `foldChange` of 2, the bound is 3, 5, 7, 9 and 11 times the concentration on the first to fifth selection.
+
+The loop stops in one of three cases:
+
+- The target growth rate is reached.
+- No enzyme limits growth. The function then raises the upper bound of `prot_pool_exchange` to the usage needed for the highest growth rate that the pool allows, and this growth rate becomes the target.
+- An enzyme is selected more than `iterPerEnzyme` times (default 5; 0 removes the limit). The loop stops with a warning, and the target is not reached.
+
+In the first two cases, a final pass minimises the protein pool usage at the target growth rate (± 0.25 %), sets each raised bound to the usage in that solution, and restores the measured concentration where the usage is lower. The function also raises the upper bound of the biomass reaction to the target when it is lower. `ec.concs` keeps the measured values.
+
+With `perComplex`, the measured subunits of a complex form one unit. Units are ranked by the reduced costs of their usage reactions, and the subunits of a unit are raised and lowered by the same factor, so levelled concentrations stay levelled. The limit of `iterPerEnzyme` counts per complex, and a limit on the total number of iterations is added.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -66,7 +76,13 @@ The copy `flex_model` is changed in place, and `ec_model` keeps the bounds from 
 
 ## Relax with relaxProteomicsGreedy
 
-`enzymeSet` (Python: `enzyme_set`) limits the candidates to a list of UniProt identifiers. In MATLAB, the function returns only `result`, so apply the relaxed bounds to the ecModel yourself. In Python, the ecModel is changed in place; the example relaxes a copy.
+`relaxProteomicsGreedy` solves the ecModel, takes the enzyme with the largest absolute shadow price of its `prot_<id>` metabolite among the enzymes with a usage bound below 1000, sets that bound to 1000, and solves again. The function checks the target before each relaxation and stops in one of three cases:
+
+- The target is reached: `converged` is true.
+- No candidate is left: a warning, and `converged` is false.
+- `maxIterations` (default 100) relaxations are done: an error, also when the last relaxation reached the target.
+
+`enzymeSet` (Python: `enzyme_set`) limits the candidates to a list of UniProt identifiers. The MATLAB function returns `result`; apply the relaxed bounds to the ecModel with `setParam`, as in the example. The Python function changes the ecModel in place; the example relaxes a copy.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -92,7 +108,15 @@ result = relax_proteomics_greedy(greedy_model, minimal_growth=float(flux_data.gr
 
 ## Relax with relax_enz_concs
 
-`relax_enz_concs` is available in geckopy only; GECKO has no MATLAB counterpart. It changes the usage bounds and `prot_pool_exchange` in place and leaves `ec.concs` unchanged. The x of an enzyme counts from its current upper bound, so a bound raised by an earlier relaxation is never lowered. An enzyme measured as 0 can be raised: its x is scaled by `floor` (default 1e-9 mg/gDCW), which makes it expensive with `weight="relative"`.
+`relax_enz_concs` is a geckopy function; GECKO has no MATLAB counterpart. It writes the bound of every enzyme with a concentration as b × (1 + x), where b is the current upper bound (the concentration, or a higher bound from an earlier relaxation), and minimises the sum of the x values under growth ≥ target, in one linear program. A bound raised earlier is therefore never lowered.
+
+- The protein pool can be raised too, at `pool_weight` (default 1000) times the price of an enzyme.
+- `weight="absolute"` minimises the mg/gDCW added.
+- `per_complex=True` gives the measured subunits of a complex one x.
+- An enzyme measured as 0 can be raised: its x is scaled by `floor` (default 1e-9 mg/gDCW), which makes it expensive with `weight="relative"`.
+- When no relaxation reaches the target, the function raises `ValueError` and restores the bounds.
+
+The function changes the usage bounds and `prot_pool_exchange` in place, leaves `ec.concs` unchanged, and returns a `FlexEnzResult` with `frequence` 1 for every enzyme.
 
 ```python
 from geckopy import relax_enz_concs
@@ -136,7 +160,7 @@ print(pd.DataFrame([vars(step) for step in result.trace]))
 
 A relaxation corrects for errors in the concentrations. The enzymes that are relaxed, and how much, show which part of the data or the ecModel limits growth:
 
-- **Many enzymes relaxed.** The proteomics data have many uncertain values. Filter them more strictly with `loadProtData` (for example a lower `maxRSD`), so that the uncertain enzymes draw from the protein pool without a bound of their own.
+- **Many enzymes relaxed.** The proteomics data have many uncertain values. Stricter filters in `loadProtData` (for example a lower `maxRSD`) remove the uncertain concentrations, and their enzymes then draw from the protein pool without a bound of their own.
 - **One enzyme selected many times**, or `flexibilizeEnzConcs` stops with the warning that the enzyme "seems to be problematic". Its kcat can be too low for this condition. Check the kcat against its source (see [Check a tuned kcat against its source](kcat-tuning.md#check-a-tuned-kcat-against-its-source) and [Choose the kcat sources](kcat-sources.md)).
 - **The protein pool is raised.** The pool from $P_{tot}$, $f$ and $\sigma$ is smaller than the protein that the condition needs, for example when sigma was fitted to another condition (see [Set the protein pool](protein-pool.md)).
 - **No method reaches the target.** `flexibilizeEnzConcs` reports that the protein pool exchange was also not limiting, `relaxProteomicsGreedy` returns `converged` false, or `relax_enz_concs` raises `ValueError`. The enzyme constraints do not limit growth: the metabolic network or the exchange fluxes do. Apply the same exchange fluxes to the conventional GEM. If it does not reach the growth rate either, check the exchange fluxes of `fluxData.tsv` and the network.
@@ -178,7 +202,7 @@ print(f"Growth rate of the GEM: {model.slim_optimize():g} /h")
 | `relaxProteomicsGreedy` raises an error (Python: `RuntimeError`) | `maxIterations` relaxations were done | Raise `maxIterations`, or use `flexibilizeEnzConcs` |
 | The MATLAB ecModel does not grow faster after `relaxProteomicsGreedy` | the function does not return the ecModel | Set the usage bounds of the enzymes in `result.trace` to 1000, as in the example |
 | The growth rate after `flexibilizeEnzConcs` is slightly below the target | the final pass minimises the pool usage within 0.25 % of the target growth rate | The difference is within 0.25 % of the target |
-| The relaxed ecModel is much less constrained than the data | `relaxProteomicsGreedy` removes each bound completely | Use `flexibilizeEnzConcs` |
+| The relaxed ecModel is much less constrained than the data | `relaxProteomicsGreedy` sets each relaxed bound to 1000 | Use `flexibilizeEnzConcs` |
 
 ## See also
 

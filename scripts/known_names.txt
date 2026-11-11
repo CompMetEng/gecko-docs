@@ -347,3 +347,4 @@ prodTargetRxn
 target_type
 prot_data
 flex_model
+get_by_id

@@ -11,6 +11,10 @@
 | `setKcatForReactions` | `set_kcat_for_reactions` | change `ec.kcat` of named reactions in the model |
 | `applyKcatConstraints` | `apply_kcat_constraints` | apply `ec.kcat` to the stoichiometry |
 
+## Setup
+
+The examples start from an ecModel made with `makeEcModel` (Python: `make_ec_model`), full or light. In MATLAB, the project is the default model adapter (`ModelAdapterManager.setDefault`); in Python, `ec_model.adapter` holds the project. The other source files of the preset are in `data/kcats` ([Choose the kcat sources](kcat-sources.md#gather-the-source-files)); `assignKcats` leaves a missing source file out.
+
 ## Write custom.tsv
 
 Every preset reads `custom.tsv` in its first stage ([Choose the kcat sources](kcat-sources.md)), so a custom kcat is used before all other sources. `updateKcatSources` and `saveKcatSource` do not write this file.
@@ -20,7 +24,7 @@ The file is tab-separated. It needs the columns `kcat` and `source`, and `rxn`, 
 | Column | Content |
 | --- | --- |
 | `rxn` | the identifier of the reaction in the conventional GEM, with `_REV` for the reverse direction. Without `enzymes`, the row applies to every isozyme of the reaction |
-| `enzymes` | the UniProt accessions of the enzyme, joined by ` + ` in any order. Without `rxn`, the row applies to every reaction with exactly this enzyme set |
+| `enzymes` | the UniProt accessions of the enzyme, joined by ` + ` in any order. Without `rxn`, the row applies to every reaction whose enzyme set is this set |
 | `kcat` | the kcat in s^-1 |
 | `source` | where the value comes from, for example `custom`; `ec.source` holds it in lower case, with each run of characters other than letters and digits replaced by `_` |
 | `note` | free text, for example the reference |
@@ -31,11 +35,11 @@ R1	P12345	120	custom	measured value of the organism
 R2_REV		35	custom	value for all isozymes
 ```
 
-`R1`, `R2` and `P12345` stand for reactions of the GEM and a UniProt accession of the organism. The rows are keyed by the conventional reaction and the enzyme set, not by the identifiers in `ec.rxns`. The file therefore stays valid when the ecModel is rebuilt, and it applies to full and light ecModels. [Project format 4](../gecko4-project-format.md#kcat-source-files) describes the format of all kcat source files.
+`R1`, `R2` and `P12345` stand for reactions of the GEM and a UniProt accession of the organism. The rows are keyed by the conventional reaction and the enzyme set, which do not depend on how the ecModel is built. The file therefore stays valid when the ecModel is rebuilt, and it applies to full and light ecModels. [Project format 4](../gecko4-project-format.md#kcat-source-files) describes the format of all kcat source files.
 
 ## Apply the custom kcats
 
-`assignKcats` reads `custom.tsv` with the other source files. A row with a kcat that is missing, not a number or not above 0 is not applied. A row that matches no reaction of the ecModel, or that matches only part of an enzyme set, is not applied either. The report lists these rows per source file:
+`assignKcats` reads `custom.tsv` with the other source files. A row whose kcat is empty, is text other than a number, or is 0 or below is not applied. A row that matches no reaction of the ecModel, or that matches part of an enzyme set, is not applied either. The report lists these rows per source file:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -100,7 +104,7 @@ apply_kcat_constraints(ec_model)
 
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
-| A custom kcat is not used | the row matches no reaction, or only part of an enzyme set | Read `report.sources.custom` of `assignKcats` and correct `rxn` or `enzymes` |
+| A custom kcat is not used | the row matches no reaction, or part of an enzyme set | Read `report.sources.custom` of `assignKcats` and correct `rxn` or `enzymes` |
 | A custom row is listed as invalid | the kcat is empty, 0, or not a plain number (for example `5,5` with a decimal comma) | Write the kcat as a number with a decimal point |
 | Error `loadKcatSource:columns` (Python: `ValueError` with `needs the columns kcat and source`) | the file lacks `kcat`, `source`, or both `rxn` and `enzymes` | Add the columns to the header line |
 | Kcats set by hand are gone | `assignKcats` replaced them | Write them to `data/kcats/custom.tsv` |

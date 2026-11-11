@@ -24,9 +24,9 @@ $$ P_{tot} \cdot f \cdot \sigma \cdot 1000 $$
 
 in mg/gDCW, the same unit as the enzyme cost of the reactions.
 
-| Parameter | Adapter key (MATLAB name) | Meaning | Unit | Default |
+| Parameter | TOML key (MATLAB name) | Meaning | Unit | Default |
 |---|---|---|---|---|
-| $P_{tot}$ | `p_tot` (`Ptot`) | total protein content of the cell | g protein/gDCW | 0.5 |
+| $P_{tot}$ | `p_tot` (`Ptot`) | total protein content of the cell | g protein per gDCW | 0.5 |
 | $f$ | `f` | mass fraction of the total protein that the enzymes of the ecModel account for | g enzyme/g protein | 0.5 |
 | $\sigma$ | `sigma` | average saturation of the enzymes: the fraction of their maximum rate at which the enzymes work in the cell | none, 0 to 1 | 0.5 |
 
@@ -168,7 +168,7 @@ Before the scan, both functions set the bounds of the objective reaction to 0 an
 [ecModel, sigma] = sigmaFitter(ecModel, 'makePlot', false);
 ```
 
-`sigmaFitter` tests $\sigma$ = 0.01, 0.02, ..., 1 and calculates for each the error $100 \times |\mu_{target} - \mu| / \mu_{target}$ in percent. It selects the smallest $\sigma$ whose error is at most the smallest error plus $10^{-9} \times 100 \times \mu_{best} / \mu_{target}$, where $\mu_{best}$ is the growth rate at the $\sigma$ with the smallest error. This tolerance allows a difference in growth rate of a relative $10^{-9}$ of $\mu_{best}$, so that rounding differences of the solver do not move the result. When the growth rate is constant from some $\sigma$ on, the result is the first $\sigma$ of that plateau with every solver.
+`sigmaFitter` tests $\sigma$ = 0.01, 0.02, ..., 1 and calculates for each the error $100 \times |\mu_{target} - \mu| / \mu_{target}$ in percent. It selects the smallest $\sigma$ whose error is at most the smallest error plus $10^{-9} \times 100 \times \mu_{best} / \mu_{target}$, where $\mu_{best}$ is the growth rate at the $\sigma$ with the smallest error. This tolerance allows a difference in growth rate of a relative $10^{-9}$ of $\mu_{best}$, which keeps rounding differences of the solver from moving the result. When the growth rate is constant from some $\sigma$ on, the result is the first $\sigma$ of that plateau with every solver.
 
 The options are `growthRate`, `Ptot`, `f`, `makePlot` (default `true`, a plot of the error against $\sigma$) and `modelAdapter`, as name-value pairs or by position in this order.
 :::
@@ -185,11 +185,11 @@ print(fit.sigma)
 `fit_sigma` changes `ec_model` in place and returns a `SigmaFitterResult` with `sigma`, and the arrays `sigma_grid`, `growth_grid` and `error_grid` (the error in percent) for a plot. The keywords `growth_rate`, `p_tot` and `f` replace the adapter values. The keyword `method` selects the search:
 
 - `method="grid"` (default) tests $\sigma$ = 1/n, 2/n, ..., 1 with n = `n_sigma_steps` (default 100, the same values as `sigmaFitter`) and selects the first $\sigma$ with the smallest error. It has no tolerance: when the growth rates on a plateau differ by rounding errors of the solver, the result can be a later $\sigma$ of the plateau.
-- `method="bisect"` uses that the growth rate does not decrease when $\sigma$ increases. It searches the smallest $\sigma$ at which the growth rate reaches the target, to a resolution of $10^{-6}$, so the result is in general not a multiple of 0.01. When the growth rate at $\sigma$ 1 is below the target, it searches the smallest $\sigma$ at which the growth rate is within a relative $10^{-9}$ of the growth rate at $\sigma$ 1, the start of the plateau. The arrays of the result contain only the $\sigma$ values that were tested.
+- `method="bisect"` uses that the growth rate does not decrease when $\sigma$ increases. It searches the smallest $\sigma$ at which the growth rate reaches the target, to a resolution of $10^{-6}$, so the result is in general not a multiple of 0.01. When the growth rate at $\sigma$ 1 is below the target, it searches the smallest $\sigma$ at which the growth rate is within a relative $10^{-9}$ of the growth rate at $\sigma$ 1, the start of the plateau. The arrays of the result contain the $\sigma$ values that were tested.
 :::
 ::::
 
-A $\sigma$ of 1, or a plateau that ends below the target growth rate, means that a larger protein pool does not let the ecModel reach the target. The kcats or the nutrient constraints limit growth, not the pool size.
+A $\sigma$ of 1, or a plateau that ends below the target growth rate, means that a larger protein pool does not let the ecModel reach the target. The kcats or the nutrient constraints limit growth.
 
 ## Fit sigma or tune the kcats
 
@@ -199,7 +199,7 @@ $\sigma$ changes the protein pool for all enzymes by the same factor. Tuning cha
 2. If the growth rate is far below the measured maximum growth rate, tune the kcats first. A $\sigma$ fitted to an ecModel with kcats that are too low is close to 1, or is the start of a plateau below the target, and makes the pool compensate for the kcats.
 3. Fit $\sigma$ after the tuning. `sensitivityTuning` multiplies a kcat by `foldChange` (default 10) in each step and stops when the growth rate reaches the target, so the growth rate after tuning is often above the target. `sigmaFitter` then selects a lower $\sigma$, at which the growth rate matches the target.
 
-A growth rate below the target can have three causes, checked in this order: the network (the conventional GEM does not reach the target either), the protein pool, and the kcats. To test the pool, remove its bound and compare the growth rate. The minimal protein pool usage at the target growth rate (see [Minimise protein pool usage at fixed growth](analysis.md#minimise-protein-pool-usage-at-fixed-growth)) shows how much enzyme mass the current kcats need. Setting the pool bound to that usage makes the ecModel reach the target, but the bound then no longer follows from $P_{tot}$, $f$ and $\sigma$; use it as a diagnostic, not as the pool of the ecModel.
+A growth rate below the target can have three causes, checked in this order: the network (the conventional GEM does not reach the target either), the protein pool, and the kcats. To test the pool, remove its bound and compare the growth rate. The minimal protein pool usage at the target growth rate (see [Minimise protein pool usage at fixed growth](analysis.md#minimise-protein-pool-usage-at-fixed-growth)) shows how much enzyme mass the current kcats need. Setting the pool bound to that usage makes the ecModel reach the target, but that bound does not follow from $P_{tot}$, $f$ and $\sigma$; use it as a diagnostic and keep the pool calculated by `setProtPoolSize`.
 
 If the ecModel reaches the target growth rate with the adapter values, fit $\sigma$ without tuning. A fitted $\sigma$ close to 1 means that the enzymes work at their maximum rate on average; check the kcats that limit growth in that case.
 
@@ -212,7 +212,7 @@ If the ecModel reaches the target growth rate with the adapter values, fit $\sig
 | $f$ is 0 or close to 0 | the protein identifiers of the data do not match `ec.enzymes` | map the identifiers of the data to UniProt identifiers |
 | `fit_sigma` raises a `ValueError` that `model.adapter` is None | the ecModel has no adapter attached, and `growth_rate`, `p_tot` or `f` is not given | attach the adapter, or give `growth_rate`, `p_tot` and `f` |
 | The fitted $\sigma$ is 1, or the error is large at every $\sigma$ | the kcats, the nutrient constraints or the network limit growth | see [Fit sigma or tune the kcats](#fit-sigma-or-tune-the-kcats) |
-| A fixed growth rate is no longer fixed after `sigmaFitter` or `fit_sigma` | both set the bounds of the objective reaction to 0 and 1000, and the returned ecModel keeps them | set the bounds of the growth reaction again |
+| The growth rate is free after `sigmaFitter` or `fit_sigma`, although its bounds were fixed before | both set the bounds of the objective reaction to 0 and 1000, and the returned ecModel keeps them | set the bounds of the growth reaction again |
 | `sigmaFitter` and `fit_sigma` give different $\sigma$ values for the same ecModel | on a growth plateau, `fit_sigma` with `method="grid"` has no tolerance for rounding errors of the solver | use `method="bisect"`, or compare the growth rates in `fit.growth_grid` |
 
 ## See also

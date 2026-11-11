@@ -1,9 +1,9 @@
 # Enzyme usage and bottlenecks
 
-A flux distribution of a full ecModel gives the amount of each enzyme that it uses. At the end of this page, you have the usage of each enzyme in a solution, the enzymes that run at their limit, the enzymes that limit the objective, and the flux distribution that uses the least enzyme mass.
+A flux distribution of a full ecModel gives the amount of each enzyme that it uses. GECKO computes the usage of each enzyme in a solution, the enzymes that run at their limit, the enzymes that limit the objective, and the flux distribution that uses the least enzyme mass.
 
 :::{note}
-The functions on this page need a full ecModel. A light ecModel has no `usage_prot_<id>` reactions, and the functions raise an error on it ([Choose the ecModel structure](ecmodel-structure.md)).
+`getEnzymeUsage`, `reportEnzymeUsage`, `getEnzymeBottlenecks`, `getConcControlCoeffs` and `getPfbaEnzymes` need a full ecModel. A light ecModel has no `usage_prot_<id>` reactions, and the functions raise an error on it ([Choose the ecModel structure](ecmodel-structure.md)).
 :::
 
 ## Functions
@@ -22,17 +22,17 @@ The examples use a full ecModel `ecModel` (Python: `ec_model`) and the model ada
 
 ## Choose a measure
 
-Each enzyme draws its protein from the shared protein pool (`prot_pool_exchange`) through a usage reaction `usage_prot_<id>`, which runs forward. Its flux is the usage of the enzyme in mg/gDCW. After `makeEcModel`, every usage reaction has an upper bound of 1000 mg/gDCW, so the pool is the only enzyme constraint that can bind. `constrainEnzConcs` sets the upper bound of the usage reaction of each enzyme with a measured concentration to that concentration; the enzyme still draws from the pool ([Constrain enzymes with proteomics](proteomics.md)).
+Each enzyme draws its protein from the shared protein pool (`prot_pool_exchange`) through a usage reaction `usage_prot_<id>`, which runs forward. Its flux is the usage of the enzyme in mg/gDCW. After `makeEcModel`, every usage reaction has an upper bound of 1000 mg/gDCW, so the pool is the one enzyme constraint that can bind. `constrainEnzConcs` sets the upper bound of the usage reaction of each enzyme with a measured concentration to that concentration; the enzyme still draws from the pool ([Constrain enzymes with proteomics](proteomics.md)).
 
-| Question | Analysis | Useful when |
+| Question | Analysis | Condition |
 | --- | --- | --- |
-| Which enzymes take most of the protein pool? | absolute usage (`getEnzymeUsage`, `reportEnzymeUsage`) | always; most useful when the protein pool limits the solution |
+| Which enzymes take most of the protein pool? | absolute usage (`getEnzymeUsage`, `reportEnzymeUsage`) | any solution; the ranking shows the allocation of the pool when the pool limits the solution |
 | Which enzymes run at their measured concentration? | capacity usage (`getEnzymeUsage`, `reportEnzymeUsage`) | enzymes have measured concentrations as upper bounds |
 | Which enzymes limit the objective, and by how much? | bottleneck ranking (`getEnzymeBottlenecks`) | enzymes have upper bounds that bind |
 | How much does the objective rise per unit of added enzyme? | control coefficients (`getConcControlCoeffs`) | as for the bottleneck ranking |
 | What is the smallest proteome that reaches the optimum? | `getPfbaEnzymes` | a flux distribution with the least enzyme mass is wanted |
 
-Usage describes one flux distribution. An LP often has several optimal flux distributions, and their enzyme usage can differ. `getPfbaEnzymes` selects one of them by a stated rule (least enzyme mass), so compute the usage from its solution when you compare conditions.
+Usage describes one flux distribution. An LP often has several optimal flux distributions, and their enzyme usage can differ. `getPfbaEnzymes` selects one of them by a stated rule (least enzyme mass), so compute the usage from its solution to compare conditions.
 
 An enzyme with a high usage does not have to limit the objective, and an enzyme with a low usage that runs at its bound can. To find the enzymes that limit the objective, the bottleneck ranking raises the bound of one enzyme at a time and solves again. If no enzyme has a bound that binds, which is the normal case without proteomics data, the ranking and the control coefficients are 0 for all enzymes, and the protein pool limits the objective.
 
@@ -74,19 +74,19 @@ The usage data has one entry per enzyme of `ec.enzymes` that has a usage reactio
 
 | Field (MATLAB / Python) | Content | Unit |
 | --- | --- | --- |
-| `protID` / `prot_id` | UniProt identifier | |
+| `protID` / `prot_id` | UniProt identifier | (none) |
 | `absUsage` / `abs_usage` | absolute usage: the absolute flux of `usage_prot_<id>` | mg/gDCW |
 | `UB` / `ub` | upper bound of `usage_prot_<id>`; after `flexibilizeEnzConcs` this can be above the measured concentration | mg/gDCW |
 | `capUsage` / `cap_usage` | capacity usage: `absUsage / UB`, the fraction of the available enzyme that the solution uses | fraction |
-| `fluxes` | the flux distribution that was given | |
+| `fluxes` | the flux distribution that was given | units of the reactions |
 | `measuredProtein`, `demandedProtein`, `demandRatio` (Python: `measured_protein`, `demanded_protein`, `demand_ratio`) | sum of the measured concentrations in `ec.concs`, sum of the absolute usage of the same enzymes, and their ratio | mg/gDCW; ratio |
 | `measuredProteinActive`, `demandRatioActive` (Python: `measured_protein_active`, `demand_ratio_active`) | the same, over the measured enzymes with an absolute usage above 1e-7 mg/gDCW | mg/gDCW; ratio |
 
 The option `zero` (Python: `include_zero`, default true) set to false leaves out the enzymes with zero usage. The demand fields are computed over all enzymes with a usage reaction, whatever its value.
 
-For an enzyme without a measured concentration, `UB` is 1000 mg/gDCW, so its capacity usage is close to 0 and has no meaning. Use capacity usage only for enzymes with a measured concentration. When `UB` is 0, the capacity usage is NaN in Python and NaN or Inf in MATLAB.
+For an enzyme without a measured concentration, `UB` is 1000 mg/gDCW, so its capacity usage is close to 0 and has no meaning. Capacity usage applies to enzymes with a measured concentration. When `UB` is 0, the capacity usage is NaN in Python and NaN or Inf in MATLAB.
 
-A `demandRatio` above 1 means that the solution uses more of the measured enzymes than was measured. This happens when the usage bounds are above the measurements, for instance after `flexibilizeEnzConcs` ([Relax proteomics constraints](relaxing-proteomics.md)). A ratio at or below 1 does not exclude that one enzyme exceeds its measurement, because the sum is over all measured enzymes. Measured enzymes that carry no flux increase `measuredProtein`, so `demandRatioActive` shows a conflict among the active enzymes more clearly. The ratio is NaN when no concentration is measured.
+A `demandRatio` above 1 means that the solution uses more of the measured enzymes than was measured. This happens when the usage bounds are above the measurements, for instance after `flexibilizeEnzConcs` ([Relax proteomics constraints](relaxing-proteomics.md)). A ratio at or below 1 does not exclude that one enzyme exceeds its measurement, because the sum is over all measured enzymes. Measured enzymes that carry no flux increase `measuredProtein`, so `demandRatioActive` is the ratio to read for a conflict among the active enzymes. The ratio is NaN when no concentration is measured.
 
 ## Read the usage report
 
@@ -96,8 +96,8 @@ A `demandRatio` above 1 means that the solution uses more of the measured enzyme
 | --- | --- | --- |
 | `topAbsUsage` / `top_abs_usage` | the enzymes with the highest absolute usage, with the usage as a percentage of the upper bound of `prot_pool_exchange`, the kcat, its source and the reaction | `topAbsUsage` (Python: `top_abs_usage`), 10; 0 or `Inf` lists all enzymes |
 | `highCapUsage` / `high_cap_usage` | the enzymes with a capacity usage above the threshold, with the same columns and the capacity usage | `highCapUsage` (Python: `high_cap_usage`), 0.9 |
-| `totalUsageFlux` / `total_usage_flux` | the upper bound of `prot_pool_exchange`, in mg/gDCW | |
-| `demandRatio`, `demandRatioActive` (Python: `demand_ratio`, `demand_ratio_active`) | copied from the usage data | |
+| `totalUsageFlux` / `total_usage_flux` | the upper bound of `prot_pool_exchange`, in mg/gDCW | (none) |
+| `demandRatio`, `demandRatioActive` (Python: `demand_ratio`, `demand_ratio_active`) | copied from the usage data | (none) |
 
 An enzyme that catalyses several reactions with flux has one row with the combined usage, marked `===` in the text columns, followed by one row per reaction. In `topAbsUsage`, enzymes whose reactions carry no flux are left out after the top N are selected, so the table can have fewer than N enzymes. In `highCapUsage`, MATLAB lists such an enzyme as a `===` row without reaction rows, and Python leaves it out.
 
@@ -142,7 +142,7 @@ The result is a DataFrame indexed by UniProt identifier. `bottlenecks.attrs["n_r
 | `upperBound` / `upper_bound` | upper bound of the usage reaction, in mg/gDCW |
 | `multipleActive` / `multiple_active` | true when another capacity constraint is active at the same optimum: another enzyme at its bound, or `prot_pool_exchange` at its upper bound |
 
-The shadow price is not used for the order. Enzyme-constrained models often have a degenerate optimum, where several constraints are active and the solver gives the dual value to one of them; the shadow price then depends on the solver and not on the model. Where `multipleActive` is true, the shadow price does not describe the effect of the single enzyme. `objectiveGain` is computed from a new solve, so it does not depend on the dual values.
+The shadow price is not used for the order. Enzyme-constrained models often have a degenerate optimum, where several constraints are active and the solver gives the dual value to one of them; the shadow price then depends on the basis that the solver returns. Where `multipleActive` is true, the shadow price does not describe the effect of the single enzyme. `objectiveGain` is computed from a new solve, so it does not depend on the dual values.
 
 `getEnzymeBottlenecks` maximises the objective. In Python, `objective_gain` is the improvement in the direction of the objective, so it is positive for a maximised objective that rises and for a minimised objective that falls.
 
@@ -169,7 +169,7 @@ from geckopy import get_conc_control_coeffs
 evaluated, control_coeffs = get_conc_control_coeffs(ec_model)
 ```
 
-The option `method="shadow_price"` reads the coefficients from the reduced costs of one solve and checks each nonzero value with one extra solve. MATLAB has only the method of the default, `"finite_difference"`.
+The option `method="shadow_price"` reads the coefficients from the reduced costs of one solve and checks each nonzero value with one extra solve. MATLAB has one method, the default `"finite_difference"`.
 :::
 ::::
 
@@ -216,7 +216,7 @@ The usage reactions must have a lower bound of 0. MATLAB raises an error when a 
 
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
-| Warning that no enzyme is at its usage bound, and every `objectiveGain` is 0 | no enzyme has a usage bound that binds; without proteomics data, only the protein pool can limit the objective | Read `topAbsUsage` for the enzymes that take most of the pool, or constrain enzymes with measured concentrations ([Constrain enzymes with proteomics](proteomics.md)) |
+| Warning that no enzyme is at its usage bound, and every `objectiveGain` is 0 | no enzyme has a usage bound that binds; without proteomics data, the protein pool is the one enzyme constraint that can limit the objective | Read `topAbsUsage` for the enzymes that take most of the pool, or constrain enzymes with measured concentrations ([Constrain enzymes with proteomics](proteomics.md)) |
 | `multipleActive` is true for the top enzymes | several capacity constraints are active at the same optimum | Use `objectiveGain`; the shadow price does not describe a single enzyme here |
 | `highCapUsage` is empty | no enzyme has a measured concentration as its bound, or none is above the threshold | Constrain enzymes with measured concentrations, or lower `highCapUsage` |
 | `demandRatio` is NaN | `ec.concs` has no measured concentration | Load proteomics data with `fillEnzConcs` |

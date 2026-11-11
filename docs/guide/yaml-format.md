@@ -105,7 +105,7 @@ The entries have these keys, in this order. A key is left out when its value is 
 - Numbers have at least one decimal (`1000.0`). A string that YAML reads as a number, boolean, null or date is written in double quotes.
 - `compartments` is a flat mapping, for example `c: cytoplasm`.
 
-The reactions of an ecModel have the identifiers of the build: `_REV` for the reverse direction and `_EXP_<n>` for an isozyme (see [Choose the ecModel structure](ecmodel-structure.md#what-makeecmodel-adds)). Once kcats are applied, the metabolites of a reaction include the enzymes (`prot_<id>`) with the coefficient `-MW/(kcat*3600)`:
+The reactions of an ecModel have the identifiers of the build: `_REV` for the reverse direction and `_EXP_<n>` for an isozyme (see [Choose the ecModel structure](ecmodel-structure.md#steps-of-makeecmodel)). Once kcats are applied, the metabolites of a reaction include the enzymes (`prot_<id>`) with the coefficient `-MW/(kcat*3600)`:
 
 ```yaml
 - reactions:

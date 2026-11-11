@@ -1,6 +1,6 @@
 # Find engineering targets
 
-Flux scanning with enforced objective function (FSEOF) finds the reactions whose flux changes with the production of a compound. At the end of this page, you have a list of reaction and gene targets for the production of a compound by an ecModel, each with a suggested action: over-express, knock down or knock out.
+Flux scanning with enforced objective function (FSEOF) finds the reactions whose flux changes with the production of a compound. `ecFSEOF` returns reaction and gene targets for the production of a compound by an ecModel, each with a suggested action: over-express, knock down or knock out.
 
 ## Functions
 
@@ -12,16 +12,16 @@ Flux scanning with enforced objective function (FSEOF) finds the reactions whose
 
 The examples use the ecModel and the model adapter parameters `params`, loaded as in the setup of [Analyse an ecModel](analysis.md#setup). The biomass reaction is read from the model adapter. Set the bounds of the condition, such as the medium and the uptake rate of the carbon source, before the scan ([Basic model operations](basic-model-operations.md)).
 
-The other names in the examples are placeholders for values of your project:
+The other names in the examples are placeholders for values of the project:
 
 | MATLAB | Python | Value |
 | --- | --- | --- |
 | `prodTargetRxn` | `prod_target_rxn` | identifier of the production reaction, for example the exchange reaction of the product |
 | `csRxn` | `cs_rxn` | identifier of the uptake reaction of the carbon source |
 
-## How the scan selects targets
+## Target selection
 
-`ecFSEOF` first finds the production at maximum growth and the maximum production. It then fixes the production reaction at evenly spaced values from the first to 90 % of the second. At each value it maximises growth and then minimises the total flux. A reaction is a target when the absolute Pearson correlation between its absolute flux and the enforced production is at least `corrThreshold` (Python: `correlation_threshold`, default 0.9). Only reactions with a gene rule are scanned, and not those that use the standard enzyme ([Choose the kcat sources](kcat-sources.md)). The `usage_prot_*` reactions take part in the scan and are left out of the result.
+`ecFSEOF` first finds the production at maximum growth and the maximum production. It then fixes the production reaction at evenly spaced values from the first to 90 % of the second. At each value it maximises growth and then minimises the total flux. A reaction is a target when the absolute Pearson correlation between its absolute flux and the enforced production is at least `corrThreshold` (Python: `correlation_threshold`, default 0.9). The scan covers the reactions with a gene rule, except those that use the standard enzyme ([Choose the kcat sources](kcat-sources.md)). The `usage_prot_*` reactions take part in the scan and are left out of the result.
 
 Each target reaction gets an action from the slope of its absolute flux:
 

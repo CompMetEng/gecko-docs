@@ -25,7 +25,7 @@ Text outside a MATLAB or Python tab reads the same in both languages. Where it r
 
 ## Decisions
 
-The decision pages are in the order in which the choices come up during the work.
+The decision pages are in the order of the work.
 
 | Page | Choice |
 | --- | --- |

@@ -1,6 +1,6 @@
 # Make a context-specific ecModel
 
-A context-specific GEM describes the metabolism of one tissue, cell line or strain. It is made from a generic GEM with a method such as ftINIT (`ftINIT` in RAVEN, `ftinit` in raven-toolbox). At the end of this page, you have an ecModel of that context, trimmed from a generic ecModel, with a protein pool for the context.
+A context-specific GEM describes the metabolism of one tissue, cell line or strain. It is made from a generic GEM with a method such as ftINIT (`ftINIT` in RAVEN, `ftinit` in raven-toolbox). `getSubsetEcModel` trims a generic ecModel to the reactions and genes of a context-specific GEM, and `setProtPoolSize` sets the protein pool of the context.
 
 ## Functions
 
@@ -11,7 +11,7 @@ A context-specific GEM describes the metabolism of one tissue, cell line or stra
 
 ## Setup
 
-The examples use the generic ecModel and the model adapter parameters `params`, loaded as in the setup of [Analyse an ecModel](analysis.md#setup). The other names in the examples are placeholders for values of your project:
+The examples use the generic ecModel and the model adapter parameters `params`, loaded as in the setup of [Analyse an ecModel](analysis.md#setup). The other names in the examples are placeholders for values of the project:
 
 | MATLAB | Python | Value |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ There are two ways to get an ecModel of a context:
 | make the context-specific GEM, then build an ecModel from it | the full ecModel workflow per context | each context has its own kcat assignment |
 | build one generic ecModel, then trim it with `getSubsetEcModel` | the generic ecModel and the context-specific GEM | all contexts have the kcats of the generic ecModel |
 
-The second way builds the enzyme data once, which saves time when many contexts are made from one generic model, and gives all contexts the same kcats. The rest of this page describes the second way. For the first way, follow [Build an ecModel](first-ecmodel.md) with the context-specific GEM as the GEM of the project.
+The second way builds the enzyme data once, which saves time when many contexts are made from one generic model, and gives all contexts the same kcats. The sections below describe the second way. For the first way, follow [Build an ecModel](first-ecmodel.md) with the context-specific GEM as the GEM of the project.
 
 ## Trim the generic ecModel
 

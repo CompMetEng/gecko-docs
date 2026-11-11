@@ -1,6 +1,6 @@
 # Choose a kcat tuning
 
-After the kcats are assigned and the protein pool is set, an ecModel often grows much more slowly than the organism. A kcat tuning raises the kcats that limit growth, so that the ecModel reaches the maximum growth rate of the organism. The result is a tuned ecModel, a list of the changed kcats, and curated values for the changed kcats that the literature supports.
+After the kcats are assigned and the protein pool is set, an ecModel often grows much more slowly than the organism. A kcat tuning raises the kcats that limit growth until the ecModel reaches the maximum growth rate of the organism. The result is a tuned ecModel, a list of the changed kcats, and curated values for the changed kcats that the literature supports.
 
 ## Functions
 
@@ -12,7 +12,11 @@ After the kcats are assigned and the protein pool is set, an ecModel often grows
 | `setKcatForReactions` | `set_kcat_for_reactions` | sets `ec.kcat` of reactions by hand |
 | `applyKcatConstraints` | `apply_kcat_constraints` | writes `ec.kcat` into the enzyme constraints of the reactions |
 
-## When the model needs a kcat tuning
+## Setup
+
+The examples need an ecModel with assigned kcats (`assignKcats`, see [Choose the kcat sources](kcat-sources.md)) and a set protein pool (`setProtPoolSize`, see [Set the protein pool](protein-pool.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python). The model adapter of the project defines `bio_rxn` and `gR_exp` (Python `gr_exp`); in MATLAB it is the default adapter (`ModelAdapterManager.setDefault`), and in Python it is attached to the model by `load_ec_model(adapter=...)`. The uptake of the carbon source is unconstrained.
+
+## Signs that the model needs a kcat tuning
 
 Maximize growth with the uptake of the carbon source unconstrained (see [Basic model operations](basic-model-operations.md)). If the growth rate is far below the maximum growth rate of the organism (`gR_exp` in the model adapter, Python `gr_exp`), the enzyme constraints are too tight. Before kcats are changed, check the two other causes of a low growth rate:
 
@@ -23,7 +27,7 @@ If both hold, some kcats are too low for the enzymes that carry most of the flux
 
 ## Standard or advanced kcat tuning
 
-| | Standard: `sensitivityTuning` | Advanced: `cmaesKcatTuning` |
+| Property | Standard: `sensitivityTuning` | Advanced: `cmaesKcatTuning` |
 | --- | --- | --- |
 | Data it needs | one maximum growth rate (`gR_exp` in the model adapter, or the option `desiredGrowthRate`) | maximum growth rates (`evotuneMaxGrowth.tsv`), exchange fluxes (`evotuneFluxData.tsv`), or both, measured in one or more conditions |
 | What it changes | `ec.kcat` of the reactions it selects, and their enzyme constraints | `ec.kcat` of the kcats with the largest effect on the fit to the data, and their enzyme constraints |
@@ -33,7 +37,7 @@ If both hold, some kcats are too low for the enzymes that carry most of the flux
 | Cost in time | one FBA per iteration | one FBA per data row for each kcat vector that is scored: two per kcat in the screen, plus `popsize` per generation in the search; runs in parallel with `nProc` |
 | Settings | the options of the function | the `[evotune]` table of `model_adapter.toml` (trust in each kcat source, weight of growth against flux data, penalty for moving a kcat, isozyme tying, stopping rules), plus `targetImpactShare`, `popsize`, `seed` and `nProc` |
 
-The two tunings are alternatives. With only the maximum growth rate of the organism, use the standard tuning. With measured growth rates on several carbon sources or measured exchange fluxes, the advanced tuning uses those data, and the trust in each kcat source limits how far each kcat moves.
+The two tunings are alternatives. When the maximum growth rate of the organism is the sole measured value, use the standard tuning. With measured growth rates on several carbon sources or measured exchange fluxes, the advanced tuning uses those data, and the trust in each kcat source limits how far each kcat moves.
 
 ## Run the standard tuning
 
@@ -119,7 +123,7 @@ kcat_list[kcat_list["rxn_id"] == "r_0079"]
 
 The GECKO tutorial `full_ecModel` assigns the kcats of its yeast ecModel with the preset `gecko_classic`. In that ecModel, `sensitivityTuning` raised the kcat of `r_0079` (5'-phosphoribosylformyl glycinamidine synthetase, enzyme P38972). The kcat before tuning, 0.05 per s, came from a BRENDA match with wildcard level 0 and origin 4 (any organism, any substrate) for EC 6.3.5.3.
 
-[BRENDA](https://www.brenda-enzymes.org/enzyme.php?ecno=6.3.5.3) lists this kcat for *Escherichia coli* with NH4+ as the substrate. The reaction in the model uses glutamine. The paper that reports the value ([Schendel et al. 1989](https://doi.org/10.1021/bi00432a017)) states in its abstract that "NH3 can replace glutamine as a nitrogen donor with a Km = 1 M and a turnover of 3 min-1 (2% glutamine turnover)", so 0.05 per s is the kcat with ammonia, not with glutamine. According to the tutorial, the paper also reports a specific activity, which BRENDA lists; the tutorial uses 2.15 µmol/min/mg protein. A specific activity gives a kcat when it is multiplied by the molecular weight of the enzyme:
+[BRENDA](https://www.brenda-enzymes.org/enzyme.php?ecno=6.3.5.3) lists this kcat for *Escherichia coli* with NH4+ as the substrate. The reaction in the model uses glutamine. The paper that reports the value ([Schendel et al. 1989](https://doi.org/10.1021/bi00432a017)) states in its abstract that "NH3 can replace glutamine as a nitrogen donor with a Km = 1 M and a turnover of 3 min-1 (2% glutamine turnover)", so 0.05 per s is the kcat with ammonia as the nitrogen donor. According to the tutorial, the paper also reports a specific activity, which BRENDA lists; the tutorial uses 2.15 µmol/min/mg protein. A specific activity gives a kcat when it is multiplied by the molecular weight of the enzyme:
 
 - 2.15 µmol/min/mg is 2.15 mmol/min/g;
 - divided by 1000, it is 0.00215 mol/min/g;
@@ -154,11 +158,11 @@ set_kcat_for_reactions(ec_model, ["r_0079"], kcat, apply=True)
 
 The committed tutorial model `tutorials/full_ecModel/models/ecYeastGEM.yml` holds this value for `r_0079`: `kcat: 5.3357625`, `source: setKcatForReactions`, `notes: preTuneKcat=0.05 | source:brenda`.
 
-When a measured value supports the kcat before tuning and not the tuned one, the network of the conventional GEM may lack a reaction or a pathway, and the GEM is corrected first.
+When a measured value supports the kcat before tuning and contradicts the tuned one, the network of the conventional GEM may lack a reaction or a pathway; correct the GEM first.
 
 ## Keep a curated kcat
 
-`assignKcats` replaces every kcat of the model with the values selected from the files in `data/kcats`. A value set with `setKcatForReactions` is therefore lost at the next `assignKcats`. To keep it, add it to `data/kcats/custom.tsv`, which every preset reads first (see [Set custom kcats](custom-kcats.md)). A row for the example above, with the columns `rxn`, `enzymes`, `kcat`, `source` and `note`:
+`assignKcats` replaces every kcat of the model with the values selected from the files in `data/kcats`. A value set with `setKcatForReactions` is therefore lost at the next `assignKcats`. To keep it, add it to `data/kcats/custom.tsv`, which every preset reads first (see [Set custom kcats](custom-kcats.md)). A row for `r_0079`, with the columns `rxn`, `enzymes`, `kcat`, `source` and `note`:
 
 ```text
 rxn	enzymes	kcat	source	note
@@ -170,12 +174,12 @@ r_0079	P38972	5.3357625	custom	specific activity 2.15 umol/min/mg, MW 148905 g/m
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
 | Error that the FBA of the input model gives no valid result (MATLAB), or `ValueError` that the FBA of the input model is not optimal (Python) | The protein pool or the exchange bounds make the model infeasible | Check the exchange bounds and the protein pool (`setProtPoolSize`) |
-| Warning that growth does not increase from increased kcats | An exchange bound or the protein pool limits growth, not a kcat | Check the bounds of the uptake reactions; check Ptot, f and sigma |
+| Warning that growth does not increase from increased kcats | An exchange bound or the protein pool limits growth | Check the bounds of the uptake reactions; check Ptot, f and sigma |
 | Warning that no protein usage reaction carries flux, or that no reaction draws on the protein pool | The protein pool does not limit growth | Check the nutrient bounds and the stoichiometry of the GEM |
 | Many kcats are tuned, or one kcat is raised several times | The target growth rate is too high, a nutrient uptake is constrained, or the GEM cannot reach the growth rate | Check `gR_exp`, the uptake bounds and the growth rate of the conventional GEM |
 | Python `sensitivity_tuning` stops at `max_iterations` | Raising kcats alone does not reach the target growth rate | Check the target growth rate and the bounds |
-| `ValueError` that `prot_to_ignore` has no usage reaction for a protein (Python, full ecModel) | The UniProt ID is not an enzyme of the model | Correct the ID |
-| A curated kcat is gone after `assignKcats` | The value was set in the model, not in `data/kcats/custom.tsv` | Add the value to `custom.tsv` |
+| `ValueError` that `prot_to_ignore` has no usage reaction for a protein (Python, full ecModel) | The model has no usage reaction for this UniProt ID | Correct the ID |
+| A curated kcat is gone after `assignKcats` | The value was set with `setKcatForReactions`, and `assignKcats` replaced it with the value from the kcat source files | Add the value to `custom.tsv` |
 
 ## See also
 

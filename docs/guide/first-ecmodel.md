@@ -287,12 +287,12 @@ The file is written to the `models` folder of the project. [ecModel YAML format]
 
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
-| `makeEcModel` stops with an error that names `params.enzyme_comp` | `enzyme_comp` is not the name of a compartment of the GEM | Set `enzyme_comp` to a compartment name of the GEM, for example `cytoplasm` |
+| `makeEcModel` stops with an error that names `params.enzyme_comp` | `enzyme_comp` names no compartment of the GEM | Set `enzyme_comp` to a compartment name of the GEM, for example `cytoplasm` |
 | `noUniprot` lists most genes of the GEM | the gene identifiers of the UniProt data do not match those of the GEM | Set `[uniprot]` as described in [Choose the ecModel structure](ecmodel-structure.md), delete `data/uniprot.tsv` and make the ecModel again |
 | `updateKcatSources` reports the `okp_` sources as `failed`, with "No OpenKineticsPredictor API key found" | no OKP API key is set | Set `OKP_API_KEY` or write the key in `data/okpApiKey.txt`, then call `updateKcatSources` again |
 | `updateKcatSources` reports sources as `pending` | the OKP jobs are still running | Call `updateKcatSources` again later |
-| The growth rate does not change when the lower bound of `c_source` is changed | `makeEcModel` reverses a reaction whose bounds allow only a negative flux, so the uptake of that exchange reaction is a positive flux in the ecModel | Set the upper bound of the exchange reaction instead |
-| `sensitivityTuning` warns that the growth rate does not increase | a bound of an exchange reaction, not an enzyme, limits growth | Check the bounds of the uptake reactions |
+| The growth rate does not change when the lower bound of `c_source` is changed | `makeEcModel` reverses a reaction with a negative lower bound and an upper bound of 0, so uptake through that exchange reaction is a positive flux in the ecModel | Set the upper bound of the exchange reaction |
+| `sensitivityTuning` warns that the growth rate does not increase | the bound of an uptake reaction limits growth | Check the bounds of the uptake reactions |
 
 ## See also
 
