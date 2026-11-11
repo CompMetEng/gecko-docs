@@ -88,10 +88,10 @@ GECKO accepts the two geckopy keys in the file and does not use them. `getKcatAc
 
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
-| `kegg.id` | `kegg.ID` | `"sce"` | Organism code in the KEGG database, from the [KEGG organism list](https://www.genome.jp/kegg/catalog/org_list.html) |
+| `kegg.id` | `kegg.ID` | `""` (KEGG is not used) | Organism code in the KEGG database, from the [KEGG organism list](https://www.genome.jp/kegg/catalog/org_list.html) |
 | `kegg.gene_id` | `kegg.geneID` | `"kegg"` | Field of the KEGG entry that matches the gene identifiers of the ecModel. `kegg` takes the KEGG entry identifier. Identifiers from the "Other DBs" section of the KEGG page, such as `NCBI-GeneID`, `UniProt` or `Ensembl` (for Human-GEM), are available for some organisms |
 | `uniprot.type` | `uniprot.type` | `"taxonomy"` | Whether `uniprot.id` is a taxonomy identifier (`taxonomy`) or a proteome identifier (`proteome`) |
-| `uniprot.id` | `uniprot.ID` | `"559292"` | Identifier of the UniProt data set (by taxonomy or proteome) with complete coverage of the genes of the ecModel |
+| `uniprot.id` | `uniprot.ID` | `""` (required unless `data/uniprot.tsv` exists) | Identifier of the UniProt data set (by taxonomy or proteome) with complete coverage of the genes of the ecModel |
 | `uniprot.gene_id_field` | `uniprot.geneIDfield` | `"gene_oln"` | UniProt field with the gene identifiers used in the ecModel; one of the "Returned Field" entries under "Names & Taxonomy" of the [UniProt return fields](https://www.uniprot.org/help/return_fields) |
 | `uniprot.reviewed` | `uniprot.reviewed` | `false` | Whether the data is limited to reviewed (Swiss-Prot) entries. Reviewed data has the highest confidence but can have low coverage for non-model organisms |
 | `complex.taxonomic_id` | `complex.taxonomicID` | none | Taxonomy identifier as available from the [Complex Portal](https://www.ebi.ac.uk/complexportal/home). Without it, no Complex Portal query is made |

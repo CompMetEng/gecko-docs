@@ -106,7 +106,7 @@ ec_model = make_ec_model(model, adapter)
 :::
 ::::
 
-`makeEcModel` downloads the UniProt and KEGG data of the organism into `data/uniprot.tsv` and `data/kegg.tsv` when these files do not exist, with the settings of `[uniprot]` and `[kegg]`. With an empty `kegg.id`, it prints a warning and uses no KEGG data.
+`makeEcModel` downloads the UniProt and KEGG data of the organism into `data/uniprot.tsv` and `data/kegg.tsv` when these files do not exist, with the settings of `[uniprot]` and `[kegg]`. With an empty `kegg.id`, it prints a warning and uses no KEGG data. `uniprot.id` has no default; without it and without `data/uniprot.tsv`, the build raises an error.
 
 The ecModel is a full ecModel: it has one pseudometabolite and one usage reaction per enzyme, and no kcats yet. [Choose the ecModel structure](ecmodel-structure.md) describes the light ecModel, the matching of genes to UniProt and KEGG, and the data of enzyme complexes.
 
