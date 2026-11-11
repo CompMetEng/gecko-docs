@@ -121,7 +121,7 @@ sol = pfba(ec_model)
 :::::{admonition} GECKO 4: enzyme-aware pFBA
 :class: tip
 
-Both languages also offer a variant that minimizes total *enzyme* usage, the L1 norm of the `usage_prot_*` fluxes, in place of the total flux of all reactions. It is not part of the original Nature Protocols procedure, and it serves the [enzyme-usage inspection](enzyme-usage-and-bottlenecks.md) done during simulation and analysis. It is not available for light ecModels, which have no `usage_prot_*` reactions to minimize.
+Both languages also offer a variant that minimizes total *enzyme* usage, the L1 norm of the `usage_prot_*` fluxes, in place of the total flux of all reactions. It is not part of the original Nature Protocols procedure, and it serves the [enzyme-usage inspection](enzyme-usage.md) done during simulation and analysis. It is not available for light ecModels, which have no `usage_prot_*` reactions to minimize.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -223,12 +223,12 @@ import cobra
 cobra.io.write_sbml_model(ec_model, "filename.xml")
 ```
 
-As on [Building an empty ecModel](building-ec-model.md#save-the-ecmodel), this plain-cobrapy SBML export does not retain the `ec_model.ec` fields, the same caveat as MATLAB's `exportModel`.
+As on [Build an ecModel](first-ecmodel.md#7-save-the-ecmodel), this plain-cobrapy SBML export does not retain the `ec_model.ec` fields, the same caveat as MATLAB's `exportModel`.
 :::
 ::::
 
 ## See also
 
-- [Growth-rate tuning](growth-rate-tuning.md)
-- [Simulation and analysis](simulation-and-analysis.md)
-- [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md)
+- [Choose a kcat tuning](kcat-tuning.md)
+- [Analyse an ecModel](analysis.md)
+- [Enzyme usage and bottlenecks](enzyme-usage.md)

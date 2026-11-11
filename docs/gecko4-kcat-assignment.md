@@ -2,7 +2,7 @@
 
 <!-- docs-site: concept-page -->
 
-GECKO 4 assigns the kcat of each reaction from kcat source files, in an order that `model_adapter.toml` sets. `collectKcats` determines the kcats and does not change the model. `assignKcats` applies the decisions and the kcat constraints. [Gathering kcats](guide/gathering-kcats.md) describes how the sources are gathered, and [Applying kcats](guide/applying-kcats.md) the steps after the assignment.
+GECKO 4 assigns the kcat of each reaction from kcat source files, in an order that `model_adapter.toml` sets. `collectKcats` determines the kcats and does not change the model. `assignKcats` applies the decisions and the kcat constraints. [Choose the kcat sources](guide/kcat-sources.md) describes how the sources are gathered, and [Choose the kcat sources](guide/kcat-sources.md) the steps after the assignment.
 
 ## Functions
 
@@ -86,7 +86,7 @@ decisions, report = assign_kcats(ec_model)   # changes ec_model in place
 :::
 ::::
 
-`updateKcatSources` has the option `dryRun`, which reports what would be gathered without gathering it. In MATLAB it checks the requirements first: Docker for a DLKcat run and an OpenKineticsPredictor API key for OKP. In Python a source with a missing requirement gets the status `failed`. A file is outdated when its header records other settings than `[kcat_sources.<name>]` asks for, or for `brenda` and `ec_tree` another BRENDA release than the files in use. `custom.tsv` and other files it cannot gather are left as they are.
+`updateKcatSources` has the option `dryRun`, which reports what would be gathered without gathering it. A source that needs an OpenKineticsPredictor API key (`okp_<method>`, and `dlkcat` when `data/DLKcat.tsv` does not exist) gets the status `failed` when no key is found. A file is outdated when its header records other settings than `[kcat_sources.<name>]` asks for, or for `brenda`, `ec_tree` and `homologs` another BRENDA release than the files in use. `custom.tsv` and other files it cannot gather are left as they are.
 
 ## Troubleshooting
 
@@ -101,4 +101,4 @@ decisions, report = assign_kcats(ec_model)   # changes ec_model in place
 
 - [GECKO 3 to GECKO 4](gecko3-to-gecko4.md)
 - [Project format 4](gecko4-project-format.md)
-- [Gathering kcats](guide/gathering-kcats.md)
+- [Choose the kcat sources](guide/kcat-sources.md)

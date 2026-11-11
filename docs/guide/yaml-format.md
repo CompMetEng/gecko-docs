@@ -105,7 +105,7 @@ The entries have these keys, in this order. A key is left out when its value is 
 - Numbers have at least one decimal (`1000.0`). A string that YAML reads as a number, boolean, null or date is written in double quotes.
 - `compartments` is a flat mapping, for example `c: cytoplasm`.
 
-The reactions of an ecModel have the identifiers of the build: `_REV` for the reverse direction and `_EXP_<n>` for an isozyme (see [Building an empty ecModel](building-ec-model.md#extension-of-a-conventional-gem)). Once kcats are applied, the metabolites of a reaction include the enzymes (`prot_<id>`) with the coefficient `-MW/(kcat*3600)`:
+The reactions of an ecModel have the identifiers of the build: `_REV` for the reverse direction and `_EXP_<n>` for an isozyme (see [Choose the ecModel structure](ecmodel-structure.md#what-makeecmodel-adds)). Once kcats are applied, the metabolites of a reaction include the enzymes (`prot_<id>`) with the coefficient `-MW/(kcat*3600)`:
 
 ```yaml
 - reactions:
@@ -167,7 +167,7 @@ The reactions `usage_prot_<enzyme>` and `prot_pool_exchange` run forward. `usage
       - Protein usage
 ```
 
-A light ecModel has `prot_pool` and `prot_pool_exchange` and no usage reactions (see [GECKO light and full ecModels](gecko-light.md)).
+A light ecModel has `prot_pool` and `prot_pool_exchange` and no usage reactions (see [Choose the ecModel structure](ecmodel-structure.md)).
 
 GECKO 3 defines both reactions in the reverse direction, with negative flux (see [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md)). `loadEcModel` and `load_ec_model` turn the protein reactions of such an ecModel forward in the loaded model. A `usage_prot_<id>` reaction with a positive coefficient of `prot_pool`, and a `prot_pool_exchange` with a negative coefficient, change the sign of their stoichiometry, bounds and objective coefficient. `upgradeEcModel` (Python: `upgrade_ec_model`) applies the same rule to a model in memory and returns the reactions it turned. Both leave a forward model unchanged. The loaders warn with the number of reactions. The file stays as it is until `saveEcModel` stores the upgraded model, and `upgradeGECKOproject` upgrades all ecModel files of a project (see [Upgrade a GECKO 3 project](../gecko3-upgrade-project.md)). In MATLAB, `loadEcModel` turns the reactions and `readYAMLmodel` leaves them as they are.
 
@@ -222,9 +222,9 @@ A reaction without enzymes has an empty `enzymes` entry or none; both are read a
 | `enzymes` | enzyme identifier: a UniProt accession or, for a gene that KEGG alone matches, the KEGG gene identifier |
 | `mw` | molecular weight in Da. The key is left out when unknown |
 | `sequence` | amino acid sequence. The default is an empty string |
-| `concs` | measured concentration in mg/gDCW (see [Proteomics integration](proteomics-integration.md)). The key is left out when not measured |
+| `concs` | measured concentration in mg/gDCW (see [Constrain enzymes with proteomics](proteomics.md)). The key is left out when not measured |
 
-The pseudo-enzyme `standard` has `standard` as gene and enzyme identifier (see [Applying kcat values](applying-kcats.md)).
+The pseudo-enzyme `standard` has `standard` as gene and enzyme identifier (see [Choose the kcat sources](kcat-sources.md)).
 
 ```yaml
 - ec-enzymes:
@@ -262,7 +262,7 @@ geckopy repairs an entry `enzymes: !!omap` without items and a value in double q
 
 ## See also
 
-- [Proteomics integration](proteomics-integration.md), where the values of `concs` come from.
-- [Building an empty ecModel](building-ec-model.md) and [Applying kcat values](applying-kcats.md), where `ec-rxns` and `ec-enzymes` are populated.
+- [Constrain enzymes with proteomics](proteomics.md), where the values of `concs` come from.
+- [Choose the ecModel structure](ecmodel-structure.md) and [Choose the kcat sources](kcat-sources.md), where `ec-rxns` and `ec-enzymes` are populated.
 - [Project format 4](../gecko4-project-format.md), for the ecModel format and the project folder.
 - [API reference](../api/index.md), for the read and write functions.

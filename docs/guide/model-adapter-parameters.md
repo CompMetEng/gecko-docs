@@ -69,7 +69,7 @@ name_contains = "spontaneous"
 | `sigma` | `sigma` | `0.5` | Average enzyme saturation factor |
 | `p_tot` | `Ptot` | `0.5` | Total protein content in the cell [g protein/gDW] |
 | `f` | `f` | `0.5` | Fraction of enzymes in the ecModel relative to all proteins (g enzyme/g protein). `calculateFfactor` (Python: `calculate_f_factor`) computes it from a proteomics data set |
-| `gr_exp` | `gR_exp` | `0.41` | Reference (experimentally observed) maximum growth rate in h^-1, the default tuning target in [Growth-rate tuning](growth-rate-tuning.md#sensitivity-tuning-of-kcat-values) |
+| `gr_exp` | `gR_exp` | `0.41` | Reference (experimentally observed) maximum growth rate in h^-1, the default tuning target in [Choose a kcat tuning](kcat-tuning.md#run-the-standard-tuning) |
 | `c_source` | `c_source` | `""` | Identifier of the exchange reaction of glucose or of another preferred carbon source |
 | `bio_rxn` | `bioRxn` | `""` | Identifier of the biomass or growth pseudoreaction, whose flux is the growth rate in h^-1 |
 | `enzyme_comp` | `enzyme_comp` | `"cytoplasm"` | Name of the compartment of the added protein pseudometabolites; must match one of the compartment names of the ecModel |
@@ -119,7 +119,7 @@ A stage has the keys `action` (`select`, the default, or `combine`), `sources`, 
 
 ## Kcat tuning
 
-The `[evotune]` section holds the hyperparameters of the CMA-ES kcat tuning described in [Tuning against experimental data](tuning-against-experimental-data.md).
+The `[evotune]` section holds the hyperparameters of the CMA-ES kcat tuning described in [Tune kcats against experimental data](advanced-tuning.md).
 
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
@@ -179,5 +179,5 @@ In geckopy, a subclass of `ModelAdapter` overrides `get_spontaneous_reactions`, 
 
 - [Project format 4](../gecko4-project-format.md), the sections of `model_adapter.toml`.
 - [Kcat assignment](../gecko4-kcat-assignment.md), the presets and stages of `[kcat_assignment]`.
-- [Getting started](getting-started.md), where the model adapter is created and populated.
+- [Build an ecModel](first-ecmodel.md), where the model adapter is created and populated.
 - [Files in the data folder](data-folder-files.md), the other project-wide reference table.

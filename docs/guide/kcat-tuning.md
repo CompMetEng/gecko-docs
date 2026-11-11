@@ -1,0 +1,184 @@
+# Choose a kcat tuning
+
+After the kcats are assigned and the protein pool is set, an ecModel often grows much more slowly than the organism. At the end of this page you have chosen between the standard and the advanced kcat tuning, have run the standard tuning, and know how to check a tuned kcat against its source and keep a curated value.
+
+## Functions
+
+| MATLAB | Python | Note |
+| --- | --- | --- |
+| `sensitivityTuning` | `sensitivity_tuning` | standard kcat tuning: raises the kcat that limits growth most, one at a time, until the model reaches a growth rate |
+| `cmaesKcatTuning` | `cmaes_kcat_tuning` | advanced kcat tuning: fits many kcats at once to measured growth rates and exchange fluxes, see [Tune kcats against experimental data](advanced-tuning.md) |
+| `loadKcatSource` | `load_kcat_source` | reads the rows of a kcat source file in `data/kcats` for the reactions of an ecModel |
+| `setKcatForReactions` | `set_kcat_for_reactions` | sets `ec.kcat` of reactions by hand |
+| `applyKcatConstraints` | `apply_kcat_constraints` | writes `ec.kcat` into the enzyme constraints of the reactions |
+
+## When the model needs a kcat tuning
+
+Maximize growth with the uptake of the carbon source unconstrained (see [Basic model operations](basic-model-operations.md)). If the growth rate is far below the maximum growth rate of the organism (`gR_exp` in the model adapter, Python `gr_exp`), the enzyme constraints are too tight. Before kcats are changed, check the two other causes of a low growth rate:
+
+- The conventional GEM, with the same exchange bounds, reaches the maximum growth rate. If it does not, the stoichiometry or the bounds of the GEM limit growth, and the GEM is corrected first.
+- Ptot, f and sigma of the protein pool are realistic for the organism (see [Set the protein pool](protein-pool.md)).
+
+If both hold, some kcats are too low for the enzymes that carry most of the flux, and a kcat tuning raises them.
+
+## The choice
+
+| | Standard: `sensitivityTuning` | Advanced: `cmaesKcatTuning` |
+| --- | --- | --- |
+| Data it needs | one maximum growth rate (`gR_exp` in the model adapter, or the option `desiredGrowthRate`) | maximum growth rates (`evotuneMaxGrowth.tsv`), exchange fluxes (`evotuneFluxData.tsv`), or both, measured in one or more conditions |
+| What it changes | `ec.kcat` of the reactions it selects, and their enzyme constraints | `ec.kcat` of the kcats with the largest effect on the fit to the data, and their enzyme constraints |
+| Which kcats | per iteration one reaction: in a full ecModel, the reaction that uses most of the enzyme whose usage reaction carries the most flux; in a light ecModel, the reaction that draws most from the protein pool | the smallest set of kcats whose effect on the fit, weighted by the trust in their source, makes up 90 % of the total effect (option `targetImpactShare`) |
+| How much | the kcat is multiplied by `foldChange` (default 10) per iteration; a kcat that is selected again is multiplied again | any value between `min(0.01, k0/100)` and `max(10000, 100*k0)` per s, where `k0` is the kcat before tuning |
+| When it stops | the growth rate reaches the target; or an iteration raises growth by 1e-9 per h or less; or the model becomes infeasible; or no enzyme usage carries flux. Python also stops after `max_iterations` (default 1000) | the best RMSE reaches `rmse_threshold` (default 0.2), or after `max_generations` (default 150) generations. Python also stops on a convergence criterion of the `cma` package |
+| Cost in time | one FBA per iteration | one FBA per data row for each kcat vector that is scored: two per kcat in the screen, plus `popsize` per generation in the search; runs in parallel with `nProc` |
+| Settings | the options of the function | the `[evotune]` table of `model_adapter.toml` (trust in each kcat source, weight of growth against flux data, penalty for moving a kcat, isozyme tying, stopping rules), plus `targetImpactShare`, `popsize`, `seed` and `nProc` |
+
+The two tunings are alternatives. With only the maximum growth rate of the organism, use the standard tuning. With measured growth rates on several carbon sources or measured exchange fluxes, the advanced tuning uses those data, and the trust in each kcat source limits how far each kcat moves.
+
+## Run the standard tuning
+
+`sensitivityTuning` reads the target growth rate and the biomass reaction from the model adapter, and sets growth as the objective. The protein pool must already be set (`setProtPoolSize`, see [Set the protein pool](protein-pool.md)), and the uptake of the carbon source unconstrained.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+[ecModel, tunedKcats] = sensitivityTuning(ecModel);
+struct2table(tunedKcats)
+```
+
+The options are name-value pairs (`sensitivityTuning(ecModel, 'foldChange', 5)`) or positional in the order `desiredGrowthRate, modelAdapter, foldChange, protToIgnore, verbose`.
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+import logging
+
+import pandas as pd
+from geckopy import sensitivity_tuning
+
+logging.basicConfig(level=logging.INFO)  # shows the growth rate of each iteration
+
+tuned = sensitivity_tuning(ec_model)
+pd.DataFrame({"rxn": tuned.rxns, "enzymes": tuned.enzymes,
+              "old_kcat": tuned.old_kcat, "new_kcat": tuned.new_kcat,
+              "source": tuned.source})
+```
+
+`sensitivity_tuning` changes `ec_model` in place and returns a `TunedKcatsResult`. It reads the target growth rate from `ec_model.adapter`. The options are keyword arguments.
+:::
+::::
+
+| MATLAB | Python | Default | Meaning |
+| --- | --- | --- | --- |
+| `desiredGrowthRate` | `desired_growth_rate` | `gR_exp` of the model adapter (Python `gr_exp`) | growth rate at which the tuning stops |
+| `foldChange` | `fold_change` | `10` | factor by which a selected kcat is multiplied |
+| `protToIgnore` | `prot_to_ignore` | none | UniProt IDs of enzymes that are never selected |
+| `verbose` | `verbose` | `true` | prints (Python: logs at `INFO`) the growth rate of each iteration |
+| `modelAdapter` | | default model adapter | model adapter with the parameters |
+| | `max_iterations` | `1000` | maximum number of iterations |
+| | `bio_rxn` | `bio_rxn` of the model adapter | biomass reaction that is set as the objective |
+
+The output (`tunedKcats`, Python `TunedKcatsResult`) has one entry per tuned reaction: `rxns`, `rxnNames` (Python `rxn_names`), `enzymes` (joined by `;`), `oldKcat` and `newKcat` (Python `old_kcat`, `new_kcat`), and `source`, the kcat source before tuning. In a full ecModel, `ec.source` of a tuned reaction becomes `sensitivityTuning`, and `ec.notes` gets `preTuneKcat=<value> | source:<source>`. A reaction that an earlier run already tuned keeps the note of that run. In a light ecModel, `ec.source` and `ec.notes` do not change. In Python, `tuned.corrections()` returns the changes as a list of `Correction` rows, ordered by fold change.
+
+After the standard tuning, `sigmaFitter` (Python `fit_sigma`) fits sigma so that the model reaches the target growth rate (see [Set the protein pool](protein-pool.md#fit-sigma-to-a-growth-rate)).
+
+## Check a tuned kcat against its source
+
+A tuning raises the kcats that limit growth in the model. It does not check whether the value before tuning was wrong. For each tuned kcat, look up where the value before tuning came from, and search the literature for a measured value.
+
+The note of a tuned reaction gives the kcat and its source before tuning. When the source is a file in `data/kcats` (for example `brenda` or `ec_tree`), `loadKcatSource` returns the rows of that file for the reaction; the `detail` column of a BRENDA row holds the EC wildcard level and the origin of the match. `output/<model id>_kcatDecisions.tsv` lists the stage of the assignment that decided each kcat (see [Choose the kcat sources](kcat-sources.md)).
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+ecModel.ec.notes(strcmp(ecModel.ec.rxns, 'r_0079'))
+kcatList = loadKcatSource(ecModel, 'brenda');
+idx = strcmp(kcatList.rxns, 'r_0079');
+table(kcatList.kcats(idx), kcatList.eccodes(idx), kcatList.detail(idx))
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+from geckopy import load_kcat_source
+
+print(ec_model.ec.notes[ec_model.ec.rxns.index("r_0079")])
+kcat_list, _ = load_kcat_source(ec_model, "brenda")
+kcat_list[kcat_list["rxn_id"] == "r_0079"]
+```
+:::
+::::
+
+### Example: a kcat from a specific activity
+
+In the yeast ecModel of the GECKO tutorial `full_ecModel`, `sensitivityTuning` raised the kcat of `r_0079` (5'-phosphoribosylformyl glycinamidine synthetase, enzyme P38972), whose kcat of 0.05 per s came from BRENDA. A specific activity of 2.15 µmol/min/mg protein gives a kcat when it is multiplied by the molecular weight of the enzyme:
+
+- 2.15 µmol/min/mg is 2.15 mmol/min/g;
+- divided by 1000, it is 0.00215 mol/min/g;
+- divided by 60, it is 3.583e-5 mol/s/g;
+- multiplied by the molecular weight of P38972, 148905 g/mol (`ec.mw`), it is 5.336 per s.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+sa = 2.15;                                   % umol/min/mg protein
+mw = ecModel.ec.mw(strcmp(ecModel.ec.enzymes, 'P38972'));   % g/mol
+kcat = sa / 1000 / 60 * mw                   % 1/s
+ecModel = setKcatForReactions(ecModel, 'r_0079', kcat);
+ecModel = applyKcatConstraints(ecModel);
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+from geckopy import set_kcat_for_reactions
+
+sa = 2.15                                    # umol/min/mg protein
+mw = ec_model.ec.mw[ec_model.ec.enzymes.index("P38972")]   # g/mol
+kcat = sa / 1000 / 60 * mw                   # 1/s
+set_kcat_for_reactions(ec_model, ["r_0079"], kcat, apply=True)
+```
+:::
+::::
+
+The committed tutorial model `tutorials/full_ecModel/models/ecYeastGEM.yml` holds this value for `r_0079`: `kcat: 5.3357625`, `source: setKcatForReactions`, `notes: preTuneKcat=0.05 | source:brenda`.
+
+When a measured value supports the kcat before tuning and not the tuned one, the network of the conventional GEM may lack a reaction or a pathway, and the GEM is corrected first.
+
+## Keep a curated kcat
+
+`assignKcats` replaces every kcat of the model with the values decided from the files in `data/kcats`. A value set with `setKcatForReactions` is therefore lost at the next `assignKcats`. To keep it, add it to `data/kcats/custom.tsv`, which every preset reads first (see [Set custom kcats](custom-kcats.md)). A row for the example above, with the columns `rxn`, `enzymes`, `kcat`, `source` and `note`:
+
+```text
+rxn	enzymes	kcat	source	note
+r_0079	P38972	5.3357625	custom	specific activity 2.15 umol/min/mg, MW 148905 g/mol
+```
+
+## Troubleshooting
+
+| Problem | Possible reason | Solution |
+| --- | --- | --- |
+| Error that the FBA of the input model gives no valid result (MATLAB), or `ValueError` that the FBA of the input model is not optimal (Python) | The protein pool or the exchange bounds make the model infeasible | Check the exchange bounds and the protein pool (`setProtPoolSize`) |
+| Warning that growth does not increase from increased kcats | An exchange bound or the protein pool limits growth, not a kcat | Check the bounds of the uptake reactions; check Ptot, f and sigma |
+| Warning that no protein usage reaction carries flux, or that no reaction draws on the protein pool | The protein pool does not limit growth | Check the nutrient bounds and the stoichiometry of the GEM |
+| Many kcats are tuned, or one kcat is raised several times | The target growth rate is too high, a nutrient uptake is constrained, or the GEM cannot reach the growth rate | Check `gR_exp`, the uptake bounds and the growth rate of the conventional GEM |
+| Python `sensitivity_tuning` stops at `max_iterations` | Raising kcats alone does not reach the target growth rate | Check the target growth rate and the bounds |
+| `ValueError` that `prot_to_ignore` has no usage reaction for a protein (Python, full ecModel) | The UniProt ID is not an enzyme of the model | Correct the ID |
+| A curated kcat is gone after `assignKcats` | The value was set in the model, not in `data/kcats/custom.tsv` | Add the value to `custom.tsv` |
+
+## See also
+
+- [Tune kcats against experimental data](advanced-tuning.md), the advanced kcat tuning in detail.
+- [Set the protein pool](protein-pool.md), Ptot, f, sigma and `sigmaFitter`.
+- [Choose the kcat sources](kcat-sources.md) and [Set custom kcats](custom-kcats.md), where the kcats before tuning come from.
+- [Basic model operations](basic-model-operations.md), bounds, objectives and FBA.
+- [API reference](../api/index.md), every function in both toolboxes.

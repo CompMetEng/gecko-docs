@@ -105,11 +105,11 @@ fprintf('Growth rate: %.4f h-1\n', sol.f);
 
 ::::{grid} 1 2 2 2
 
-:::{grid-item-card} Workflow overview
-:link: guide/workflow
+:::{grid-item-card} Build an ecModel
+:link: guide/first-ecmodel
 :link-type: doc
 
-The order of the functions from model construction to analysis, with the alternative paths, as MATLAB and Python diagrams.
+A working ecModel with the default settings, from a project folder to a saved model, in MATLAB and Python.
 :::
 
 :::{grid-item-card} Upgrade a GECKO 3 project

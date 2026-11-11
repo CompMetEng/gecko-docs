@@ -1,10 +1,10 @@
 # Guide
 
-The guide has one page per job, with MATLAB and Python side by side. [Introduction to ecModels](introduction.md) describes the ecModel concept, [Getting started](getting-started.md) scaffolds a project, and the following pages follow the order of the work from a conventional GEM to an analysed ecModel. Each page is also readable by itself.
+The guide shows how to build an enzyme-constrained model (ecModel) from a conventional genome-scale metabolic model (GEM) with GECKO (MATLAB) or geckopy (Python), and how to analyse it. [Build an ecModel](first-ecmodel.md) makes a working ecModel with the default settings. Each step of that page links to a decision page, which describes the options of the step, what each option needs and what it changes in the model. The background pages describe the file formats and the parameters.
 
 :::{admonition} GECKO 4 pre-release
 :class: important
-This guide documents GECKO 4, a pre-release. The pages follow the structure of the published GECKO 3.0 Nature Protocols pipeline and describe GECKO 4. [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md) lists the changes against that protocol and describes how to stay on GECKO 3 for a workflow that depends on its behaviour.
+GECKO 4 is a pre-release, and the guide describes GECKO 4. A GECKO 3 user finds the changes of results, functions and names, and the steps to upgrade a project, in [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md).
 :::
 
 :::{admonition} MATLAB and Python
@@ -14,66 +14,50 @@ Task pages show both languages in tabs: GECKO (MATLAB), built on RAVEN, and geck
 Text outside a MATLAB or Python tab reads the same in both languages. Where it refers to the enzyme data of a model, `ec.kcat` stands for `ecModel.ec.kcat` in MATLAB and `ec_model.ec.kcat` in Python. The field names are identical in both languages except `rxnEnzMat` (Python: `rxn_enz_mat`) and `ec.geckoLight` (Python: `gecko_light`).
 :::
 
-## Workflow
+## Start
 
-[![Flowchart of the workflow: project, ecModel, kcat sources, assignment, growth-rate tuning, proteomics, relaxation and analysis](../_static/workflow-overview.png){width=200px .no-scaled-link}](workflow.md)
+- [Introduction to ecModels](introduction.md): what an ecModel is, the enzyme constraint and the protein pool.
+- [Installation](../installation/index.md): install GECKO or geckopy.
 
-The [workflow overview](workflow.md) shows the order of the stages, the kcat sources that run in parallel and the alternative paths, with the functions of each stage in MATLAB and Python.
+## Quick path
 
-## Pages
+- [Build an ecModel](first-ecmodel.md): create a project, make the ecModel, assign kcats, set the protein pool, check the growth rate and save the model, with the default settings.
 
-Start:
+## Decisions
 
-- [Introduction to ecModels](introduction.md), what an ecModel is and how GECKO adds enzyme constraints to a conventional GEM.
-- [Installation](../installation/index.md), set up GECKO or geckopy.
+The decision pages are in the order in which the choices come up during the work.
 
-Steps, in the order of the work:
+| Page | Choice |
+| --- | --- |
+| [Choose the ecModel structure](ecmodel-structure.md) | full or light ecModel, matching of genes to UniProt and KEGG, enzyme complexes |
+| [Choose the kcat sources](kcat-sources.md) | the kcat assignment preset, and the treatment of isozymes and of reactions without a kcat |
+| [Set custom kcats](custom-kcats.md) | curated kcats that take precedence over the kcat sources |
+| [Set the protein pool](protein-pool.md) | the values of the total protein content, the enzyme fraction `f` and the saturation factor `sigma` |
+| [Choose a kcat tuning](kcat-tuning.md) | standard or advanced kcat tuning, when the ecModel grows too slowly |
+| [Tune kcats against experimental data](advanced-tuning.md) | the data and the settings of the advanced kcat tuning |
+| [Constrain enzymes with proteomics](proteomics.md) | the integration of measured enzyme concentrations |
+| [Relax proteomics constraints](relaxing-proteomics.md) | the method that loosens proteomics constraints that prevent growth |
+| [Analyse an ecModel](analysis.md) | objectives, flux variability, sampling, flux scanning and context-specific ecModels |
+| [Enzyme usage and bottlenecks](enzyme-usage.md) | which enzymes a solution uses and which enzymes limit the objective |
 
-1. [Getting started](getting-started.md), scaffold a project and fill the model adapter.
-2. [Building an empty ecModel](building-ec-model.md), expand a conventional GEM into the structure of an ecModel.
-3. [Gathering kcats](gathering-kcats.md), collect the kcats of each source.
-4. [Applying kcats](applying-kcats.md), write kcats into the enzyme constraints of the ecModel.
-5. [Growth-rate tuning](growth-rate-tuning.md), reduce the difference between the growth rate of a new ecModel and that of the organism.
-6. [Tuning against experimental data](tuning-against-experimental-data.md), fit and curate the kcats that limit the model.
-7. [Proteomics integration](proteomics-integration.md), constrain the concentrations of individual enzymes with proteomics data.
-8. [Relaxing overconstrained proteomics](relaxing-constraints.md), loosen proteomics constraints that keep the ecModel from its growth rate.
-9. [Simulation and analysis](simulation-and-analysis.md), objectives, flux variability, sampling, flux scanning, mapping to the conventional GEM and context-specific ecModels.
-10. [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md), which enzymes a solution uses and which enzymes limit the objective.
+## Background
 
-Background, the reference material that the steps link to:
+- [ecModel YAML format](yaml-format.md): the file format that both toolboxes read and write.
+- [Files in the data folder](data-folder-files.md): the files that the `data` folder of a project can hold.
+- [Model adapter parameters](model-adapter-parameters.md): every parameter of `model_adapter.toml` in both languages.
+- [Basic model operations](basic-model-operations.md): bounds, objectives, flux balance analysis, flux inspection and export, for conventional GEMs and ecModels.
 
-- [GECKO light and full ecModels](gecko-light.md), the two ecModel layouts and the choice between them.
-- [ecModel YAML format](yaml-format.md), the file format that both toolboxes read and write.
-- [Files in the data folder](data-folder-files.md), every file that the `data` folder of a project can hold.
-- [Model adapter parameters](model-adapter-parameters.md), every parameter of `model_adapter.toml` in both languages.
-- [Basic model operations](basic-model-operations.md), bounds, objectives, FBA, flux inspection and export for conventional GEMs and ecModels.
+## Migration
 
-Migration, pages for GECKO 3 projects and scripts:
-
-- [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md), the changes of results, errors, functions and names.
-- [Project format 4](../gecko4-project-format.md), the project folder, `model_adapter.toml`, kcat source files and the ecModel format.
-- [Upgrade a GECKO 3 project](../gecko3-upgrade-project.md), the steps of `upgradeGECKOproject` and `upgradeEcModel`.
-- [Kcat assignment](../gecko4-kcat-assignment.md), the kcat sources, stages and presets of `collectKcats` and `assignKcats`.
-
-## Approximate timing
-
-The table lists the wall-clock time of a first pass through each step on a genome-scale model such as yeast-GEM. The time depends on the size of the model, the internet connection and the configured solver.
-
-| Pages | Approximate time | Notes |
-|---|---|---|
-| Getting started, Building an empty ecModel | 15 min | |
-| Gathering kcats, Applying kcats | 1 h | the prediction of kcats accounts for most of the time |
-| Growth-rate tuning, Tuning against experimental data | 15 min | |
-| Proteomics integration | 15 min | |
-| Relaxing overconstrained proteomics | 15 min | longer with proteomics data of lower quality, which needs more enzymes to be flexibilised |
-| Simulation and analysis | 3 h | `ecFVA` at genome scale accounts for most of the time, and it is much shorter with a commercial solver |
-| Enzyme usage and bottlenecks | 15 min | |
+- [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md): the changes of results, errors, functions and names.
+- [Project format 4](../gecko4-project-format.md): the project folder, `model_adapter.toml`, the kcat source files and the ecModel format.
+- [Upgrade a GECKO 3 project](../gecko3-upgrade-project.md): the steps of `upgradeGECKOproject` and `upgradeEcModel`.
+- [Kcat assignment](../gecko4-kcat-assignment.md): the kcat sources, stages and presets of `collectKcats` and `assignKcats`.
 
 ## See also
 
-- [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md), the changes of GECKO 4 against the published protocol.
-- [API reference](../api/index.md), the generated documentation of the functions of both toolboxes.
-- [MATLAB vs Python](../matlab-vs-python.md), the names of the functions in GECKO and geckopy.
+- [API reference](../api/index.md): the generated documentation of the functions of both toolboxes.
+- [MATLAB vs Python](../matlab-vs-python.md): the names of the functions in GECKO and geckopy.
 
 ```{toctree}
 :hidden:
@@ -85,26 +69,31 @@ introduction
 
 ```{toctree}
 :hidden:
-:caption: Guide
+:caption: Quick path
 
-workflow
-getting-started
-building-ec-model
-gathering-kcats
-applying-kcats
-growth-rate-tuning
-tuning-against-experimental-data
-proteomics-integration
-relaxing-constraints
-simulation-and-analysis
-enzyme-usage-and-bottlenecks
+first-ecmodel
+```
+
+```{toctree}
+:hidden:
+:caption: Decisions
+
+ecmodel-structure
+kcat-sources
+custom-kcats
+protein-pool
+kcat-tuning
+advanced-tuning
+proteomics
+relaxing-proteomics
+analysis
+enzyme-usage
 ```
 
 ```{toctree}
 :hidden:
 :caption: Background
 
-gecko-light
 yaml-format
 data-folder-files
 model-adapter-parameters
