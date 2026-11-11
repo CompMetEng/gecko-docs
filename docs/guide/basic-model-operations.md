@@ -57,7 +57,7 @@ ec_model.reactions.get_by_id("r_0003").lower_bound = 0
 :::
 ::::
 
-Set the objective to maximize flux through the biomass reaction:
+Set the objective to maximise flux through the biomass reaction:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -97,7 +97,7 @@ sol = ec_model.optimize()
 :::
 ::::
 
-Perform parsimonious FBA, optimising the objective and minimizing the total sum of flux:
+Perform parsimonious FBA, optimising the objective and minimising the total sum of flux:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -121,7 +121,7 @@ sol = pfba(ec_model)
 :::::{admonition} Enzyme-aware pFBA
 :class: tip
 
-Both languages also offer a variant that minimizes the total enzyme usage, the L1 norm of the `usage_prot_*` fluxes, in place of the total flux of all reactions. [Enzyme usage and bottlenecks](enzyme-usage.md) uses it to find the flux distribution with the least enzyme mass. It is not available for light ecModels, which have no `usage_prot_*` reactions to minimize.
+`getPfbaEnzymes` (Python: `pfba_enzymes`) minimises the total enzyme usage, the L1 norm of the `usage_prot_*` fluxes, in place of the total flux of all reactions. [Enzyme usage and bottlenecks](enzyme-usage.md) uses it to find the flux distribution with the least enzyme mass. It is not available for light ecModels, which have no `usage_prot_*` reactions to minimise.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -232,7 +232,7 @@ As on [Build an ecModel](first-ecmodel.md#7-save-the-ecmodel), this plain-cobrap
 | Problem | Possible reason | Solution |
 |---|---|---|
 | Warning `Reactions not present in model, will be ignored` from `setParam` (Python: `KeyError` from `get_by_id`) | no reaction of the ecModel has this identifier; `makeEcModel` adds the suffixes `_REV` and `_EXP_<n>` to split reactions | use the identifier of the ecModel, for example `r_0003_REV` for the reverse direction |
-| Error `Invalid set of bounds for reaction(s)` from `setParam` (Python: `ValueError` from the bound setter) | the new lower bound is above the upper bound, or the reverse | change the other bound first, or set both bounds with `setParam(ecModel, 'eq', ...)` (Python: `Reaction.bounds`) |
+| Error `Invalid set of bounds for reaction(s)` from `setParam` (Python: `ValueError` from the bound setter) | the new lower bound is above the upper bound, or the reverse | change the other bound first, or set both bounds in one call with `setParam(ecModel, {'lb','ub'}, {rxn, rxn}, [lb ub])` (Python: `Reaction.bounds = (lb, ub)`) |
 | `sol.stat` is -1 and `sol.x` is empty (Python: `sol.status` is `infeasible`) | the bounds cannot be met together, for example a fixed growth rate above the growth that the protein pool allows | relax the fixed bounds one at a time to find the bound that makes the problem infeasible |
 | Error from `getPfbaEnzymes` that a full ecModel is required (Python: `NotImplementedError`) | the ecModel is light and has no `usage_prot_<id>` reactions | use `solveLP(ecModel, 1)` (Python: `pfba`), or build a full ecModel |
 | An ecModel read from an SBML file has no `ec` structure | `exportModel` and `cobra.io.write_sbml_model` do not write the `ec` fields | save the ecModel with `saveEcModel` (Python: `save_ec_model`) as YAML for further GECKO work |

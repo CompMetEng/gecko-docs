@@ -1,6 +1,6 @@
 # Choose a kcat tuning
 
-After the kcats are assigned and the protein pool is set, an ecModel often grows much more slowly than the organism. A kcat tuning raises the kcats that limit growth until the ecModel reaches the maximum growth rate of the organism. The result is a tuned ecModel, a list of the changed kcats, and curated values for the changed kcats that the literature supports.
+After the kcats are assigned and the protein pool is set, an ecModel can grow more slowly than the organism. A kcat tuning raises the kcats that limit growth until the ecModel reaches the maximum growth rate of the organism. The result is a tuned ecModel, a list of the changed kcats, and curated values for the changed kcats that the literature supports.
 
 ## Functions
 
@@ -18,7 +18,7 @@ The examples need an ecModel with assigned kcats (`assignKcats`, see [Choose the
 
 ## Signs that the model needs a kcat tuning
 
-Maximize growth with the uptake of the carbon source unconstrained (see [Basic model operations](basic-model-operations.md)). If the growth rate is far below the maximum growth rate of the organism (`gR_exp` in the model adapter, Python `gr_exp`), the enzyme constraints are too tight. Before kcats are changed, check the two other causes of a low growth rate:
+Maximise growth with flux balance analysis (FBA), with the uptake of the carbon source unconstrained (see [Basic model operations](basic-model-operations.md)). If the growth rate is far below the maximum growth rate of the organism (`gR_exp` in the model adapter, Python `gr_exp`), the enzyme constraints are too tight. Before kcats are changed, check the two other causes of a low growth rate:
 
 - The conventional GEM, with the same exchange bounds, reaches the maximum growth rate. If it does not, the stoichiometry or the bounds of the GEM limit growth, and the GEM is corrected first.
 - Ptot, f and sigma of the protein pool are realistic for the organism (see [Set the protein pool](protein-pool.md)).
@@ -31,11 +31,15 @@ If both hold, some kcats are too low for the enzymes that carry most of the flux
 | --- | --- | --- |
 | Data it needs | one maximum growth rate (`gR_exp` in the model adapter, or the option `desiredGrowthRate`) | maximum growth rates (`evotuneMaxGrowth.tsv`), exchange fluxes (`evotuneFluxData.tsv`), or both, measured in one or more conditions |
 | What it changes | `ec.kcat` of the reactions it selects, and their enzyme constraints | `ec.kcat` of the kcats with the largest effect on the fit to the data, and their enzyme constraints |
-| Which kcats | per iteration one reaction: in a full ecModel, the reaction that uses most of the enzyme whose usage reaction carries the most flux; in a light ecModel, the reaction that draws most from the protein pool | the smallest set of kcats whose effect on the fit, weighted by the trust in their source, makes up 90 % of the total effect (option `targetImpactShare`) |
+| Which kcats | one reaction per iteration: the reaction with the largest use of the most used enzyme | the top kcats of a screen, up to 90 % of the weighted effect on the fit (option `targetImpactShare`) |
 | How much | the kcat is multiplied by `foldChange` (default 10) per iteration; a kcat that is selected again is multiplied again | any value between `min(0.01, k0/100)` and `max(10000, 100*k0)` per s, where `k0` is the kcat before tuning |
-| When it stops | the growth rate reaches the target; or an iteration raises growth by 1e-9 per h or less; or the model becomes infeasible; or no enzyme usage carries flux. Python also stops after `max_iterations` (default 1000) | the best RMSE reaches `rmse_threshold` (default 0.2), or after `max_generations` (default 150) generations. Python also stops on a convergence criterion of the `cma` package |
+| When it stops | the growth rate reaches the target, or growth stops rising | the best root-mean-square error (RMSE) reaches `rmse_threshold` (default 0.2), or after `max_generations` (default 150) generations |
 | Cost in time | one FBA per iteration | one FBA per data row for each kcat vector that is scored: two per kcat in the screen, plus `popsize` per generation in the search; runs in parallel with `nProc` |
-| Settings | the options of the function | the `[evotune]` table of `model_adapter.toml` (trust in each kcat source, weight of growth against flux data, penalty for moving a kcat, isozyme tying, stopping rules), plus `targetImpactShare`, `popsize`, `seed` and `nProc` |
+| Settings | the options of the function | the `[evotune]` table of `model_adapter.toml`, plus `targetImpactShare`, `popsize`, `seed` and `nProc` |
+
+In a full ecModel, each iteration of the standard tuning selects the enzyme whose usage reaction carries the most flux and raises the kcat of the reaction that uses most of that enzyme; in a light ecModel, it raises the kcat of the reaction that draws most from the protein pool. The standard tuning also stops when an iteration raises growth by 1e-9 per h or less, when the model becomes infeasible, or when no enzyme usage carries flux; Python also stops after `max_iterations` (default 1000).
+
+The advanced tuning weights the effect of each kcat on the fit by the `sigma0_log` of its source, so a kcat from a less trusted source has a larger weight. Python also stops on a convergence criterion of the `cma` package. The `[evotune]` settings set the trust in each kcat source, the weight of growth against flux data, the penalty for moving a kcat, isozyme tying and the stopping rules.
 
 The two tunings are alternatives. When the maximum growth rate of the organism is the sole measured value, use the standard tuning. With measured growth rates on several carbon sources or measured exchange fluxes, the advanced tuning uses those data, and the trust in each kcat source limits how far each kcat moves.
 
@@ -121,7 +125,7 @@ kcat_list[kcat_list["rxn_id"] == "r_0079"]
 
 ### Example: a kcat from a specific activity
 
-The GECKO tutorial `full_ecModel` assigns the kcats of its yeast ecModel with the preset `gecko_classic`. In that ecModel, `sensitivityTuning` raised the kcat of `r_0079` (5'-phosphoribosylformyl glycinamidine synthetase, enzyme P38972). The kcat before tuning, 0.05 per s, came from a BRENDA match with wildcard level 0 and origin 4 (any organism, any substrate) for EC 6.3.5.3.
+The GECKO tutorial `full_ecModel` assigns the kcats of its yeast ecModel with the preset `gecko_classic`. In that ecModel, `sensitivityTuning` raised the kcat of `r_0079` (5'-phosphoribosylformyl glycinamidine synthetase, enzyme P38972). The kcat before tuning, 0.05 per s, came from a BRENDA match with wildcard level 0 and origin 4 (closest organism, any substrate; see [BRENDA origin and wildcard levels](kcat-sources.md#brenda-origin-and-wildcard-levels)) for EC 6.3.5.3.
 
 [BRENDA](https://www.brenda-enzymes.org/enzyme.php?ecno=6.3.5.3) lists this kcat for *Escherichia coli* with NH4+ as the substrate. The reaction in the model uses glutamine. The paper that reports the value ([Schendel et al. 1989](https://doi.org/10.1021/bi00432a017)) states in its abstract that "NH3 can replace glutamine as a nitrogen donor with a Km = 1 M and a turnover of 3 min-1 (2% glutamine turnover)", so 0.05 per s is the kcat with ammonia as the nitrogen donor. According to the tutorial, the paper also reports a specific activity, which BRENDA lists; the tutorial uses 2.15 µmol/min/mg protein. A specific activity gives a kcat when it is multiplied by the molecular weight of the enzyme:
 
@@ -179,6 +183,7 @@ r_0079	P38972	5.3357625	custom	specific activity 2.15 umol/min/mg, MW 148905 g/m
 | Many kcats are tuned, or one kcat is raised several times | The target growth rate is too high, a nutrient uptake is constrained, or the GEM cannot reach the growth rate | Check `gR_exp`, the uptake bounds and the growth rate of the conventional GEM |
 | Python `sensitivity_tuning` stops at `max_iterations` | Raising kcats alone does not reach the target growth rate | Check the target growth rate and the bounds |
 | `ValueError` that `prot_to_ignore` has no usage reaction for a protein (Python, full ecModel) | The model has no usage reaction for this UniProt ID | Correct the ID |
+| Error `sigmaFitter:growthRate` (MATLAB), or `ValueError` that `growth_rate` is 0 (Python) | The target growth rate is not above 0 (MATLAB) or is 0 (Python) | Set `gR_exp` (Python `gr_exp`) in the model adapter, or give the growth rate |
 | A curated kcat is gone after `assignKcats` | The value was set with `setKcatForReactions`, and `assignKcats` replaced it with the value from the kcat source files | Add the value to `custom.tsv` |
 
 ## See also

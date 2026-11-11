@@ -1,11 +1,13 @@
 # Choose the ecModel structure
 
-`makeEcModel` turns a conventional GEM into an ecModel without kcats: reversible reactions are split by direction, the enzymes of each reaction are recorded in the `ec` structure, and the protein pool is added. The result is a full or a light ecModel without kcats, a list of the genes that have no protein data, and, for an organism in the Complex Portal, the subunit stoichiometry of the enzyme complexes.
+`makeEcModel` turns a conventional genome-scale metabolic model (GEM) into an enzyme-constrained model (ecModel) without kcats: reversible reactions are split by direction, the enzymes of each reaction are recorded in the `ec` structure, and the protein pool is added. The result is a full or a light ecModel without kcats, a list of the genes that have no protein data, and, for an organism in the Complex Portal, the subunit stoichiometry of the enzyme complexes.
 
 ## Functions
 
 | MATLAB | Python | Note |
 |---|---|---|
+| `ModelAdapterManager.setDefault` | `ModelAdapter.from_folder` | read `model_adapter.toml` of the project |
+| `loadDatabases` | `load_uniprot_tsv`, `load_kegg_tsv` | read `data/uniprot.tsv` and `data/kegg.tsv`, and download a missing file |
 | `loadConventionalGEM` | `load_conventional_gem` | load the GEM named by `conv_gem` in the model adapter |
 | `makeEcModel` | `make_ec_model` | build a full or a light ecModel |
 | `getComplexData` | `get_complex_data` | download complex stoichiometries from the Complex Portal |
@@ -13,7 +15,7 @@
 
 ## Setup
 
-A project folder with `model_adapter.toml` (see [Build an ecModel](first-ecmodel.md)). The build reads these adapter keys, described in [Model adapter parameters](model-adapter-parameters.md):
+The project folder has a `model_adapter.toml` (see [Build an ecModel](first-ecmodel.md)). The build reads these adapter keys, described in [Model adapter parameters](model-adapter-parameters.md):
 
 - `conv_gem`: path of the conventional GEM.
 - `enzyme_comp`: name of the compartment (an entry of `model.compNames`) that receives the protein pseudometabolites.
@@ -31,7 +33,7 @@ Both structures add the enzyme cost of a reaction as protein mass drawn from the
 |---|---|---|
 | Isozymes | each isozyme gets its own copy of the reaction (`_EXP_1`, `_EXP_2`, ...) | the reaction is not copied; `ec.rxns` has one row per isozyme, with the prefix `001_`, `002_`, ... |
 | Enzymes in the model | one pseudometabolite `prot_<UniProt>` and one reaction `usage_prot_<UniProt>` per enzyme | none |
-| Enzyme cost of a reaction | the reaction consumes its enzymes; the enzymes draw on `prot_pool` | the reaction consumes `prot_pool` directly, with the cost of the isozyme with the smallest MW/kcat |
+| Enzyme cost of a reaction | the reaction consumes its enzymes; the enzymes draw on `prot_pool` | the reaction consumes `prot_pool` directly, with the cost of the isozyme with the smallest ratio of molecular weight (MW) to kcat |
 | Size of the model | larger than the conventional GEM by the isozyme copies and one reaction per enzyme | the irreversible conventional GEM plus `prot_pool_exchange` |
 | Needed for | proteomics constraints, enzyme usage and bottleneck analysis | |
 
@@ -90,7 +92,7 @@ ec_model = make_ec_model(model, adapter, gecko_light=True)
 :::
 ::::
 
-The ecModel has no kcats yet: `ec.kcat` is 0 for every row, and no reaction consumes enzymes or protein pool. [Choose the kcat sources](kcat-sources.md) fills the kcats and applies them.
+The ecModel has no kcats yet: `ec.kcat` is 0 for every row, and no metabolic reaction consumes an enzyme (full ecModel) or `prot_pool` (light ecModel). [Choose the kcat sources](kcat-sources.md) fills the kcats and applies them.
 
 ## Steps of makeEcModel
 
@@ -117,7 +119,7 @@ The identifiers that these steps add must be new, so `makeEcModel` raises an err
 
 `makeEcModel` matches each gene of the model to a row of `data/uniprot.tsv`, on the field set by `uniprot.gene_id_field`. When `data/uniprotConversion.tsv` exists, the genes are first converted to UniProt identifiers with that table, and the match is on the UniProt identifier. A gene that UniProt does not match is looked up in `data/kegg.tsv`, on the field set by `kegg.gene_id`. For a gene found in KEGG, `ec.enzymes` gets the UniProt accession of the KEGG row, or the KEGG gene identifier when the row has no accession; a warning lists these genes.
 
-A gene that matches in neither file has no enzyme in the ecModel. A reaction that has such a gene and other genes that match is constrained by the genes that match. A reaction whose genes all have no match gets no enzyme cost.
+A gene that matches in neither file has no enzyme in the ecModel. A subunit of a complex without a match is left out of the complex, and the other subunits still give the reaction its enzyme cost. A reaction, or in a full ecModel an isozyme copy of a reaction, whose genes all have no match has an empty row in `ec.rxnEnzMat` and no enzyme cost. In a light ecModel, such an isozyme is left out when the isozyme with the smallest cost is selected.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -125,23 +127,20 @@ A gene that matches in neither file has no enzyme in the ecModel. A reaction tha
 
 `noUniprot`, the second output of `makeEcModel`, lists the genes that match neither file, and a warning gives their number.
 
-MATLAB downloads a missing `data/uniprot.tsv` or `data/kegg.tsv` when `uniprot.id` or `kegg.id` is set. A file that exists is not downloaded again: after a change of `uniprot.id`, delete `data/uniprot.tsv` before the build.
+`makeEcModel` downloads a missing `data/uniprot.tsv` or `data/kegg.tsv` through `loadDatabases`, with the `[uniprot]` and `[kegg]` values of the adapter.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
 
 `make_ec_model` returns no list. It logs a warning with the number of genes that match neither file and the first five, and adds a note under `rxn.notes["geckopy_warning"]` to every reaction that has such a gene.
 
-`make_ec_model` raises a `FileNotFoundError` when `data/uniprot.tsv` is missing, and uses `data/kegg.tsv` when the file exists. Download the files first:
+`make_ec_model` downloads a missing `data/uniprot.tsv` or `data/kegg.tsv` with the `[uniprot]` and `[kegg]` values of the adapter, through `load_uniprot_tsv` and `load_kegg_tsv`. It raises a `FileNotFoundError` when `data/uniprot.tsv` is missing and `uniprot.id` is empty. The arguments `uniprot_db` and `kegg_db` take databases loaded beforehand.
 
-```console
-geckopy uniprot-download 559292 data/uniprot.tsv
-geckopy kegg-download sce data/kegg.tsv
-```
-
-`uniprot-download` takes `--id-type proteome` for a proteome identifier such as `UP000002311` and `--gene-id-field` for the UniProt field that holds the gene identifiers. It keeps the reviewed (Swiss-Prot) entries, and with `--include-unreviewed` also the unreviewed entries; MATLAB uses `uniprot.reviewed` of the adapter, whose default is `false`. For the same file as MATLAB with the default adapter, add `--include-unreviewed`.
+The commands `geckopy uniprot-download` and `geckopy kegg-download` download the same files, with identifiers and options given on the command line; they do not read the adapter.
 :::
 ::::
+
+In both languages, a file that exists is not downloaded again: after a change of `uniprot.id`, delete `data/uniprot.tsv` before the build.
 
 Many genes without a match mean that the UniProt query or the gene identifier field does not fit the gene identifiers of the GEM. Compare a few gene identifiers of the GEM with the gene column of `data/uniprot.tsv`, then change `uniprot.id`, `uniprot.type` or `uniprot.gene_id_field`, or add `data/uniprotConversion.tsv` (see [Find the UniProt and KEGG parameters](#find-the-uniprot-and-kegg-parameters)).
 
@@ -149,9 +148,9 @@ Many genes without a match mean that the UniProt query or the gene identifier fi
 
 `data/uniprot.tsv` gives the molecular weight and the sequence of each enzyme, and a GEM without it has no enzyme data. `data/kegg.tsv` is optional: it fills genes that UniProt does not match, and EC numbers. The query must return gene identifiers in the same style as the genes of the GEM.
 
-- **UniProt proteome or taxonomy.** With `uniprot.type = "proteome"`, `uniprot.id` is a proteome identifier from [UniProt proteomes](https://www.uniprot.org/proteomes); choose the reference proteome when the organism has several proteomes. With `uniprot.type = "taxonomy"`, `uniprot.id` is a taxonomy identifier; choose the most specific one, for example the strain (559292 for *S. cerevisiae* S288C) in place of the species (4932). A proteome gives fewer duplicate matches between genes and proteins. `uniprot.reviewed = true` restricts the query to Swiss-Prot entries.
+- **UniProt proteome or taxonomy.** With `uniprot.type = "proteome"`, `uniprot.id` is a proteome identifier from [UniProt proteomes](https://www.uniprot.org/proteomes); choose the reference proteome when the organism has several proteomes. With `uniprot.type = "taxonomy"`, `uniprot.id` is a taxonomy identifier; choose the most specific one, for example the strain (559292 for *S. cerevisiae* S288C) in place of the species (4932). A proteome gives fewer duplicate matches between genes and proteins. `uniprot.reviewed = true` restricts the query to Swiss-Prot entries; the default `false` also includes unreviewed entries (`geckopy uniprot-download`: the option `--reviewed-only` restricts it).
 - **UniProt gene identifier field.** `uniprot.gene_id_field` is the UniProt field whose values match the genes of the GEM. The page of one protein on uniprot.org shows its gene names under "Names & Taxonomy"; for yeast-GEM, which uses identifiers such as `YFL026W` ("Ordered locus names"), the field is `gene_oln`.
-- **KEGG organism code.** `kegg.id` is the code from the [KEGG organism list](https://www.genome.jp/kegg/catalog/org_list.html), for example `sce` or `hsa`. The default is `sce`, so for an organism that is not in KEGG, set `kegg.id = ""`; no KEGG file is then downloaded.
+- **KEGG organism code.** `kegg.id` is the code from the [KEGG organism list](https://www.genome.jp/kegg/catalog/org_list.html), for example `sce` or `hsa`. The default is `sce`, so for an organism that is not in KEGG, set `kegg.id = ""`; the build then downloads no KEGG file, prints a warning and uses no KEGG data.
 - **KEGG gene identifier.** With `kegg.gene_id = "kegg"`, the genes are matched on the KEGG gene identifier. Another value is read from the "Other DBs" links of each KEGG gene entry, for example `Ensembl` for the gene identifiers of Human-GEM. A KEGG entry without a UniProt link is not written to `data/kegg.tsv`.
 
 When no UniProt field matches the gene identifiers, `data/uniprotConversion.tsv` maps them: a header row, then one row per gene with the gene identifier and the UniProt identifier, tab-separated. `data/kegg.tsv` has both identifiers in its first and third columns (UniProt, gene, KEGG gene, comma-separated, no header), which gives the table for an organism whose GEM uses KEGG gene identifiers, such as *E. coli* iML1515 with `b0008`:
@@ -201,7 +200,7 @@ complexInfo = getComplexData();
 [ecModel, foundComplex, proposedComplex] = applyComplexData(ecModel, complexInfo);
 ```
 
-`getComplexData` reads the taxonomy identifier from the adapter, or takes it as the argument `taxonomicID`; 0 downloads the complexes of all organisms. It writes `data/ComplexPortal.json`. `applyComplexData` without `complexInfo` reads that file, and runs `getComplexData` when the file does not exist. `foundComplex` and `proposedComplex` are tables, and the number of each is printed.
+`getComplexData` reads the taxonomy identifier from the adapter, or takes it as the argument `taxonomicID`; 0 downloads the complexes of all organisms. Without a taxonomy identifier, it warns and returns an empty structure. It writes `data/ComplexPortal.json`. `applyComplexData` without `complexInfo` reads that file, and runs `getComplexData` when the file does not exist. `foundComplex` and `proposedComplex` are tables, and the number of each is printed.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -214,11 +213,11 @@ get_complex_data(adapter.params.complex.taxonomic_id, write_to=json_path)
 apply_complex_data(ec_model, path=json_path)
 ```
 
-`get_complex_data` takes the taxonomy identifier (0 for all organisms) and returns the complexes; `write_to` saves them. `apply_complex_data` changes `ec_model` in place, logs the number of full and proposed matches, and logs each proposed complex as a warning. When at least one complex matches and `apply=True` (the default), it runs `apply_kcat_constraints` afterwards.
+`get_complex_data` takes the taxonomy identifier (0 for all organisms) and returns the complexes; `write_to` saves them. Without a taxonomy identifier (`None`), it logs a warning and returns an empty list. `apply_complex_data` changes `ec_model` in place, logs the number of full and proposed matches, and logs each proposed complex as a warning. When at least one complex matches and `apply=True` (the default), it runs `apply_kcat_constraints` afterwards.
 :::
 ::::
 
-A complex is applied to a reaction when its proteins and the enzymes of the reaction are the same set. For a reaction with more than one enzyme and no exact match, a complex is proposed, not applied, in two cases: the complex contains all enzymes of the reaction and more subunits; or the complex contains at least 75 % (and less than 100 %) of the enzymes of the reaction and has no more subunits than the reaction has enzymes, so it can contain subunits that the reaction lacks (Python: the keyword `min_match_to_propose`, default 0.75). MATLAB lists a proposal for each case that applies, so a reaction can have two rows in `proposedComplex`; Python logs one proposal per reaction, the first case when both apply. Read the proposed complexes: a missing subunit in the gene rule of the GEM can be the reason, and a curated gene rule then gives an exact match in the next build.
+A complex is applied to a reaction when its proteins and the enzymes of the reaction are the same set. For a reaction with more than one enzyme and no exact match, a complex is proposed, not applied, in two cases: the complex contains all enzymes of the reaction and more subunits; or the complex contains at least 75 % (and less than 100 %) of the enzymes of the reaction and has no more subunits than the reaction has enzymes, so it can contain subunits that the reaction lacks (Python: the keyword `min_match_to_propose`, default 0.75). A reaction can have a proposal for each case, so two rows in `proposedComplex` (Python: two warnings). Read the proposed complexes: a missing subunit in the gene rule of the GEM can be the reason, and a curated gene rule then gives an exact match in the next build.
 
 The stoichiometry changes `ec.rxnEnzMat` (Python: `ec.rxn_enz_mat`). The enzyme cost in the reactions follows from it when the kcats are applied, so add the complex data before the kcats are assigned.
 
@@ -231,7 +230,7 @@ The stoichiometry changes `ec.rxnEnzMat` (Python: `ec.rxn_enz_mat`). The enzyme 
 | Error that none of the proteins in `uniprot.tsv` or `kegg.tsv` match the genes (Python: `ValueError`) | the UniProt and KEGG parameters do not fit the gene identifiers | see [Match genes to UniProt and KEGG](#match-genes-to-uniprot-and-kegg) |
 | MATLAB error that the model was likely loaded with the COBRA Toolbox | the model has the field `rules` or `modelID` | load it with `importModel`, or convert it with `ravenCobraWrapper` |
 | An error that names a light ecModel (Python: `NotImplementedError` or `ValueError`) | the function needs a full ecModel | build a full ecModel |
-| Warning `No taxonomicID specified.` from `getComplexData`, then an error that the output argument `complexInfo` is not assigned | `complex.taxonomic_id` is not set, and `getComplexData` returns without a result | set it in `model_adapter.toml` or give `taxonomicID` |
+| Warning that no taxonomic identifier is specified, and no complex data | `complex.taxonomic_id` is not set; `getComplexData` returns an empty structure (Python: `get_complex_data` returns an empty list) | set it in `model_adapter.toml`, or give it as an argument |
 | Error that no data could be gathered from the Complex Portal | the Complex Portal has no complexes for this taxonomy identifier | skip the complex data |
 | The rows of `ec.rxns` do not match `model.rxns` in a light ecModel | the rows have the prefix `001_`, `002_`, ... | remove the first four characters |
 

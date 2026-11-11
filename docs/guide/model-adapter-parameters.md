@@ -155,17 +155,7 @@ The API key is no parameter. It is an argument of the functions, the environment
 
 geckopy ignores the `[matlab]` section. The functions are searched on the MATLAB path, to which the `code` folder of the project is added.
 
-## Adapter classes
-
-A GECKO 3 adapter class keeps working. It sets `obj.params` with the MATLAB names of the tables above, and `ModelAdapterManager.setDefault` takes the path of its `.m` file. `convertAdapterToToml` writes the parameters of a class as `model_adapter.toml` and lists the methods that the class overrides and the file cannot express. The option `'adapterFormat','class'` of `createGECKOproject` creates a project with a class.
-
-A class that needs code beyond the file can read its parameters from the file in the constructor:
-
-```matlab
-obj.params = loadAdapterParams(fullfile(projectPath, 'model_adapter.toml'));
-```
-
-In geckopy, a subclass of `ModelAdapter` overrides `get_spontaneous_reactions`, `get_uniprot_compatible_genes`, `get_uniprot_ids_from_table`, `get_kegg_compatible_genes`, `get_brenda_db_folder` or `get_phyl_dist_path`. It is instantiated explicitly; `from_folder` does not discover it.
+A GECKO 3 adapter class sets the same parameters in MATLAB code; [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md#adapter-classes) describes how such a class is used and converted.
 
 ## Troubleshooting
 

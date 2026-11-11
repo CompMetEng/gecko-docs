@@ -1,6 +1,6 @@
 # Tune kcats against experimental data
 
-The advanced kcat tuning fits many kcats at once to maximum growth rates and exchange fluxes, measured in one or more conditions. It searches with CMA-ES (covariance matrix adaptation evolution strategy), and the trust in the source of each kcat limits how far the kcat moves. The steps are: prepare the data files, configure the tuning, rank the kcats by their effect on the fit, review the assignment of the top kcats, and tune. The result is an ecModel whose selected kcats fit the data, and a list of the changed kcats. [Choose a kcat tuning](kcat-tuning.md) compares this tuning with the standard tuning.
+The advanced kcat tuning fits many kcats at once to maximum growth rates and exchange fluxes, measured in one or more conditions, by minimising the root-mean-square error (RMSE) between simulated and measured values. It searches with CMA-ES (covariance matrix adaptation evolution strategy), and the trust in the source of each kcat limits how far the kcat moves. The steps are: prepare the data files, configure the tuning, rank the kcats by their effect on the fit, review the assignment of the top kcats, and tune. The result is an ecModel whose selected kcats fit the data, and a list of the changed kcats. [Choose a kcat tuning](kcat-tuning.md) compares this tuning with the standard tuning.
 
 ## Functions
 
@@ -10,11 +10,11 @@ The advanced kcat tuning fits many kcats at once to maximum growth rates and exc
 | `screenKcatLeverage` | `screen_kcat_leverage` | ranks the kcats by their effect on the fit, without tuning |
 | `selectTunableMask` | `select_tunable_mask` | selects the top kcats of the screen for the search |
 | `reviewKcatAssignment` | `review_assignment` | flags kcat assignments that may be wrong, independent of the data |
-| `ecStatsFromBrenda` | `ec_stats_from_brenda` | summarizes the BRENDA data per EC number for the review |
+| `ecStatsFromBrenda` | `ec_stats_from_brenda` | summarises the BRENDA data per EC number for the review |
 | `cmaesKcatTuning` | `cmaes_kcat_tuning` | searches the selected kcats for the best fit to the data |
 | `tunePriorPenaltyWeight` | `tune_prior_penalty_weight` | runs the tuning for several `prior_penalty_weight` values and seeds, and reports fit and reproducibility |
 
-## Requirements
+## Setup
 
 - An ecModel with assigned kcats (see [Choose the kcat sources](kcat-sources.md)) and a set protein pool (see [Set the protein pool](protein-pool.md)), in a project with `model_adapter.toml`.
 - At least one of the files `evotuneMaxGrowth.tsv` and `evotuneFluxData.tsv` in the `data` folder of the project. The tutorial `full_ecModel` of GECKO has all three data files in its `data` folder.
@@ -86,18 +86,18 @@ custom = 0.1
 
 | Setting (MATLAB field) | Meaning |
 | --- | --- |
-| `source_groups` (`kcatSources`) | trust groups, each with the `sources` it covers; see the rules below the table |
-| `sigma0_log_source` (`sigma0logSource`) | standard deviation in log space for each group; the keys must be the group names. A smaller value is more trust: the search moves such a kcat less, and the screen ranks it lower |
+| `source_groups` (`kcatSources`) | trust groups, each with the `sources` it covers |
+| `sigma0_log_source` (`sigma0logSource`) | standard deviation in log space for each group; the keys are the group names |
 | `sigma0_log_default` (`sigma0logDefault`) | standard deviation for a kcat whose source is in no group |
 | `max_growth_weight` (`maxGrowthWeight`) | weight `w` of the maximum growth rates against the fluxes in the RMSE |
-| `prior_penalty_weight` (`priorPenaltyWeight`) | weight `p` of a penalty for moving kcats; the search minimizes `rmse + p * mean(((log k - log k0) / sigma0_log)^2)`. At 0 the objective is the RMSE |
+| `prior_penalty_weight` (`priorPenaltyWeight`) | weight `p` of a penalty for moving kcats; the search minimises `rmse + p * mean(((log k - log k0) / sigma0_log)^2)`. At 0 the objective is the RMSE |
 | `tie_isozymes` (`tieIsozymes`) | isozyme copies of one reaction with the same kcat and the same group get one shared kcat |
 | `rmse_threshold` (`rmseThreshold`) | the search stops when the best RMSE reaches this value; a negative value never stops the search early |
 | `max_generations` (`maxGenerations`) | maximum number of CMA-ES generations |
 
-A kcat belongs to a group when its `ec.source`, or the part of `ec.source` before ` (`, equals one of the `sources` of the group, without regard to case. `brenda (wc=0, origin=1)` is in the group that lists `brenda`, and `combined (sd=0.10, n=2)` in the group that lists `combined`. With `match_okp = true`, a group also covers the method of `[okp] method`.
+A smaller `sigma0_log` is more trust: the search moves such a kcat less, and the screen ranks it lower. A kcat belongs to a group when its `ec.source`, or the part of `ec.source` before ` (`, equals one of the `sources` of the group, without regard to case. `brenda (wc=0, origin=1)` is in the group that lists `brenda`, and `combined (sd=0.10, n=2)` in the group that lists `combined`. With `match_okp = true`, a group also covers the method of `[okp] method`.
 
-The groups depend on the source labels in the model. With the default kcat assignment, `ec.source` also holds labels such as `ec_tree`, `combined (...)` and `standard`, which the template groups do not list, so these kcats take `sigma0_log_default`. List the labels of `ec.source` (`unique(ecModel.ec.source)`, Python `set(ec_model.ec.source)`) and add a group for each label that needs its own trust. MATLAB reads `source_groups` as a flat list of source labels (`kcatSources`) with one width per label (`sigma0logSource`), so in MATLAB the group of a kcat, in `screen.sourceGroup` and `result.groups`, is the matched source label; in Python it is the group name. When a label matches several groups, the last group applies in MATLAB and the first in Python.
+The groups depend on the source labels in the model. With the default kcat assignment, `ec.source` also holds labels such as `ec_tree`, `combined (...)` and `standard`, which the template groups do not list, so these kcats take `sigma0_log_default`. List the labels of `ec.source` (`unique(ecModel.ec.source)`, Python `set(ec_model.ec.source)`) and add a group for each label that needs its own trust. MATLAB reads `source_groups` as a flat list of source labels (`kcatSources`) with one width per label (`sigma0logSource`), so in MATLAB the group of a kcat, in `screen.sourceGroup` and `result.groups`, is the matched source label; in Python it is the group name. When a label matches several groups, the first group applies.
 
 ## Rank the kcats by their effect
 
@@ -226,18 +226,17 @@ Different kcat vectors can fit the data equally well, so two seeds can move a kc
 | MATLAB | Python | Meaning |
 | --- | --- | --- |
 | `rxns`, `oldKcat`, `newKcat`, `groups` | `rxns`, `old_kcat`, `new_kcat`, `groups` | the selected kcats before and after tuning, and the trust group of each; tied copies share one value |
-| `rmseTrace`, `objectiveTrace` | `rmse_trace`, `objective_trace` | the best RMSE and the best value of the minimized objective, per generation; the two are equal when `prior_penalty_weight` is 0 |
+| `rmseTrace`, `objectiveTrace` | `rmse_trace`, `objective_trace` | the best RMSE and the best value of the minimised objective, per generation; the two are equal when `prior_penalty_weight` is 0 |
 | `nGenerations` | `n_generations` | number of generations that ran |
 | `converged` | `converged` | whether the best RMSE reached `rmse_threshold` |
 
-`nChanged` (Python `n_changed`) counts the kcats that differ from their value before tuning by more than 2 %. `parsimonyFrontier` (Python `parsimony_frontier`) sets each kcat that moved less than a threshold, in units of its `sigma0_log`, back to the value before tuning, and scores the result for a series of thresholds with a scoring function that the caller gives. `bestParsimonious` (Python `best_parsimonious`) returns the point with the fewest changed kcats whose RMSE is within 2 % of the best RMSE. In Python, `result.corrections(leverage=...)` returns one row per changed kcat, sorted by the leverage of the screen; `corrections_tsv` in `geckopy.kcat_tuning` writes the rows as TSV. Check the tuned model against data that were not used in the fit: an improvement on the fitted conditions without an improvement on other data indicates overfitting. As with the standard tuning, check the large changes against the source of each kcat (see [Choose a kcat tuning](kcat-tuning.md#check-a-tuned-kcat-against-its-source)), and keep curated values in `data/kcats/custom.tsv`.
+`nChanged` (Python `n_changed`) counts the kcats that differ from their value before tuning by more than 2 %. `parsimonyFrontier` (Python `parsimony_frontier`) sets each kcat that moved less than a threshold, in units of its `sigma0_log`, back to the value before tuning, and scores the result for a series of thresholds with a scoring function that the caller gives. `bestParsimonious` (Python `best_parsimonious`) returns the point with the fewest changed kcats whose RMSE is within 2 % of the best RMSE. In Python, `result.corrections(leverage=...)` returns one row per changed kcat, sorted by the leverage of the screen; `leverage` has one value per entry of `result.rxns`; `corrections_tsv` in `geckopy.kcat_tuning` writes the rows as TSV. Check the tuned model against data that were not used in the fit: an improvement on the fitted conditions without an improvement on other data indicates overfitting. As with the standard tuning, check the large changes against the source of each kcat (see [Choose a kcat tuning](kcat-tuning.md#check-a-tuned-kcat-against-its-source)), and keep curated values in `data/kcats/custom.tsv`.
 
 ## Troubleshooting
 
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
-| `ValueError` that `evotune_data` has neither `flux_data` nor `max_grate` (Python) | Neither `evotuneFluxData.tsv` nor `evotuneMaxGrowth.tsv` is in `<project>/data/` | Add one of the files |
-| MATLAB `cmaesKcatTuning` runs, but the RMSE is NaN in every generation | Neither `evotuneFluxData.tsv` nor `evotuneMaxGrowth.tsv` is in `<project>/data/`; `cmaesKcatTuning` raises no error and the search runs on an RMSE of NaN | Add one of the files |
+| Error `evotune:noData` (MATLAB), or `ValueError` that `evotune_data` has neither `flux_data` nor `max_grate` (Python) | Neither `evotuneFluxData.tsv` nor `evotuneMaxGrowth.tsv` is in `<project>/data/` | Add one of the files |
 | Error that a carbon source cannot be matched by name with an exchange reaction | The `Condition` of a row differs from every metabolite name in the exchange column headers | Use the metabolite name of the column header as the condition |
 | Error `No tunable kcats` | No kcat is above 0, or the mask excludes every kcat | Assign kcats first, or widen the mask |
 | Error `Only 1 free parameter(s) after masking and tying` | The mask and the isozyme tying leave fewer than two free kcats | Raise `targetImpactShare`, or give a wider `tunableMask` |

@@ -30,7 +30,7 @@ Each enzyme pseudometabolite is made by its usage reaction, `usage_prot_<id>`, w
 
 $$ e_i = \sum_j \frac{n_{ij} \cdot MW_i}{3600 \cdot k_{cat,j}} \, v_j $$
 
-The reaction `prot_pool_exchange` produces `prot_pool`, so its flux is the sum of all enzyme usages. Its upper bound is the protein pool, which `setProtPoolSize` (Python: `set_prot_pool_size`) sets to
+The reaction `prot_pool_exchange` produces `prot_pool`, so its flux is the sum of all enzyme usages. `setProtPoolSize` (Python: `set_prot_pool_size`) sets the upper bound of `prot_pool_exchange` to the protein pool, so the enzyme usages are limited by
 
 $$ \sum_i e_i \le P_{tot} \cdot f \cdot \sigma \cdot 1000 $$
 

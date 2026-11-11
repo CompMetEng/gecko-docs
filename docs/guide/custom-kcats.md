@@ -73,7 +73,7 @@ A row in `partial` shares at least half of its enzymes with a reaction of the ec
 
 ## Change kcats by hand
 
-`setKcatForReactions` changes `ec.kcat` of the named reactions, and `applyKcatConstraints` applies the change to the stoichiometry. In a full ecModel, a reaction name without `_EXP_<n>` changes all isozymes of the reaction. `ec.source` of a changed reaction reads `setKcatForReactions`.
+`setKcatForReactions` changes `ec.kcat` of the named reactions, and `applyKcatConstraints` applies the change to the stoichiometry. In a full ecModel, a reaction name without `_EXP_<n>` changes all isozymes of the reaction. In a light ecModel, the names in `ec.rxns` have a number prefix (`001_R1`), and the name is given with this prefix. A name that matches no entry of `ec.rxns` is ignored without a message. `ec.source` of a changed reaction reads `setKcatForReactions`.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -107,9 +107,10 @@ apply_kcat_constraints(ec_model)
 | A custom kcat is not used | the row matches no reaction, or part of an enzyme set | Read `report.sources.custom` of `assignKcats` and correct `rxn` or `enzymes` |
 | A custom row is listed as invalid | the kcat is empty, 0, or not a plain number (for example `5,5` with a decimal comma) | Write the kcat as a number with a decimal point |
 | Error `loadKcatSource:columns` (Python: `ValueError` with `needs the columns kcat and source`) | the file lacks `kcat`, `source`, or both `rxn` and `enzymes` | Add the columns to the header line |
+| Error `collectKcats:legacyCustomKcats` (Python: `ValueError`) | the project has the GECKO 3 file `data/customKcats.tsv` and no `data/kcats/custom.tsv` | Run `convertCustomKcats` |
 | Kcats set by hand are gone | `assignKcats` replaced them | Write them to `data/kcats/custom.tsv` |
-| `convertCustomKcats` reports that `custom.tsv` exists | the function does not overwrite the file | Remove the file, or give another `outFile` (Python: `out_file`) |
-| `convertCustomKcats` raises an error for a light ecModel | the conversion needs the full ecModel | Convert with the full ecModel; the `custom.tsv` written also applies to the light ecModel |
+| Error `convertCustomKcats:exists` (Python: `FileExistsError`) | the function does not overwrite the file | Remove the file, or give another `outFile` (Python: `out_file`) |
+| Error `convertCustomKcats:light` (Python: `ValueError`) | the conversion needs the full ecModel | Convert with the full ecModel; the `custom.tsv` written also applies to the light ecModel |
 
 ## See also
 

@@ -49,8 +49,6 @@ The table is a selection; [MATLAB and Python](matlab-vs-python.md) lists all pai
 | `reviewKcatAssignment` | `review_assignment` |
 | `upgradeGECKOproject` | `upgrade_project`, command `geckopy upgrade` |
 | `createGECKOproject` | command `geckopy init` |
-| `writeOpenKineticsPredictorInput` | `build_okp_input_csv` in `geckopy.gather_kcats.open_kinetics_predictor` |
-| `readOpenKineticsPredictorOutput` | `parse_okp_output` in `geckopy.gather_kcats.open_kinetics_predictor` |
 
 ## Functions of one implementation
 
@@ -71,7 +69,7 @@ The table is a selection; [MATLAB and Python](matlab-vs-python.md) lists all pai
 |---|---|
 | Result and data types | `TunedKcatsResult`, `FlexEnzResult`, `BrendaData`, `PhylDist`, `FluxData`, `Enzyme` |
 | Build steps of `make_ec_model` | `geckopy.ec_model.pipeline.add_protein_usage_reactions` and the other steps that `makeEcModel` runs inline |
-| Algorithms | `relax_enz_concs` (least total fold increase of the enzyme bounds in one linear program), `level_complex_abundances` (one abundance per complex), `sweep_tunable_mask_size` and `recommend_target_impact_share` (share of kcats that `cmaes_kcat_tuning` tunes) |
+| Algorithms | `level_complex_abundances` (one abundance per complex), `sweep_tunable_mask_size` and `recommend_target_impact_share` (share of kcats that `cmaes_kcat_tuning` tunes) |
 
 ## Differences in behaviour
 

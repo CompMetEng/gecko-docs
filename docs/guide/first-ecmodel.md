@@ -1,6 +1,6 @@
 # Build an ecModel
 
-The steps below build an enzyme-constrained model (ecModel) from a conventional genome-scale metabolic model (GEM) with the default settings of GECKO and geckopy. At the end, the project folder holds an ecModel with kcats and a protein pool, which reaches the growth rate of the organism, saved as a YAML file. Each step links to the page that describes the other options of that step.
+These steps build an enzyme-constrained model (ecModel) from a conventional genome-scale metabolic model (GEM) with the default settings of GECKO and geckopy. At the end, the project folder holds an ecModel with kcats and a protein pool, which reaches the growth rate of the organism, saved as a YAML file. Each step links to the page that describes the other options of that step.
 
 ## Functions
 
@@ -10,11 +10,14 @@ The steps below build an enzyme-constrained model (ecModel) from a conventional 
 | `ModelAdapterManager.setDefault` | `ModelAdapter.from_folder` | read `model_adapter.toml` of the project |
 | `loadConventionalGEM` | `load_conventional_gem` | load the GEM that `conv_gem` names |
 | `makeEcModel` | `make_ec_model` | add the enzymes and the protein pool to the GEM |
+| `loadDatabases` (called by `makeEcModel` and `getECfromDatabase`) | `load_uniprot_tsv`, `load_kegg_tsv` | read the UniProt and KEGG data of the organism |
 | `getECfromGEM`, `getECfromDatabase` | `fill_eccodes_from_gem`, `fill_eccodes_from_database` | fill the EC numbers of the reactions |
 | `findMetSmiles` | `find_met_smiles` | find the SMILES of the metabolites in PubChem |
 | `updateKcatSources` | `update_kcat_sources` | make the kcat source files that the preset needs |
 | `assignKcats` | `assign_kcats` | select one kcat per reaction and apply it |
 | `setProtPoolSize` | `set_prot_pool_size` | set the upper bound of the protein pool |
+| `setParam` | `reaction.lower_bound`, `model.objective` | set a bound or the objective |
+| `solveLP` | `model.slim_optimize` | solve the model |
 | `sensitivityTuning` | `sensitivity_tuning` | raise the kcats that limit growth (standard kcat tuning) |
 | `sigmaFitter` | `fit_sigma` | fit the saturation factor $\sigma$ to the growth rate |
 | `saveEcModel` | `save_ec_model` | save the ecModel as YAML in `models` |
@@ -87,36 +90,23 @@ model = loadConventionalGEM();
 [ecModel, noUniprot] = makeEcModel(model);
 ```
 
-`pwd` is the project folder, which `createGECKOproject` made the current folder. `makeEcModel` downloads the UniProt and KEGG data of the organism into `data/uniprot.tsv` and `data/kegg.tsv` when these files do not exist. `noUniprot` lists the genes that neither database matched.
+`pwd` is the project folder, which `createGECKOproject` made the current folder. `noUniprot` lists the genes that neither database matched.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
 
 ```python
-from geckopy import ModelAdapter, load_conventional_gem, load_uniprot_tsv, make_ec_model
-from geckopy.databases import load_kegg_tsv
+from geckopy import ModelAdapter, load_conventional_gem, make_ec_model
 
 adapter = ModelAdapter.from_folder("ecMyModel")
 params = adapter.params
-uniprot_db = load_uniprot_tsv(
-    params.path / "data" / "uniprot.tsv",
-    uniprot_id=params.uniprot.id,
-    id_type=params.uniprot.type,
-    gene_id_field=params.uniprot.gene_id_field,
-    reviewed=params.uniprot.reviewed,
-)
-kegg_db = load_kegg_tsv(
-    params.path / "data" / "kegg.tsv",
-    kegg_id=params.kegg.id,
-    gene_id_field=params.kegg.gene_id,
-)
 model = load_conventional_gem(adapter)
-ec_model = make_ec_model(model, adapter, uniprot_db=uniprot_db, kegg_db=kegg_db)
+ec_model = make_ec_model(model, adapter)
 ```
-
-`load_uniprot_tsv` and `load_kegg_tsv` download the UniProt and KEGG data of the organism into `data/uniprot.tsv` and `data/kegg.tsv` when these files do not exist.
 :::
 ::::
+
+`makeEcModel` downloads the UniProt and KEGG data of the organism into `data/uniprot.tsv` and `data/kegg.tsv` when these files do not exist, with the settings of `[uniprot]` and `[kegg]`. With an empty `kegg.id`, it prints a warning and uses no KEGG data.
 
 The ecModel is a full ecModel: it has one pseudometabolite and one usage reaction per enzyme, and no kcats yet. [Choose the ecModel structure](ecmodel-structure.md) describes the light ecModel, the matching of genes to UniProt and KEGG, and the data of enzyme complexes.
 
@@ -145,9 +135,12 @@ updateKcatSources(ecModel);
 ```python
 from geckopy import (
     assign_kcats, fill_eccodes_from_database, fill_eccodes_from_gem,
-    find_met_smiles, update_kcat_sources,
+    find_met_smiles, load_uniprot_tsv, update_kcat_sources,
 )
+from geckopy.databases import load_kegg_tsv
 
+uniprot_db = load_uniprot_tsv(params.path / "data" / "uniprot.tsv")
+kegg_db = load_kegg_tsv(params.path / "data" / "kegg.tsv", kegg_id=params.kegg.id)
 fill_eccodes_from_gem(ec_model)
 no_ec = [rxn for rxn, ec in zip(ec_model.ec.rxns, ec_model.ec.eccodes) if not ec]
 fill_eccodes_from_database(ec_model, uniprot_db, kegg_db=kegg_db, ec_rxns=no_ec)
@@ -156,13 +149,13 @@ print(update_kcat_sources(ec_model))
 decisions, report = assign_kcats(ec_model)
 ```
 
-`assign_kcats` changes `ec_model` in place.
+`load_uniprot_tsv` and `load_kegg_tsv` read the files that `make_ec_model` downloaded; `load_kegg_tsv` returns `None` when `kegg.id` is empty and `data/kegg.tsv` does not exist. `assign_kcats` changes `ec_model` in place.
 :::
 ::::
 
 The EC numbers come from the annotation of the GEM, and from UniProt and KEGG for the reactions that the GEM does not annotate. `updateKcatSources` makes the kcat source files in `data/kcats` that the preset needs and prints a table with the status of each source. The BRENDA files are downloaded the first time they are used. `assignKcats` selects one kcat per reaction from the source files, applies the kcats to the model, and writes the decision for each reaction to `output/<model id>_kcatDecisions.tsv`.
 
-The default preset takes kcats from BRENDA measurements of the organism and from the measurements of the same EC number in other organisms. For the reactions that these leave without a kcat, it combines the predictions of the OpenKineticsPredictor (OKP) methods. OKP is a web service that needs an API key, set as the environment variable `OKP_API_KEY` or in the file `data/okpApiKey.txt` (a key is generated at [predictor.openkinetics.org](https://predictor.openkinetics.org/)). The first call of `updateKcatSources` submits one OKP job per method and reports these sources as `pending`; a later call fetches the results. Call `updateKcatSources` again until no source is `pending`, then run `assignKcats`. A source file that does not exist is skipped by `assignKcats`, and a reaction without a kcat from any source gets a kcat from an isozyme or the standard kcat (`getStandardKcat`, Python: `assign_standard_kcat`).
+The default preset takes kcats from BRENDA measurements of the organism and from the measurements of the same EC number in other organisms. For the reactions that these leave without a kcat, it takes the predictions of the OpenKineticsPredictor (OKP) method KinForm-H. OKP is a web service that needs an API key, set as the environment variable `OKP_API_KEY` or in the file `data/okpApiKey.txt` (a key is generated at [predictor.openkinetics.org](https://predictor.openkinetics.org/)). The first call of `updateKcatSources` submits the OKP job and reports the source `okp_kinform_h` as `pending`; a later call fetches the result. Call `updateKcatSources` again until no source is `pending`, then run `assignKcats`. A source file that does not exist is skipped by `assignKcats`, and a reaction without a kcat from any source gets a kcat from an isozyme or the standard kcat (`getStandardKcat`, Python: `assign_standard_kcat`).
 
 [Choose the kcat sources](kcat-sources.md) describes the presets and the treatment of reactions without a kcat, and [Set custom kcats](custom-kcats.md) describes curated kcats.
 
@@ -218,9 +211,9 @@ print(growth)
 
 [Basic model operations](basic-model-operations.md) describes bounds, objectives and the inspection of a solution.
 
-## 6. Tune kcats if the growth rate is too low
+## 6. Tune kcats and fit sigma
 
-When the growth rate is lower than `gr_exp`, the standard kcat tuning raises the kcats that limit growth. Then `sigmaFitter` selects the saturation factor at which the growth rate of the model is closest to `gr_exp`, and sets the protein pool with that value.
+When the growth rate is lower than `gr_exp`, the standard kcat tuning raises the kcats that limit growth; when the model already reaches `gr_exp`, `sensitivityTuning` changes no kcat. Then `sigmaFitter` selects the saturation factor at which the growth rate of the model is closest to `gr_exp`, and sets the protein pool with that value.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -289,8 +282,8 @@ The file is written to the `models` folder of the project. [ecModel YAML format]
 | --- | --- | --- |
 | `makeEcModel` stops with an error that names `params.enzyme_comp` | `enzyme_comp` names no compartment of the GEM | Set `enzyme_comp` to a compartment name of the GEM, for example `cytoplasm` |
 | `noUniprot` lists most genes of the GEM | the gene identifiers of the UniProt data do not match those of the GEM | Set `[uniprot]` as described in [Choose the ecModel structure](ecmodel-structure.md), delete `data/uniprot.tsv` and make the ecModel again |
-| `updateKcatSources` reports the `okp_` sources as `failed`, with "No OpenKineticsPredictor API key found" | no OKP API key is set | Set `OKP_API_KEY` or write the key in `data/okpApiKey.txt`, then call `updateKcatSources` again |
-| `updateKcatSources` reports sources as `pending` | the OKP jobs are still running | Call `updateKcatSources` again later |
+| `updateKcatSources` reports the source `okp_kinform_h` as `failed`, with "No OpenKineticsPredictor API key found" | no OKP API key is set | Set `OKP_API_KEY` or write the key in `data/okpApiKey.txt`, then call `updateKcatSources` again |
+| `updateKcatSources` reports a source as `pending` | the OKP job is still running | Call `updateKcatSources` again later |
 | The growth rate does not change when the lower bound of `c_source` is changed | `makeEcModel` reverses a reaction with a negative lower bound and an upper bound of 0, so uptake through that exchange reaction is a positive flux in the ecModel | Set the upper bound of the exchange reaction |
 | `sensitivityTuning` warns that the growth rate does not increase | the bound of an uptake reaction limits growth | Check the bounds of the uptake reactions |
 

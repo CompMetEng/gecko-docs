@@ -348,3 +348,16 @@ target_type
 prot_data
 flex_model
 get_by_id
+restrictTo
+restrict_to
+poolWeight
+okp_kinform_h
+submitOpenKineticsPredictor
+fetchOpenKineticsPredictor
+writeOpenKineticsPredictorInput
+readOpenKineticsPredictorOutput
+bayesianSensitivityTuning
+abc_max
+getcarbonnum
+getrSample
+updateprior

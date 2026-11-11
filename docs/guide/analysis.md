@@ -242,6 +242,7 @@ mapped.mapped_flux, mapped.enz_usage_flux, mapped.usage_enz
 | --- | --- | --- |
 | `prot_pool_exchange` or the `usage_prot_*` reactions carry negative flux | the model has these reactions in the reverse direction and was not loaded with `loadEcModel` | Run `upgradeEcModel` (Python: `upgrade_ec_model`) |
 | `mapRxnsToConv` or `ecFVA` raises "Not all reactions from model.rxns can be found in the ecModel" | the conventional GEM differs from the GEM that the ecModel was made from | Pass the GEM that `makeEcModel` started from |
+| `map_rxns_to_conv` or `ec_fva` raises a `ValueError` that lists conventional reactions missing from the ecModel | the conventional GEM differs from the GEM that the ecModel was made from | Pass the GEM that `makeEcModel` started from |
 | The `ecFVA` ranges of the ecModel reach 1000 for many reactions | the bounds of the condition are missing, so the default bounds limit the fluxes | Set the growth rate and the uptake rates before `ecFVA` |
 | Independent sampling chains give different flux distributions | the chains have not converged | Increase `thinning` and the number of samples, and check again |
 

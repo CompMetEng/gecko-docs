@@ -21,15 +21,19 @@ The other names in the examples are placeholders for values of the project:
 
 ## Target selection
 
-`ecFSEOF` first finds the production at maximum growth and the maximum production. It then fixes the production reaction at evenly spaced values from the first to 90 % of the second. At each value it maximises growth and then minimises the total flux. A reaction is a target when the absolute Pearson correlation between its absolute flux and the enforced production is at least `corrThreshold` (Python: `correlation_threshold`, default 0.9). The scan covers the reactions with a gene rule, except those that use the standard enzyme ([Choose the kcat sources](kcat-sources.md)). The `usage_prot_*` reactions take part in the scan and are left out of the result.
+`ecFSEOF` first finds the production at maximum growth and the maximum production. It then fixes the production reaction at `nSteps` (Python: `n_steps`, default 16) evenly spaced values from the first to 90 % of the second. At each value it maximises growth and then minimises the total flux. A reaction is a target when the absolute Pearson correlation between its absolute flux and the enforced production is at least `corrThreshold` (Python: `correlation_threshold`, default 0.9). The scan covers the reactions with a gene rule, except those that use the standard enzyme ([Choose the kcat sources](kcat-sources.md)). The `usage_prot_*` reactions take part in the scan and are left out of the result.
 
 Each target reaction gets an action from the slope of its absolute flux:
 
-| Slope | Absolute flux at the last step | Action (MATLAB) | Action (Python) |
-| --- | --- | --- | --- |
-| positive | any | `OE` (over-express) | `amplify` |
-| negative | at most 1e-8 | `KO` (knock out) | `knockout` |
-| negative | above 1e-8 | `KD` (knock down) | `knockdown` |
+| Slope | Absolute flux at the last step | Action |
+| --- | --- | --- |
+| positive | any | `OE` (over-express) |
+| negative | at most 1e-8 | `KO` (knock out) |
+| negative | above 1e-8 | `KD` (knock down) |
+
+A gene gets one action from its target reactions. When these reactions have one action, the gene keeps it, also when the gene is essential. When they have different actions, the gene gets `OE` if one of them is `OE`, otherwise `KO` if the gene is not essential, otherwise `KD`. A gene is essential when growth is infeasible or below 1e-8 with the usage reactions of its enzymes fixed at 0 and the production fixed at the last value of the scan.
+
+When the production at maximum growth is equal to 90 % of the maximum production, there is no range to scan, and the function raises an error.
 
 ## Run the scan
 
@@ -42,7 +46,7 @@ fseof = ecFSEOF(ecModel, prodTargetRxn, csRxn, 'nSteps', 16, 'outputFile', true)
 fseof.geneTargets
 ```
 
-`rxnTargets` and `transportTargets` list the target reactions with identifier, name, slope, gene rule and equation, ordered by the product of slope and correlation; they have no action column. The actions are in `geneTargets`, with one row per gene of the target reactions: gene, short name, mean slope, action and essentiality. When the target reactions of a gene have one action, the gene keeps it, also when the gene is essential. When they have different actions, the gene gets `OE` if one of them is `OE`, otherwise `KO` if the gene is not essential, otherwise `KD`. A gene is essential when blocking its enzymes stops growth. With `outputFile` set to `true`, the function writes `ecFSEOF_genes.tsv`, `ecFSEOF_rxns.tsv` and `ecFSEOF_transporter.tsv` to the `output` folder of the project. The function warns when the lower bound of `csRxn` is below the uptake at maximum growth, that is, when the uptake does not reach its bound.
+`rxnTargets` and `transportTargets` list the target reactions with identifier, name, slope, gene rule and equation, ordered by the product of slope and correlation; they have no action column. `geneTargets` has one row per gene of the target reactions: gene, short name, mean slope, action and essentiality. With `outputFile` set to `true`, the function writes `ecFSEOF_genes.tsv`, `ecFSEOF_rxns.tsv` and `ecFSEOF_transporter.tsv` to the `output` folder of the project. The function warns when the lower bound of `csRxn` is below the uptake at maximum growth, that is, when the uptake does not reach its bound.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -55,7 +59,7 @@ result.targets
 result.gene_targets
 ```
 
-`result.targets` is one DataFrame with the reaction targets first and the transport targets after them (column `transport`), each group ordered by `score`, the product of the absolute slope and the absolute correlation. The column `target_type` holds the action of each reaction. `result.gene_targets` has one row per gene of the target reactions, with the actions of its reactions joined by `;`, and is ordered by the largest absolute slope of those reactions; it does not combine the actions into one. `result.scan` holds the fluxes at each step. `ec_fseof` does not test gene essentiality and does not write files; use `cobra.flux_analysis.single_gene_deletion` and `result.targets.to_csv(...)` for these. The biomass reaction is read from `ec_model.adapter`, or from the argument `bio_rxn`. When `cs_rxn` is given, the function logs a warning when the lower bound of `cs_rxn` is below the uptake at maximum growth. The default `n_steps` is 10, and 16 in MATLAB.
+`result.targets` is one DataFrame with the reaction targets first and the transport targets after them (column `transport`), each group ordered by `score`, the product of the absolute slope and the absolute correlation. The column `target_type` holds the action of each reaction. `result.gene_targets` has one row per gene of the target reactions, with the columns `gene`, `name`, `slope` (mean absolute slope), `action`, `essentiality` and `reactions`, ordered by slope. `result.scan` holds the fluxes at each step. `ec_fseof` writes no files; `result.targets.to_csv(...)` writes the table. The biomass reaction is read from `ec_model.adapter`, or from the argument `bio_rxn`. When `cs_rxn` is given, the function logs a warning when the lower bound of `cs_rxn` is below the uptake at maximum growth.
 :::
 ::::
 
@@ -64,8 +68,7 @@ result.gene_targets
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
 | `ecFSEOF` or `ec_fseof` returns no targets | no reaction reaches `corrThreshold` (Python: `correlation_threshold`) | Lower the threshold, or check the bounds of the production and carbon source reactions |
-| `ecFSEOF` raises an index error | the production at maximum growth is equal to 90 % of the maximum production, so the scan has no range | Check the bounds of the production reaction |
-| `ec_fseof` returns no targets, and all values in `result.enforced` are equal | the production at maximum growth is equal to 90 % of the maximum production, so no flux changes during the scan | Check the bounds of the production reaction |
+| `ecFSEOF` raises `ecFSEOF:noRange`; `ec_fseof` raises a `ValueError` that says there is no range to scan | the production at maximum growth is equal to 90 % of the maximum production | Check the bounds of the production reaction and of the carbon source reaction |
 | Warning about the lower bound of the carbon source | the uptake at maximum growth does not reach the lower bound of the carbon source reaction | Set the lower bound to the uptake rate of the condition |
 
 ## See also

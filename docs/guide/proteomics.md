@@ -19,7 +19,7 @@ Load the absolute proteomics data and the exchange fluxes of one experiment, bou
 
 ## Setup
 
-A full ecModel with kcats and a protein pool (see [Build an ecModel](first-ecmodel.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python), and the files `data/proteomics.tsv` and `data/fluxData.tsv` of the project. In MATLAB, the model adapter of the project is the default adapter; in Python, the examples read the project folder from `params = ec_model.adapter.params`. The examples assume a `proteomics.tsv` with two conditions of three replicates each, and select the first condition in both files.
+A full ecModel with kcats and a protein pool (see [Build an ecModel](first-ecmodel.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python), and the files `data/proteomics.tsv` and `data/fluxData.tsv` of the project. In MATLAB, the model adapter of the project is the default adapter, and `params = ModelAdapterManager.getDefault().getParameters();` holds its parameters; in Python, `params = ec_model.adapter.params` holds them. The objective is the biomass reaction, maximised: `ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);` in MATLAB, and `ec_model.objective = params.bio_rxn` with `ec_model.objective_direction = "max"` in Python (see [Basic model operations](basic-model-operations.md)). The examples assume a `proteomics.tsv` with two conditions of three replicates each, and select the first condition in both files.
 
 ## Choose the options
 
@@ -45,7 +45,7 @@ Start with `'loose'` and `'max'`. The ecModel then has a solution also when the 
 
 `data/proteomics.tsv` is tab-delimited with one header row. The first column holds the UniProt identifiers, and every following column holds one replicate, in mg/gDCW. The replicates of the first condition come first, then those of the second condition, and so on. The header must have one column more than the total number of replicates; otherwise `loadProtData` raises the error `loadProtData:replicateMismatch` (Python: `ValueError`). A cell with `NA`, `na`, `NaN`, `#VALUE!` or no value is not measured, and a row without an identifier is removed. Relative proteomics data cannot be used: a concentration in another unit gives wrong bounds and no error.
 
-`data/fluxData.tsv` is tab-delimited with one header row and one row per condition. The columns are the condition name, the total protein content Ptot (g/gDCW), the growth rate (1/h), and then one column per exchange reaction, in mmol/gDCW/h, negative for uptake and positive for excretion. The header of an exchange column has the form `<metabolite> (<reaction id>)`. Optional columns `evotuneRMSEweight` and `source` can be at any position. A line with a different number of cells than the header raises an error. The example shows the first 7 of the 11 columns of `fluxData.tsv` in the `full_ecModel` tutorial of GECKO, which uses yeast-GEM; `r_1714` is the glucose exchange of yeast-GEM:
+`data/fluxData.tsv` is tab-delimited with one header row and one row per condition. The columns are the condition name, the total protein content Ptot (g/gDCW), the growth rate (1/h), and then one column per exchange reaction, in mmol/gDCW/h, negative for uptake and positive for excretion. The header of an exchange column has the form `<metabolite> (<reaction id>)`. Optional columns `evotuneRMSEweight` and `source` can be at any position. A line with a different number of cells than the header raises an error. The example shows 7 of the 11 columns (the first six and the last one) of `fluxData.tsv` in the `full_ecModel` tutorial of GECKO, which uses yeast-GEM; `r_1714` is the glucose exchange of yeast-GEM:
 
 ```text
 Condition	Ptot	grRate	glucose (r_1714)	CO2 (r_1672)	oxygen (r_1992)	ethanol (r_1761)
@@ -98,7 +98,7 @@ fill_enz_concs(ec_model, prot_data, data_col=0)
 
 ## Level the concentrations of complexes
 
-`levelComplexConcs` runs after `fillEnzConcs` and before `constrainEnzConcs`. It groups the enzymes of the reactions with several subunits into complexes (`getComplexFamilies`), converts the concentrations to molar amounts with `ec.mw`, and writes the median over the measured subunits, per copy, back to every subunit of the complex, multiplied by its copies. The option `statistic` selects `'median'` or `'mean'`. With `fillMissing` true (default), an unmeasured subunit of a complex receives the concentration of the complex. A subunit that belongs to more than one complex, or that also catalyses a reaction alone, keeps its measured value, and a subunit measured as 0 stays 0.
+`levelComplexConcs` runs after `fillEnzConcs` and before `constrainEnzConcs`. It groups the enzymes of the reactions with several subunits into complexes (`getComplexFamilies`), converts the concentrations to molar amounts with `ec.mw`, and writes the median over the measured subunits, per copy, back to every subunit of the complex, multiplied by its copies. The option `statistic` selects `'median'` or `'mean'`. The option `families` takes the output of `getComplexFamilies` (Python: `complex_families`), for a grouping with other values of `minShared` and `minOverlap` (Python: `min_shared`, `min_overlap`). With `fillMissing` true (default), an unmeasured subunit of a complex receives the concentration of the complex. A subunit in two complexes belongs to the complex whose enzyme sets catalyse more reactions. A subunit in three or more complexes, in two complexes of equal weight, or that also catalyses a reaction alone keeps its measured value, and a subunit measured as 0 stays 0.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -148,7 +148,7 @@ constrain_enz_concs(ec_model)
 :::
 ::::
 
-The option `removeConstraints` (Python: `remove_constraints`) resets all usage bounds to 1000 and leaves `ec.concs` unchanged.
+The option `removeConstraints` (Python: `remove_constraints`) resets all usage bounds to 1000 and leaves `ec.concs` unchanged. The option `restrictTo` (Python: `restrict_to`) takes a list of UniProt identifiers; the usage reactions of the other enzymes keep their bounds.
 
 ## Limit unmeasured isozymes
 
@@ -263,7 +263,7 @@ With `'max'`, the growth rate cannot exceed the measured one. A growth rate belo
 | `calculateFfactor` returns 0 (Python: with a warning) | the identifiers in `proteomics.tsv` do not match `ec.enzymes` | Use UniProt identifiers in `proteomics.tsv`, as in `ec.enzymes` |
 | A protein with a replicate of 0 is missing or has a higher mean than expected | a 0 is read as not measured | Set `zerosAsMeasured` (Python: `zeros_as_measured`) to true if the 0 is a measurement |
 | The ecModel is infeasible or grows much slower after `constrainEnzConcs` or `zeroUnmeasuredIsozymes` | enzymes with a bound of 0: measured zeros, or isozymes set to 0 | Load with `zerosAsMeasured` false, use `'detectionLimit'`, or relax with `relaxProteomicsGreedy` |
-| A complex is still limited by one subunit after levelling | the subunit belongs to more than one complex or catalyses a reaction alone, and keeps its measured value | Check the field `shared` of the result of `levelComplexConcs` |
+| A complex is still limited by one subunit after levelling | the subunit is in three or more complexes, in two complexes of equal weight, or catalyses a reaction alone, and keeps its measured value | Check the field `shared` of the result of `levelComplexConcs` |
 | `constrainFluxData:missingReaction` (Python: `ValueError`) | a reaction identifier in the header of `fluxData.tsv` is not in the ecModel | Correct the header to `<metabolite> (<reaction id>)` |
 | `ValueError` from `constrain_enz_concs` | the ecModel is a light ecModel, or `ec.concs` has a negative value | Use a full ecModel; correct the proteomics data |
 | `updateProtPool` raises an error | `updateProtPool` is deprecated and does not accept an ecModel in which measured enzymes draw from the protein pool | Use `setProtPoolSize` with the Ptot and f of the condition |

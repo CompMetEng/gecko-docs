@@ -65,6 +65,22 @@ A smaller, faster-simulating ecModel variant for when full proteome coverage is 
 ## Quick start
 
 ::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+% load a previously built ecModel from a project folder
+ModelAdapterManager.setDefault('path/to/project');
+model = loadEcModel('ecYeastGEM.yml');
+
+% set growth as the objective
+model = setParam(model, 'obj', 'r_2111', 1);
+
+% run FBA
+sol = solveLP(model);
+fprintf('Growth rate: %.4f h-1\n', sol.f);
+```
+:::
 :::{tab-item} 🐍 Python
 :sync: python
 
@@ -81,22 +97,6 @@ model.objective = "r_2111"
 # run FBA -- simulation comes from cobrapy, unchanged
 sol = model.optimize()
 print(f"Growth rate: {sol.objective_value:.4f} h⁻¹")
-```
-:::
-:::{tab-item} Ⓜ️ MATLAB
-:sync: matlab
-
-```matlab
-% load a previously built ecModel from a project folder
-ModelAdapterManager.setDefault('path/to/project');
-model = loadEcModel('ecYeastGEM.yml');
-
-% set growth as the objective
-model = setParam(model, 'obj', 'r_2111', 1);
-
-% run FBA
-sol = solveLP(model);
-fprintf('Growth rate: %.4f h-1\n', sol.f);
 ```
 :::
 ::::
@@ -123,7 +123,7 @@ Convert a GECKO 3 project and its ecModel to project format 4 with `upgradeGECKO
 :link: installation/index
 :link-type: doc
 
-Set up GECKO in MATLAB or geckopy in Python, the solver and Docker for DLKcat.
+Set up GECKO in MATLAB or geckopy in Python, and a linear-programming solver.
 :::
 
 :::{grid-item-card} GECKO and geckopy

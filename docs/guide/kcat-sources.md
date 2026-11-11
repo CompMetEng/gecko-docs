@@ -14,11 +14,11 @@ GECKO selects one kcat per enzymatic reaction from the kcat source files in `dat
 
 ## Setup
 
-The examples start from an ecModel made with `makeEcModel` (Python: `make_ec_model`), full or light ([Choose the ecModel structure](ecmodel-structure.md)). In MATLAB, the project is the default model adapter (`ModelAdapterManager.setDefault`); in Python, `ec_model.adapter` holds the project. The project folder has `data/uniprot.tsv` and `data/kegg.tsv` from making the ecModel. The OKP methods and DLKcat without `data/DLKcat.tsv` need an OpenKineticsPredictor API key ([Prepare the inputs](#prepare-the-inputs)). The BRENDA download, the PubChem queries and OpenKineticsPredictor need internet access.
+The examples start from an ecModel made with `makeEcModel` (Python: `make_ec_model`), full or light ([Choose the ecModel structure](ecmodel-structure.md)). In MATLAB, the project is the default model adapter (`ModelAdapterManager.setDefault`); in Python, `ec_model.adapter` holds the project. The project folder has `data/uniprot.tsv` and `data/kegg.tsv` from making the ecModel. The OpenKineticsPredictor (OKP) methods and DLKcat without `data/DLKcat.tsv` need an OKP API key ([Prepare the inputs](#prepare-the-inputs)). The BRENDA download, the PubChem queries and OpenKineticsPredictor need internet access.
 
 ## Presets
 
-`[kcat_assignment] preset` selects one of six presets. Each preset is a list of stages, and a stage gives a kcat to the reactions that the earlier stages left without one. Every preset starts with the custom kcats of the project. In the table, "OKP" means the OpenKineticsPredictor methods of `[kcat_sources.okp] methods`; the default methods are CataPro, DLKcat, EITLEM, KinForm-H, KinForm-L, OmniESI, OmniESI-O2DENet and UniKP.
+`[kcat_assignment] preset` selects one of six presets. Each preset is a list of stages, and a stage gives a kcat to the reactions that the earlier stages left without one. Every preset starts with the custom kcats of the project. In the table, "the OKP methods" means the OKP methods of `[kcat_sources.okp] methods`; the default is KinForm-H alone, and a stage with one method uses its prediction with the bias correction of that method.
 
 | Preset | Kcat of a reaction, in this order | Needs |
 | --- | --- | --- |
@@ -35,7 +35,7 @@ A project can list its own stages in `[[kcat_assignment.stage]]` tables in place
 
 ### Preset to start with
 
-Against measured kcats hidden from the search, the EC tree was as close as or closer than the BRENDA median at each origin level and with EC wildcards, and the EC tree combined with the OKP methods was slightly closer than the EC tree; in ecModels, however, values combined with predictions set high-turnover enzymes such as ATP synthase too low ([Kcat assignment](../gecko4-kcat-assignment.md#presets)). No other comparison of the presets has been measured. `brenda_ec_tree`, the default, uses predictions for the reactions without a value from measurements, and is the preset to start with.
+Against measured kcats hidden from the search, the EC tree was as close as or closer than the BRENDA median at origins 1 to 4 and with EC wildcards, and the EC tree combined with eight OKP methods (CataPro, DLKcat, EITLEM, KinForm-H, KinForm-L, OmniESI, OmniESI-O2DENet and UniKP) was slightly closer than the EC tree; in ecModels, however, values combined with predictions set high-turnover enzymes such as ATP synthase too low ([Kcat assignment](../gecko4-kcat-assignment.md#presets)). No other comparison of the presets has been measured, and KinForm-H alone, the default OKP method, was not compared separately. `brenda_ec_tree`, the default, uses predictions for the reactions without a value from measurements, and is the preset to start with.
 
 ## BRENDA origin and wildcard levels
 
@@ -57,6 +57,8 @@ A BRENDA match records how specific it is in two numbers, which `ec.source` show
 | 2 | `w.x.-.-` |
 | 3 | `w.-.-.-` |
 | 4 | `-.-.-.-` (every EC number in BRENDA) |
+
+Matches at wildcard level 4 are kept in `brenda.tsv`, and no stage uses them: the `wildcard_limit` of a stage is at most 3.
 
 For each EC number, the origins are tried in the order 1, 2, 3, 5, 4, 6, so a specific activity of the organism is used before a kcat of another organism on another substrate. When no origin gives a value, the rightmost level of the EC number that is not yet a wildcard is replaced by `-`, and the origins are tried again. With a wildcard, origins 1 and 2 are skipped, because the last levels of an EC number define the substrate specificity. When a reaction has several EC numbers, the match with the fewest wildcards, then the earliest tried origin, then the highest kcat is used.
 
@@ -112,7 +114,7 @@ When the EC numbers of the GEM are not reliable, skip `getECfromGEM` and fill al
 
 ## Gather the source files
 
-`updateKcatSources` lists the source files that the preset reads and gathers each file that is missing or outdated. A file is outdated when the settings in its header differ from `[kcat_sources.<name>]`, or when it was made from another BRENDA release than the BRENDA files in use. `custom.tsv` is never gathered or changed. The option `dryRun` reports the status of each file without gathering.
+`updateKcatSources` lists the source files that the preset reads and gathers each file that is missing or outdated. A file is outdated when the settings in its header differ from the settings of the preset and `[kcat_sources.<name>]`, or when it was made from another BRENDA release than the BRENDA files in use. `custom.tsv` is never gathered or changed. The option `dryRun` reports the status of each file without gathering.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -137,18 +139,18 @@ report = update_kcat_sources(ec_model)
 
 `report` has one row per source file, with the columns `source`, `status` and `note`. The status is `current`, `gathered`, `pending`, `outdated`, `missing`, `failed` or `skipped`. OpenKineticsPredictor is a web service with a job queue: the first call submits one job per method and reports the source as `pending`, and a later call fetches the result and writes the file. Call `updateKcatSources` again until no source is `pending`. A source that is `failed` has the reason in `note`, for example a missing API key.
 
-`[kcat_sources.<name>]` of `model_adapter.toml` holds the settings with which `updateKcatSources` gathers a source file. A preset sets `aggregation` of `brenda` and `k` of `ec_tree`. A `[kcat_sources.<name>]` table in `model_adapter.toml` replaces these preset settings of the source as a whole, so a `[kcat_sources.brenda]` table without `aggregation` gathers BRENDA with `kcat_aggregate_brenda` (default `max`).
+`[kcat_sources.<name>]` of `model_adapter.toml` holds the settings with which `updateKcatSources` gathers a source file. A preset sets `aggregation` of `brenda` and `k` of `ec_tree`. A `[kcat_sources.<name>]` table in `model_adapter.toml` overrides the keys that it sets and keeps the other settings of the preset. A source file gathered before a change of these settings is then reported as `outdated`.
 
 | Table | Key | Default |
 | --- | --- | --- |
-| `[kcat_sources.brenda]` | `aggregation`: `max` or `median` of the BRENDA values per EC number, substrate and organism | set by the preset (`max` for `gecko_classic`, `median` for the others); without it, `kcat_aggregate_brenda` |
+| `[kcat_sources.brenda]` | `aggregation`: `max` or `median` of the BRENDA values per EC number, substrate and organism | set by the preset (`max` for `gecko_classic`, `median` for the others); `kcat_aggregate_brenda` with stages in place of a preset |
 | `[kcat_sources.brenda]` | `force_wildcard_level`: number of EC levels replaced by a wildcard in every EC number | 0 |
 | `[kcat_sources.ec_tree]` | `k`: shrinkage constant | 5 |
 | `[kcat_sources.homologs]` | `k`: number of homologs | 10 |
 | `[kcat_sources.homologs]` | `min_identity`: minimum sequence identity, as a fraction | 0.4 |
 | `[kcat_sources.homologs]` | `coverage`: minimum coverage of both sequences, as a fraction | 0.8 |
 | `[kcat_sources.okp_<method>]` | `method`: the OpenKineticsPredictor method of the file | the method whose name gives the file name |
-| `[kcat_sources.okp]` | `methods`: the methods that `okp` stands for in a stage | the eight methods listed under [Presets](#presets) |
+| `[kcat_sources.okp]` | `methods`: the methods that `okp` stands for in a stage | `["KinForm-H"]` |
 
 The source `dlkcat` (presets `gecko_median` and `gecko_classic`) reads `data/DLKcat.tsv` when the file exists. Without it, `dlkcat` is predicted with the DLKcat method of OpenKineticsPredictor.
 
@@ -160,17 +162,17 @@ DLKcat can also run on the local computer, in the Docker image `ghcr.io/sysbioch
 
 ## Compare presets before applying
 
-`collectKcats` determines the kcats as `assignKcats` does and does not change the model. It writes the result to `output/<model id>_kcatDecisions.tsv` unless `writeReport` (Python: `write_report`) is false. The file has one row per reaction of `ec.rxns` with these columns (Python names in parentheses):
+`collectKcats` determines the kcats as `assignKcats` does and does not change the model. It writes the result to `output/<model id>_kcatDecisions.tsv` unless `writeReport` (Python: `write_report`) is false. The file has one row per reaction of `ec.rxns` with these columns; the table that MATLAB returns has the names in parentheses:
 
 | Column | Content |
 | --- | --- |
-| `ecRxn` (`ec_rxn`) | the reaction of `ec.rxns` |
-| `stage` | the number of the stage that gave the kcat, `custom`, `isozymes` or `standard`; empty when the reaction has no kcat |
+| `ec_rxn` (`ecRxn`) | the reaction of `ec.rxns` |
+| `stage` | the number of the stage that gave the kcat (`1` for a kcat from `custom.tsv`), `isozymes` or `standard`; empty when the reaction has no kcat |
 | `source` | the source as written to `ec.source` |
 | `kcat` | the kcat in s^-1 |
 | `candidates` | the number of values that the selected source had for the reaction, or the number of sources combined |
-| `spreadLog10` (`spread_log10`) | the range of these values in log10 units |
-| `sdLog10` (`sd_log10`) | the uncertainty of a combined value in log10 units |
+| `spread_log10` (`spreadLog10`) | the range of these values in log10 units |
+| `sd_log10` (`sdLog10`) | the uncertainty of a combined value in log10 units |
 
 To compare two presets, change the preset of a copy of the adapter, gather its sources, and collect the decisions of both:
 
@@ -209,6 +211,8 @@ print(b["stage"].value_counts())
 ::::
 
 The MATLAB adapter is a value object, so `other` is a copy and the default adapter keeps its preset. In Python, the preset is changed on the adapter of the model and set back afterwards. To keep the other preset, write it in `model_adapter.toml`.
+
+Presets with other source settings share the source files: `gecko_classic` gathers `brenda.tsv` with the BRENDA maximum and the other presets with the median. Gathering the sources of one preset then makes the file outdated for the other. Compare such presets in a copy of the project folder, or run `updateKcatSources` with the preset of the project again before `assignKcats`.
 
 ## Assign the kcats
 
@@ -252,7 +256,7 @@ After the stages, two settings of `[kcat_assignment]` fill the reactions that ar
 | OKP sources are `failed` with `No OpenKineticsPredictor API key found` | no key in `OKP_API_KEY` or in `data/okpApiKey.txt` | Generate a key and store it in one of the two places |
 | `No kcat source file <file>; it is left out` | a stage names a source that has no file in `data/kcats` | Run `updateKcatSources`, or remove the source from the stages |
 | BRENDA and the EC tree give kcats for few reactions | many reactions have no EC number | Fill `ec.eccodes` (section [Prepare the inputs](#prepare-the-inputs)) |
-| Few reactions get a predicted kcat | many metabolites have no SMILES | Read `noSMILES` of `findMetSmiles` (Python: the log of `find_met_smiles`) and correct the metabolite names or `data/smilesDB.tsv` |
+| Few reactions get a predicted kcat | many metabolites have no SMILES | Read `noSMILES` of `findMetSmiles` (Python: the log of `find_met_smiles`, with the number at INFO level and the names at DEBUG level) and correct the metabolite names or `data/smilesDB.tsv` |
 | Error `kcatAssignment:config` (Python: a validation error of the adapter) | an unknown preset, a preset and stages together, or a stage with a wrong option | Correct `[kcat_assignment]` |
 | Kcats set by hand are gone | `assignKcats` replaced them | Write them to `data/kcats/custom.tsv` ([Set custom kcats](custom-kcats.md)) |
 
