@@ -49,7 +49,7 @@ geckopy init ecMyModel
 :::
 ::::
 
-Copy the GEM into `models`, then set the parameters of the organism in `model_adapter.toml`. `conv_gem`, `org_name`, `c_source` and `bio_rxn` have no default value. The defaults of the organism-specific parameters, such as `[uniprot]` and `[kegg]`, are the values of *Saccharomyces cerevisiae*, so set these for the organism as well. The example holds the values for [yeast-GEM](https://github.com/SysBioChalmers/yeast-GEM), in which `r_1714` is the glucose exchange and `r_4041` the biomass reaction:
+Copy the GEM into `models`, then set the parameters of the organism in `model_adapter.toml`. `conv_gem`, `org_name`, `c_source` and `bio_rxn` have no default value. `[uniprot] id` has no default either, and an empty `[kegg] id` means that KEGG is not used; set both for the organism. The example holds the values for [yeast-GEM](https://github.com/SysBioChalmers/yeast-GEM), in which `r_1714` is the glucose exchange and `r_4041` the biomass reaction:
 
 ```toml
 conv_gem = "models/yeast-GEM.yml"
