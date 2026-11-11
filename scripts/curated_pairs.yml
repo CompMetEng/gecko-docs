@@ -16,7 +16,6 @@
 #   not_ported -- deliberately absent from Python, with the reason
 
 aliases:
-  adapterTemplate: generate_template_toml
   assignKcatValues: apply_kcat_list
   constrainFluxData: apply_flux_data_constraints
   getECfromDatabase: fill_eccodes_from_database
@@ -41,9 +40,6 @@ not_ported:
     the file round-trip with a REST client (submit_open_kinetics_predictor /
     fetch_open_kinetics_predictor); the equivalent parsing is internal to
     that client.
-  updateProtPool: >-
-    Obsolete since GECKO 3.2.0; setProtPoolSize (geckopy set_prot_pool_size)
-    supersedes it.
   writeOpenKineticsPredictorInput: >-
     Builds an OpenKineticsPredictor request file. geckopy replaced the file
     round-trip with a REST client; the equivalent request-building is
