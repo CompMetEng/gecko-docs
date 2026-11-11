@@ -11,7 +11,7 @@ A GECKO 3 script keeps running after each change in this box and returns a diffe
 - `fuzzyKcatMatching` divides a BRENDA kcat by the coefficient of the substrate the kcat was measured on. GECKO 3 divided by the smallest coefficient in the reaction.
 - `assignKcats` and `collectKcats` use the preset `brenda_ec_tree` when `model_adapter.toml` sets no other.
 - `calculateFfactor` averages each protein over the samples in which it is measured.
-- `sigmaFitter` returns the smallest sigma whose percent error is within a relative 1e-9 of the smallest error. The 1e-9 tolerance is not part of GECKO 3. geckopy `fit_sigma` takes the first grid point with the smallest error (default `method="grid"`) or a continuous sigma (`method="bisect"`).
+- `sigmaFitter` returns the smallest sigma whose growth rate is within a relative 1e-9 of the growth rate at the smallest error. The 1e-9 tolerance is not part of GECKO 3. geckopy `fit_sigma` takes the first grid point with the smallest error (default `method="grid"`) or a continuous sigma (`method="bisect"`).
 :::
 
 ## Changes by consequence
@@ -24,7 +24,7 @@ A GECKO 3 script keeps running after each change in this box and returns a diffe
 | Substrate of a BRENDA kcat | the kcat is divided by the smallest coefficient in the reaction | the kcat is divided by the coefficient of the substrate that matched | Rebuild the kcat list. Reactions that are not written per the measured substrate get a lower kcat |
 | Default kcat assignment | `selectKcatValue` (`assignKcatValues` in GECKO 4) merges a DLKcat list and a BRENDA list | `assignKcats` determines the kcat from the kcat source files in `data/kcats` with the preset `brenda_ec_tree` | Set `preset = "gecko_classic"` in `[kcat_assignment]` to keep the GECKO 3 order (see [Kcat assignment](gecko4-kcat-assignment.md)) |
 | Protein fraction `f` | `calculateFfactor` averages over all samples, so a protein missing in one sample is left out of both totals | the average is over the samples in which the protein is measured | Recalculate `f` when the proteomics file has missing values |
-| Sigma fit | `sigmaFitter` returns the sigma with the smallest error | it returns the smallest sigma whose percent error is within a relative 1e-9 of the smallest error (geckopy `fit_sigma`: no tolerance in the default grid) | Refit when the growth rate is flat over a range of sigma |
+| Sigma fit | `sigmaFitter` returns the sigma with the smallest error | it returns the smallest sigma whose growth rate is within a relative 1e-9 of the growth rate at the smallest error (geckopy `fit_sigma`: no tolerance in the default grid) | Refit when the growth rate is flat over a range of sigma |
 
 ### Changes that raise an error
 
@@ -39,7 +39,7 @@ A GECKO 3 script keeps running after each change in this box and returns a diffe
 
 A GECKO 3 project is configured by an adapter class and keeps its kcats in `data/DLKcat.tsv`, `data/customKcats.tsv` and in the variables of the script. A GECKO 4 project is configured by `model_adapter.toml`, keeps each kcat source in its own file in `data/kcats`, and records the ecModel format in the saved model. [Project format 4](gecko4-project-format.md) describes the files, and [Upgrade a GECKO 3 project](gecko3-upgrade-project.md) the steps that convert a project.
 
-Adapter classes keep working. Functions with name-value arguments also take them positionally, in the GECKO 3 order: `loadEcModel(filename, modelAdapter)` and `loadEcModel('filename', filename)` are equivalent. A call uses one of the two forms for all its optional arguments.
+Adapter classes keep working, but they are deprecated as project format (see Deprecated). Functions with name-value arguments also take them positionally, in the GECKO 3 order: `loadEcModel(filename, modelAdapter)` and `loadEcModel('filename', filename)` are equivalent. A call uses one of the two forms for all its optional arguments.
 
 ## New functions
 
@@ -59,17 +59,27 @@ The table lists a selection.
 
 `levelComplexConcs` gives the subunits of a multi-subunit complex one abundance. The complex is then not capped by its least abundant subunit. It runs after `fillEnzConcs` and before `constrainEnzConcs`.
 
-kcat prediction goes through the hosted OpenKineticsPredictor service, in addition to a local DLKcat installation. The DLKcat Docker context is not part of the GECKO repository (`src/dlkcat-gecko` is removed).
+kcat prediction goes through the hosted OpenKineticsPredictor service. `kcatsFromDLKcat` uses its DLKcat method unless `data/DLKcat.tsv` exists or `'via', 'docker'` asks for a local run in the Docker image. The DLKcat Docker context is not part of the GECKO repository (`src/dlkcat-gecko` is removed).
 
 ## Removed
 
 | Removed | Replacement |
 | --- | --- |
 | BRENDA files in `databases/` | `fetchBrendaAsset` downloads the files of the toolbox-assets release `brenda-2026.1-1` into `databases/brenda-2026.1-1` on first use. A project keeps its own files in `data/brenda` |
+| `truncateValues` | none; no function of GECKO 4 calls it |
+
+## Deprecated
+
+Each function or option in the table prints a deprecation warning and is removed in a future release.
+
+| Deprecated | Replacement |
+| --- | --- |
+| `updateProtPool` | `setProtPoolSize` with the protein content of the condition. From GECKO 3.2.0 measured enzymes draw from the protein pool, and `updateProtPool` raises an error on such an ecModel |
+| Adapter classes as project format: `createGECKOproject(..., 'adapterFormat', 'class')` and `adapterTemplate.m` | `model_adapter.toml`. Existing adapter classes still load, and `convertAdapterToToml` converts them |
 
 ## Renamed functions
 
-The old name of each function in the table calls the new function and prints a deprecation warning. Seven of the old names are in `src/deprecated`; `mergeDLKcatAndFuzzyKcats` is a wrapper of `mergeKcats` in `src/gather_kcats`. The old names are removed in a future release.
+The old name of each function in the table calls the new function and prints a deprecation warning. The old names are in `src/deprecated` and are removed in a future release.
 
 | GECKO 3 name | GECKO 4 name | Reason |
 | --- | --- | --- |
@@ -116,7 +126,7 @@ The Add-On manager distributes the latest release. Uninstall the Add-On (`GECKOI
 GECKO 1 ([Sánchez et al., 2017](references.md#gecko-1)) and GECKO 2 ([Domenzain et al., 2022](references.md#gecko-2)) share one ecModel structure, which differs from GECKO 3 and GECKO 4:
 
 - Enzyme and kcat information is spread over several model fields. From GECKO 3, `ecModel.ec` (Python: `ec_model.ec`) collects it.
-- Enzymes enter the S-matrix as `1/kcat`, with the molecular weight in the protein exchange reactions. From GECKO 3 the coefficient is `MW/kcat` (see [Building an empty ecModel](guide/building-ec-model.md)).
+- Enzymes enter the S-matrix as `1/kcat`, with the molecular weight in the protein exchange reactions. From GECKO 3 the coefficient is `MW/kcat` (see [Choose the ecModel structure](guide/ecmodel-structure.md)).
 - The YAML format of GECKO 3 and GECKO 4 retains the full model content. GECKO 1 and GECKO 2 have no such format.
 
 Functions of GECKO 3 and GECKO 4 do not work on a GECKO 1 or GECKO 2 ecModel, and the reverse. geckopy supports GECKO 4 ecModels.
