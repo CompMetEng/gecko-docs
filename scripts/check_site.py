@@ -39,7 +39,7 @@ REQUIRED_FILES = [
 # Scripts that every site copies unchanged from the plugin.
 SHARED_SCRIPTS = [
     "project.py", "api_index.py", "gen_api_pages.py", "autolink.py",
-    "check_names.py", "run_examples.py", "check_site.py", "report_broken_links.py",
+    "check_names.py", "check_style.py", "run_examples.py", "check_site.py", "report_broken_links.py",
 ]
 
 WRONG_NAMES = {
@@ -64,7 +64,7 @@ RULE_FILES = {
 # Names of configuration files and folders are not mentions of a tool.
 CONFIG_NAMES = re.compile(r"claude\.md|\.claude(?:-plugin)?\b", re.I)
 
-GUIDE_EXPECTED = ["Functions on this page", "What can go wrong", "See also"]
+GUIDE_EXPECTED = ["Functions", "Troubleshooting", "See also"]
 # A page that explains a concept instead of a task opts out of the anatomy.
 CONCEPT_MARKER = "<!-- docs-site: concept-page -->"
 
@@ -327,7 +327,7 @@ def check_pages(site: Path, files: list[Path]) -> list[Finding]:
             out.append(Finding("P", "error", rel, f"heading level jumps from H{skip[1]} to H{skip[2]} (strict build warns)", skip[0]))
         if rel.startswith("docs/guide/") and p.name != "index.md" and CONCEPT_MARKER not in text:
             for h in GUIDE_EXPECTED:
-                if not re.search(rf"^#+ {re.escape(h)}", text, re.M):
+                if not re.search(rf"^(?:#+ |:{{3,}}\{{\w+\}} ){re.escape(h)}", text, re.M):
                     out.append(Finding("P", "warning", rel, f"no '{h}' section"))
     return out
 
