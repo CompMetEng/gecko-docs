@@ -124,7 +124,7 @@ The `[evotune]` section holds the hyperparameters of the CMA-ES kcat tuning desc
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
 | `evotune.sigma0_log_default` | `evotune.sigma0logDefault` | `0.5` | Prior standard deviation (log) of the kcats whose source is in no group |
-| `evotune.source_groups` | `evotune.kcatSources` | none | Trust tiers: a table `[evotune.source_groups.<group>]` per group with the `ec.source` values it covers as `sources`. With `match_okp = true`, a group also covers the method of `[okp] method` |
+| `evotune.source_groups` | `evotune.kcatSources` | none | Trust tiers: a table `[evotune.source_groups.<group>]` per group with the origins of `ec.source` it covers as `sources`. With `match_okp = true`, a group also covers the method of `[okp] method` |
 | `evotune.sigma0_log_source` | `evotune.sigma0logSource` | none | Prior standard deviation (log) per group; the keys are the group names of `evotune.source_groups` |
 | `evotune.rmse_threshold` | `evotune.rmseThreshold` | `0.2` | The search stops when the best RMSE reaches this value |
 | `evotune.max_generations` | `evotune.maxGenerations` | `150` | Maximum number of CMA-ES generations |

@@ -12,6 +12,8 @@ GECKO 4 assigns the kcat of each reaction from kcat source files, in an order th
 | `assignKcats` | `assign_kcats` | applies the decisions and the kcat constraints. Kcats that the model had are replaced |
 | `updateKcatSources` | `update_kcat_sources` | gathers the source files that the configuration needs and that are missing or outdated |
 | `kcatAssignmentConfig` | `kcat_assignment_config` | returns the settings with the preset expanded into stages |
+| `parseKcatSource` | `parse_kcat_source` | splits an entry of `ec.source` into its origin, detail, tuning methods and prior |
+| `formatKcatSource` | `format_kcat_source` | writes an entry of `ec.source` from these parts |
 
 ## Sources
 
@@ -62,6 +64,53 @@ top_origin_limit = 1
 A stage has the options `action` (default `select`), `sources`, `criteria` (default `max`), `top_origin_limit` (default 4), `bottom_origin_limit` (default 6) and `wildcard_limit` (default 3).
 
 Against measured kcats hidden from the search, the EC tree was closer than the BRENDA median at origin 2, at origin 4 and with EC wildcards, and as close at origin 1 and 3. The EC tree combined with the OKP methods was slightly closer than the EC tree, and the OKP methods combined were as close. In ecModels, values combined with predictions set high-turnover enzymes such as ATP synthase too low. The default therefore uses predictions where measurements give no value. The OKP methods of this comparison were eight methods combined (CataPro, DLKcat, EITLEM, KinForm-H, KinForm-L, OmniESI, OmniESI-O2DENet and UniKP); the default of `[kcat_sources.okp] methods` is KinForm-H alone, which the comparison did not test separately.
+
+## Provenance of a kcat
+
+`ec.source` records where the kcat of each reaction came from. An entry has the form `<origin>[ (<detail>)][ | tuned=<method>[+<method>...] (prior=<value>)]`:
+
+| Entry | Meaning |
+| --- | --- |
+| `brenda (wc=0, origin=1)` | a BRENDA match, with the number of EC levels that were wildcarded (`wc`) and the organism closeness of the match (`origin`) |
+| `combined (sd=0.61, n=6)` | the combination of `n` sources, with the uncertainty `sd` in log10 units |
+| `custom`, `standard`, `isozymes` | a curated kcat, the standard kcat, and the mean over the isozymes of the reaction |
+| `manual` | a kcat that `setKcatForReactions` (Python `set_kcat_for_reactions`) set |
+| `brenda (wc=0, origin=2) \| tuned=cmaes (prior=6.55)` | a kcat that tuning changed, with the kcat before the first tuning as `prior` |
+
+The origin is the label of the kcat source in lower case with underscores (`brenda`, `ec_tree`, `okp_kinform_h`). The detail has the pairs `wc` and `origin` for a BRENDA match and `sd` and `n` for a combined value. The assignment writes a new origin and drops a tuning status. `sensitivityTuning` and `cmaesKcatTuning` (Python `sensitivity_tuning` and `cmaes_kcat_tuning`) keep the origin and detail of every kcat they change and add their method, `sensitivity` or `cmaes`, to the tuning status. The `prior` stays the kcat before the first tuning, and a second tuning with the same method adds nothing.
+
+`parseKcatSource` and `formatKcatSource` read and write these entries. The parser returns the origin as it was written, the detail pairs (a number when the value is a plain decimal number, text otherwise), the tuning methods and the prior. An entry that does not follow the form is read as one origin without detail, so an entry that an earlier release wrote stays readable. The formatter writes the origin in lower case with underscores, a number with six significant digits and a prior only together with a tuning status. A detail pair without a value, with an infinite value or with a key that does not start with a letter is left out. An empty origin with a detail or a tuning status is written as `unknown`.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+info = parseKcatSource('brenda (wc=0, origin=2) | tuned=cmaes (prior=6.55)');
+info.origin   % 'brenda'
+info.detail   % struct with wc = 0 and origin = 2
+info.tuned    % {'cmaes'}
+info.prior    % 6.55
+text = formatKcatSource('brenda', struct('wc', 0, 'origin', 2), {'cmaes'}, 6.55);
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+from geckopy import format_kcat_source, parse_kcat_source
+
+info = parse_kcat_source("brenda (wc=0, origin=2) | tuned=cmaes (prior=6.55)")
+info.origin   # 'brenda'
+info.detail   # {'wc': 0.0, 'origin': 2.0}
+info.tuned    # ('cmaes',)
+info.prior    # 6.55
+text = format_kcat_source("brenda", {"wc": 0, "origin": 2}, ["cmaes"], 6.55)
+```
+:::
+::::
+
+Functions that read `ec.source` use the origin. `getStandardKcat` and `removeStandardKcat` (Python `assign_standard_kcat` and `remove_standard_kcat`) treat a row as the standard kcat when its origin is `standard` and it has no tuning status, so a standard kcat that tuning changed is kept. The trust tiers of evotune group the kcats by the origin.
 
 ## Run the assignment
 

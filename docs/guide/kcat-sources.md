@@ -216,7 +216,7 @@ Presets with other source settings share the source files: `gecko_classic` gathe
 
 ## Assign the kcats
 
-`assignKcats` determines the kcats, writes `ec.kcat` and `ec.source`, applies the enzyme constraints and writes the decisions file. The kcats that the model had before are replaced.
+`assignKcats` determines the kcats, writes `ec.kcat` and `ec.source` (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)), applies the enzyme constraints and writes the decisions file. The kcats that the model had before are replaced.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB

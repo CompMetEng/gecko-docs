@@ -89,7 +89,7 @@ pd.DataFrame({"rxn": tuned.rxns, "enzymes": tuned.enzymes,
 | | `max_iterations` | `1000` | maximum number of iterations |
 | | `bio_rxn` | `bio_rxn` of the model adapter | biomass reaction that is set as the objective |
 
-The output (`tunedKcats`, Python `TunedKcatsResult`) has one entry per tuned reaction: `rxns`, `rxnNames` (Python `rxn_names`), `enzymes` (joined by `;`), `oldKcat` and `newKcat` (Python `old_kcat`, `new_kcat`), and `source`, the kcat source before tuning. In a full ecModel, `ec.source` of a tuned reaction becomes `sensitivityTuning`, and `ec.notes` gets `preTuneKcat=<value> | source:<source>`. A reaction that an earlier run already tuned keeps the note of that run. In a light ecModel, `ec.source` and `ec.notes` do not change. In Python, `tuned.corrections()` returns the changes as a list of `Correction` rows, ordered by fold change.
+The output (`tunedKcats`, Python `TunedKcatsResult`) has one entry per tuned reaction: `rxns`, `rxnNames` (Python `rxn_names`), `enzymes` (joined by `;`), `oldKcat` and `newKcat` (Python `old_kcat`, `new_kcat`), and `source`, the kcat source before tuning. `ec.source` of a tuned reaction keeps its origin and detail and gets the tuning status, for example `brenda (wc=0, origin=1) | tuned=sensitivity (prior=0.05)`, where the prior is the kcat before the first tuning (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). A reaction that an earlier run already tuned keeps the prior of that run. In a light ecModel, every ec row of the tuned reaction gets the status. `ec.notes` does not change. In Python, `tuned.corrections()` returns the changes as a list of `Correction` rows, ordered by fold change.
 
 After the standard tuning, `sigmaFitter` (Python `fit_sigma`) fits sigma so that the model reaches the target growth rate (see [Set the protein pool](protein-pool.md#fit-sigma-to-a-growth-rate)).
 
@@ -97,14 +97,14 @@ After the standard tuning, `sigmaFitter` (Python `fit_sigma`) fits sigma so that
 
 A tuning raises the kcats that limit growth in the model. It does not check whether the value before tuning was wrong. For each tuned kcat, look up where the value before tuning came from, and search the literature for a measured value.
 
-The note of a tuned reaction gives the kcat and its source before tuning. When the source is a file in `data/kcats` (for example `brenda` or `ec_tree`), `loadKcatSource` returns the rows of that file for the reaction; the `detail` column of a BRENDA row holds the EC wildcard level and the origin of the match (see [BRENDA origin and wildcard levels](kcat-sources.md#brenda-origin-and-wildcard-levels)). `output/<model id>_kcatDecisions.tsv` lists the stage of the assignment that set each kcat (see [Choose the kcat sources](kcat-sources.md)).
+`ec.source` of a tuned reaction gives the origin of the kcat and the kcat before tuning (`prior`). When the source is a file in `data/kcats` (for example `brenda` or `ec_tree`), `loadKcatSource` returns the rows of that file for the reaction; the `detail` column of a BRENDA row holds the EC wildcard level and the origin of the match (see [BRENDA origin and wildcard levels](kcat-sources.md#brenda-origin-and-wildcard-levels)). `output/<model id>_kcatDecisions.tsv` lists the stage of the assignment that set each kcat (see [Choose the kcat sources](kcat-sources.md)).
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
 ```matlab
-ecModel.ec.notes(strcmp(ecModel.ec.rxns, 'r_0079'))
+ecModel.ec.source(strcmp(ecModel.ec.rxns, 'r_0079'))
 kcatList = loadKcatSource(ecModel, 'brenda');
 idx = strcmp(kcatList.rxns, 'r_0079');
 table(kcatList.kcats(idx), kcatList.eccodes(idx), kcatList.detail(idx))
@@ -116,7 +116,7 @@ table(kcatList.kcats(idx), kcatList.eccodes(idx), kcatList.detail(idx))
 ```python
 from geckopy import load_kcat_source
 
-print(ec_model.ec.notes[ec_model.ec.rxns.index("r_0079")])
+print(ec_model.ec.source[ec_model.ec.rxns.index("r_0079")])
 kcat_list, _ = load_kcat_source(ec_model, "brenda")
 kcat_list[kcat_list["rxn_id"] == "r_0079"]
 ```

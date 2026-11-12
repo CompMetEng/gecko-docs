@@ -238,7 +238,7 @@ sigma = fit_sigma(ec_model).sigma
 :::
 ::::
 
-`sensitivityTuning` selects the enzyme with the highest usage, multiplies the kcat of the reaction that uses the most of this enzyme by 10, and repeats this until the model reaches `gr_exp`. `tunedKcats` lists each changed reaction with its kcat before and after tuning, and `ec.notes` of the reaction records the kcat and the source before tuning. [Choose a kcat tuning](kcat-tuning.md) describes how to check a tuned kcat and the advanced tuning against measured growth rates and fluxes, and [Set the protein pool](protein-pool.md) describes the fit of $\sigma$.
+`sensitivityTuning` selects the enzyme with the highest usage, multiplies the kcat of the reaction that uses the most of this enzyme by 10, and repeats this until the model reaches `gr_exp`. `tunedKcats` lists each changed reaction with its kcat before and after tuning, and `ec.source` of the reaction keeps the origin of the kcat, with the kcat before tuning as `prior`. [Choose a kcat tuning](kcat-tuning.md) describes how to check a tuned kcat and the advanced tuning against measured growth rates and fluxes, and [Set the protein pool](protein-pool.md) describes the fit of $\sigma$.
 
 ## 7. Save the ecModel
 

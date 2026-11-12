@@ -73,7 +73,7 @@ A row in `partial` shares at least half of its enzymes with a reaction of the ec
 
 ## Change kcats by hand
 
-`setKcatForReactions` changes `ec.kcat` of the named reactions, and `applyKcatConstraints` applies the change to the stoichiometry. In a full ecModel, a reaction name without `_EXP_<n>` changes all isozymes of the reaction. In a light ecModel, the names in `ec.rxns` have a number prefix (`001_R1`), and the name is given with this prefix. A name that matches no entry of `ec.rxns` is ignored without a message. `ec.source` of a changed reaction reads `setKcatForReactions`.
+`setKcatForReactions` changes `ec.kcat` of the named reactions, and `applyKcatConstraints` applies the change to the stoichiometry. In a full ecModel, a reaction name without `_EXP_<n>` changes all isozymes of the reaction. In a light ecModel, the names in `ec.rxns` have a number prefix (`001_R1`), and the name is given with this prefix. A name that matches no entry of `ec.rxns` is ignored without a message. `ec.source` of a changed reaction reads `manual`.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
