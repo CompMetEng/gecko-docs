@@ -42,7 +42,7 @@ The changes in this table, and calls of removed functions (see [Removed](#remove
 | `loadEcModel` checks the ecModel format | `gecko_format` in the file is higher than 4 | Update GECKO |
 | Adapter keys | `model_adapter.toml` has a key that is not in `adapterParameters.tsv` | Remove or rename the key, or place a key that GECKO uses and geckopy does not use under `[matlab.params]` |
 | Options of `assignKcats` and `upgradeGECKOproject` | an option name that the function does not have | Correct the option name |
-| `runDLKcat`, `writeDLKcatInput` | every call in MATLAB: the functions are deprecated and raise an error (geckopy `run_dlkcat` and `write_dlkcat_input` warn and still run) | Use `kcatsFromDLKcat(ecModel, 'via', 'docker')` |
+| `runDLKcat`, `writeDLKcatInput` | every call in MATLAB: the functions are deprecated and raise an error | Use `kcatsFromDLKcat(ecModel, 'via', 'docker')` |
 | `sigmaFitter` raises `sigmaFitter:growthRate` | the target growth rate is not above 0 | Give a growth rate above 0 |
 | `setProtPoolSize` raises `setProtPoolSize:noPoolExchange` | the model has no `prot_pool_exchange` (GECKO 3 left the model unchanged) | Give an ecModel made by `makeEcModel` |
 | `getConcControlCoeffs` raises `getConcControlCoeffs:infeasible` | the model has no optimal solution | Make the model feasible first |
