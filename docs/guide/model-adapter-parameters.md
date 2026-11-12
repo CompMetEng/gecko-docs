@@ -138,7 +138,7 @@ When `[evotune]` has no `source_groups`, the groups are `dlkcat`, `brenda` and `
 
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
-| `okp.method` | `okp.method` | `"CataPro"` | OpenKineticsPredictor method |
+| `okp.method` | `okp.method` | `"KinForm-H"` | OpenKineticsPredictor method |
 | `okp.handle_long_sequences` | `okp.handleLongSequences` | `"truncate"` | Action of OpenKineticsPredictor on sequences that are too long |
 | `okp.include_similarity_columns` | `okp.includeSimilarityColumns` | `true` | Return the similarity to the training data of the method |
 | `okp.canonicalize_substrates` | `okp.canonicalizeSubstrates` | `true` | Canonicalise substrate SMILES before the prediction |

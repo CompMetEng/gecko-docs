@@ -87,17 +87,20 @@ The table lists a selection.
 
 `levelComplexConcs` gives the subunits of a multi-subunit complex one abundance. The complex is then not capped by its least abundant subunit. It runs after `fillEnzConcs` and before `constrainEnzConcs`.
 
-kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, through `kcatsFromOKP`. The default OKP method (`[okp] method`) is KinForm-H, and the `okp` stage of the presets uses the methods of `[kcat_sources.okp] methods`, by default KinForm-H alone; GECKO 4 pre-releases used CataPro and eight methods. `kcatsFromDLKcat` uses its DLKcat method unless `data/DLKcat.tsv` exists, or the option `'via', 'docker'` selects a local run in the Docker image. The DLKcat Docker context is not part of the GECKO repository (`src/dlkcat-gecko` is removed).
+kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, through `kcatsFromOKP`. The default OKP method (`[okp] method`) is KinForm-H, and the `okp` stage of the presets uses the methods of `[kcat_sources.okp] methods`, by default KinForm-H alone. `kcatsFromDLKcat` uses its DLKcat method unless `data/DLKcat.tsv` exists, or the option `'via', 'docker'` selects a local run in the Docker image. The DLKcat Docker context is not part of the GECKO repository (`src/dlkcat-gecko` is removed).
 
 ## Removed
 
 | Removed | Replacement |
 | --- | --- |
 | BRENDA files in `databases/` | `fetchBrendaAsset` downloads the files of the toolbox-assets release `brenda-2026.1-1` into `databases/brenda-2026.1-1` on first use. A project keeps its own files in `data/brenda` |
-| `truncateValues` | none; no function of GECKO 4 calls it |
-| `findMaxValue` | none; geckopy keeps a port as `find_max_value` |
-| `bayesianSensitivityTuning` and its helpers `abc_max`, `getcarbonnum`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels); `anaerobicModel_GECKO` and `changeMedia` of the same folder are now in `tutorials/full_ecModel/code` | `cmaesKcatTuning`, the advanced kcat tuning, with the data files `data/evotune*.tsv` (see [Tune kcats against experimental data](guide/advanced-tuning.md)). A stub in `src/deprecated` raises an error that names it. |
-| `submitOpenKineticsPredictor`, `fetchOpenKineticsPredictor`, `writeOpenKineticsPredictorInput`, `readOpenKineticsPredictorOutput` (public in GECKO 4 pre-releases) | `kcatsFromOKP` |
+| `truncateValues` | `round(x, 6, 'significant')` |
+| `findMaxValue` | `kcatsFromBrenda` or `kcatsFromECTree` |
+| `bayesianSensitivityTuning` and its helpers `abc_max`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels) | `cmaesKcatTuning`, the advanced kcat tuning, with the data files `data/evotune*.tsv` (see [Tune kcats against experimental data](guide/advanced-tuning.md)) |
+| `getcarbonnum` | `fillCarbonNum` writes the carbon number of each exchange reaction to `model.excarbon` |
+| `anaerobicModel_GECKO`, `changeMedia` | copies in `tutorials/full_ecModel/code`, for *Saccharomyces cerevisiae* |
+
+The removed functions in the table, except `truncateValues`, `anaerobicModel_GECKO` and `changeMedia`, have a stub in `src/deprecated` that raises an error naming the replacement. `upgradeGECKOproject` lists the lines of a project's scripts that call them.
 
 ## Deprecated
 
@@ -119,7 +122,6 @@ The old name of each function in the table calls the new function and prints a d
 | `startGECKOproject` | `createGECKOproject` | |
 | `copyECtoGEM` | `applyECcodes` | |
 | `enzymeUsage` | `getEnzymeUsage` | |
-| `pfbaEnzymes` | `getPfbaEnzymes` | |
 | `addCarbonNum` | `fillCarbonNum` | |
 | `updateGECKOdoc` | `buildGECKOdoc` | |
 | `selectKcatValue` | `assignKcatValues` | the function writes `ecModel.ec.kcat` |
