@@ -101,14 +101,14 @@ kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, thr
 
 ## Deprecated
 
-`updateProtPool`, `applyCustomKcats`, `runDLKcat`, `writeDLKcatInput`, `readDLKcatOutput` and the option `'adapterFormat', 'class'` of `createGECKOproject` print a deprecation warning. Adapter classes still load without a warning. Everything in the table is removed in a future release.
+`updateProtPool`, `applyCustomKcats`, `runDLKcat`, `writeDLKcatInput`, `readDLKcatOutput` and the option `'adapterFormat', 'class'` of `createGECKOproject` print a deprecation warning, and so does the first adapter class loaded in a MATLAB session, unless it subclasses `TomlAdapter`. Everything in the table is removed in a future release.
 
 | Deprecated | Replacement |
 | --- | --- |
 | `updateProtPool` | `setProtPoolSize` with the protein content of the condition. From GECKO 3.2.0 measured enzymes draw from the protein pool, and `updateProtPool` raises an error on such an ecModel |
 | `applyCustomKcats` | `convertCustomKcats` writes `data/customKcats.tsv` as `data/kcats/custom.tsv`, which `collectKcats` and `assignKcats` read |
 | `runDLKcat`, `writeDLKcatInput` (raise an error), `readDLKcatOutput` (still reads the file) | `kcatsFromDLKcat` with `'via', 'docker'` or `'via', 'file'` |
-| Adapter classes as project format: `createGECKOproject(..., 'adapterFormat', 'class')` and `adapterTemplate.m` | `model_adapter.toml`. Existing adapter classes still load, and `convertAdapterToToml` converts them |
+| Adapter classes as project format: `createGECKOproject(..., 'adapterFormat', 'class')` and `adapterTemplate.m` | `model_adapter.toml`. Existing adapter classes still load with a deprecation warning, and `convertAdapterToToml` converts them |
 
 ## Renamed functions
 
