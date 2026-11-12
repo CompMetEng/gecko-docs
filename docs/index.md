@@ -53,7 +53,7 @@ Convert a conventional GEM into an ecModel by bounding reaction rates with enzym
 :::
 
 :::{grid-item-card} Proteomics integration
-Constrain individual enzyme usage with absolute or relative proteomics measurements.
+Constrain the usage of individual enzymes with absolute proteomics measurements.
 :::
 
 :::{grid-item-card} Light ecModels
@@ -65,6 +65,22 @@ A smaller, faster-simulating ecModel variant for when full proteome coverage is 
 ## Quick start
 
 ::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+% load a previously built ecModel from a project folder
+ModelAdapterManager.setDefault('path/to/project');
+model = loadEcModel('ecYeastGEM.yml');
+
+% set growth as the objective
+model = setParam(model, 'obj', 'r_2111', 1);
+
+% run FBA
+sol = solveLP(model);
+fprintf('Growth rate: %.4f h-1\n', sol.f);
+```
+:::
 :::{tab-item} 🐍 Python
 :sync: python
 
@@ -83,33 +99,17 @@ sol = model.optimize()
 print(f"Growth rate: {sol.objective_value:.4f} h⁻¹")
 ```
 :::
-:::{tab-item} Ⓜ️ MATLAB
-:sync: matlab
-
-```matlab
-% load a previously built ecModel from a project folder
-ModelAdapterManager.setDefault('path/to/project');
-model = loadEcModel('ecYeastGEM.yml');
-
-% set growth as the objective
-model = setParam(model, 'obj', 'r_2111', 1);
-
-% run FBA
-sol = solveLP(model);
-fprintf('Growth rate: %.4f h-1\n', sol.f);
-```
-:::
 ::::
 
 ## Documentation
 
 ::::{grid} 1 2 2 2
 
-:::{grid-item-card} Workflow overview
-:link: guide/workflow
+:::{grid-item-card} Build an ecModel
+:link: guide/first-ecmodel
 :link-type: doc
 
-The order of the functions from model construction to analysis, with the alternative paths, as MATLAB and Python diagrams.
+A working ecModel with the default settings, from a project folder to a saved model, in MATLAB and Python.
 :::
 
 :::{grid-item-card} Upgrade a GECKO 3 project
@@ -123,7 +123,7 @@ Convert a GECKO 3 project and its ecModel to project format 4 with `upgradeGECKO
 :link: installation/index
 :link-type: doc
 
-Set up GECKO in MATLAB or geckopy in Python, the solver and Docker for DLKcat.
+Set up GECKO in MATLAB or geckopy in Python, and a linear-programming solver.
 :::
 
 :::{grid-item-card} GECKO and geckopy

@@ -49,8 +49,6 @@ The table is a selection; [MATLAB and Python](matlab-vs-python.md) lists all pai
 | `reviewKcatAssignment` | `review_assignment` |
 | `upgradeGECKOproject` | `upgrade_project`, command `geckopy upgrade` |
 | `createGECKOproject` | command `geckopy init` |
-| `writeOpenKineticsPredictorInput` | `build_okp_input_csv` in `geckopy.gather_kcats.open_kinetics_predictor` |
-| `readOpenKineticsPredictorOutput` | `parse_okp_output` in `geckopy.gather_kcats.open_kinetics_predictor` |
 
 ## Functions of one implementation
 
@@ -71,7 +69,7 @@ The table is a selection; [MATLAB and Python](matlab-vs-python.md) lists all pai
 |---|---|
 | Result and data types | `TunedKcatsResult`, `FlexEnzResult`, `BrendaData`, `PhylDist`, `FluxData`, `Enzyme` |
 | Build steps of `make_ec_model` | `geckopy.ec_model.pipeline.add_protein_usage_reactions` and the other steps that `makeEcModel` runs inline |
-| Algorithms | `relax_enz_concs` (least total fold increase of the enzyme bounds in one linear program), `level_complex_abundances` (one abundance per complex), `sweep_tunable_mask_size` and `recommend_target_impact_share` (share of kcats that `cmaes_kcat_tuning` tunes) |
+| Algorithms | `level_complex_abundances` (one abundance per complex), `sweep_tunable_mask_size` and `recommend_target_impact_share` (share of kcats that `cmaes_kcat_tuning` tunes) |
 
 ## Differences in behaviour
 
@@ -79,7 +77,7 @@ The scenarios of the [raven-gecko-parity](https://github.com/CompMetEng/raven-ge
 
 - **`ecFSEOF` and `ec_fseof`** return the same target reactions on ecTestGEM. On the ecYeastGEM of the tutorial the order of targets differs in 27 positions, and the set of targets depends on the solver pair, because the pFBA solution that the regression uses is not unique. On ecYeastGEM 9.1.1 the order is the same.
 - **`upgradeGECKOproject` and `upgrade_project`** differ for a project that has an adapter class and no `model_adapter.toml`. `upgradeGECKOproject` converts the class. `upgrade_project` lists the adapter for conversion by hand, because an adapter class is MATLAB code, and then skips the conversion of the custom kcats and the stored predictions.
-- **`sigmaFitter` and `fit_sigma`** scan the same grid of 0.01 steps. `sigmaFitter` returns the smallest sigma within a relative 1e-9 of the smallest error, and `fit_sigma` takes the first grid point with the smallest error, so solver rounding noise on a growth plateau can move its result to a later grid point. `fit_sigma` with `method="bisect"` returns a continuous sigma.
+- **`sigmaFitter` and `fit_sigma`** scan the same grid of 0.01 steps. `sigmaFitter` returns the smallest sigma whose growth rate differs from the target by at most the smallest difference plus 1e-9 times the growth rate at the smallest difference, and `fit_sigma` takes the first grid point with the smallest error, so solver rounding noise on a growth plateau can move its result to a later grid point. `fit_sigma` with `method="bisect"` returns a continuous sigma.
 - **`saveEcModel` and `save_ec_model`** write files that differ in charge, SBO terms, gene names and the subsystem of the protein usage reactions, because the models in memory differ in these fields; the layout of the files agrees.
 
 ## See also

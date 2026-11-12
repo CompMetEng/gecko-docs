@@ -69,7 +69,7 @@ name_contains = "spontaneous"
 | `sigma` | `sigma` | `0.5` | Average enzyme saturation factor |
 | `p_tot` | `Ptot` | `0.5` | Total protein content in the cell [g protein/gDW] |
 | `f` | `f` | `0.5` | Fraction of enzymes in the ecModel relative to all proteins (g enzyme/g protein). `calculateFfactor` (Python: `calculate_f_factor`) computes it from a proteomics data set |
-| `gr_exp` | `gR_exp` | `0.41` | Reference (experimentally observed) maximum growth rate in h^-1, the default tuning target in [Growth-rate tuning](growth-rate-tuning.md#sensitivity-tuning-of-kcat-values) |
+| `gr_exp` | `gR_exp` | `0.41` | Reference (experimentally observed) maximum growth rate in h^-1, the default tuning target in [Choose a kcat tuning](kcat-tuning.md#run-the-standard-tuning) |
 | `c_source` | `c_source` | `""` | Identifier of the exchange reaction of glucose or of another preferred carbon source |
 | `bio_rxn` | `bioRxn` | `""` | Identifier of the biomass or growth pseudoreaction, whose flux is the growth rate in h^-1 |
 | `enzyme_comp` | `enzyme_comp` | `"cytoplasm"` | Name of the compartment of the added protein pseudometabolites; must match one of the compartment names of the ecModel |
@@ -88,10 +88,10 @@ GECKO accepts the two geckopy keys in the file and does not use them. `getKcatAc
 
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
-| `kegg.id` | `kegg.ID` | `"sce"` | Organism code in the KEGG database, from the [KEGG organism list](https://www.genome.jp/kegg/catalog/org_list.html) |
+| `kegg.id` | `kegg.ID` | `""` (KEGG is not used) | Organism code in the KEGG database, from the [KEGG organism list](https://www.genome.jp/kegg/catalog/org_list.html) |
 | `kegg.gene_id` | `kegg.geneID` | `"kegg"` | Field of the KEGG entry that matches the gene identifiers of the ecModel. `kegg` takes the KEGG entry identifier. Identifiers from the "Other DBs" section of the KEGG page, such as `NCBI-GeneID`, `UniProt` or `Ensembl` (for Human-GEM), are available for some organisms |
 | `uniprot.type` | `uniprot.type` | `"taxonomy"` | Whether `uniprot.id` is a taxonomy identifier (`taxonomy`) or a proteome identifier (`proteome`) |
-| `uniprot.id` | `uniprot.ID` | `"559292"` | Identifier of the UniProt data set (by taxonomy or proteome) with complete coverage of the genes of the ecModel |
+| `uniprot.id` | `uniprot.ID` | `""` (required unless `data/uniprot.tsv` exists) | Identifier of the UniProt data set (by taxonomy or proteome) with complete coverage of the genes of the ecModel |
 | `uniprot.gene_id_field` | `uniprot.geneIDfield` | `"gene_oln"` | UniProt field with the gene identifiers used in the ecModel; one of the "Returned Field" entries under "Names & Taxonomy" of the [UniProt return fields](https://www.uniprot.org/help/return_fields) |
 | `uniprot.reviewed` | `uniprot.reviewed` | `false` | Whether the data is limited to reviewed (Swiss-Prot) entries. Reviewed data has the highest confidence but can have low coverage for non-model organisms |
 | `complex.taxonomic_id` | `complex.taxonomicID` | none | Taxonomy identifier as available from the [Complex Portal](https://www.ebi.ac.uk/complexportal/home). Without it, no Complex Portal query is made |
@@ -119,7 +119,7 @@ A stage has the keys `action` (`select`, the default, or `combine`), `sources`, 
 
 ## Kcat tuning
 
-The `[evotune]` section holds the hyperparameters of the CMA-ES kcat tuning described in [Tuning against experimental data](tuning-against-experimental-data.md).
+The `[evotune]` section holds the hyperparameters of the CMA-ES kcat tuning described in [Tune kcats against experimental data](advanced-tuning.md).
 
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
@@ -138,7 +138,7 @@ When `[evotune]` has no `source_groups`, the groups are `dlkcat`, `brenda` and `
 
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
-| `okp.method` | `okp.method` | `"CataPro"` | OpenKineticsPredictor method |
+| `okp.method` | `okp.method` | `"KinForm-H"` | OpenKineticsPredictor method |
 | `okp.handle_long_sequences` | `okp.handleLongSequences` | `"truncate"` | Action of OpenKineticsPredictor on sequences that are too long |
 | `okp.include_similarity_columns` | `okp.includeSimilarityColumns` | `true` | Return the similarity to the training data of the method |
 | `okp.canonicalize_substrates` | `okp.canonicalizeSubstrates` | `true` | Canonicalise substrate SMILES before the prediction |
@@ -155,17 +155,7 @@ The API key is no parameter. It is an argument of the functions, the environment
 
 geckopy ignores the `[matlab]` section. The functions are searched on the MATLAB path, to which the `code` folder of the project is added.
 
-## Adapter classes
-
-A GECKO 3 adapter class keeps working. It sets `obj.params` with the MATLAB names of the tables above, and `ModelAdapterManager.setDefault` takes the path of its `.m` file. `convertAdapterToToml` writes the parameters of a class as `model_adapter.toml` and lists the methods that the class overrides and the file cannot express. The option `'adapterFormat','class'` of `createGECKOproject` creates a project with a class.
-
-A class that needs code beyond the file can read its parameters from the file in the constructor:
-
-```matlab
-obj.params = loadAdapterParams(fullfile(projectPath, 'model_adapter.toml'));
-```
-
-In geckopy, a subclass of `ModelAdapter` overrides `get_spontaneous_reactions`, `get_uniprot_compatible_genes`, `get_uniprot_ids_from_table`, `get_kegg_compatible_genes`, `get_brenda_db_folder` or `get_phyl_dist_path`. It is instantiated explicitly; `from_folder` does not discover it.
+A GECKO 3 adapter class sets the same parameters in MATLAB code; [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md#adapter-classes) describes how such a class is used and converted.
 
 ## Troubleshooting
 
@@ -179,5 +169,5 @@ In geckopy, a subclass of `ModelAdapter` overrides `get_spontaneous_reactions`, 
 
 - [Project format 4](../gecko4-project-format.md), the sections of `model_adapter.toml`.
 - [Kcat assignment](../gecko4-kcat-assignment.md), the presets and stages of `[kcat_assignment]`.
-- [Getting started](getting-started.md), where the model adapter is created and populated.
+- [Build an ecModel](first-ecmodel.md), where the model adapter is created and populated.
 - [Files in the data folder](data-folder-files.md), the other project-wide reference table.

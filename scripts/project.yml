@@ -20,7 +20,7 @@ matlab:
   - folder: io
     title: Input / output
   - folder: kcat_tuning
-    title: kcat sensitivity tuning
+    title: kcat tuning
   - folder: limit_proteins
     title: Limit proteins
   - folder: model_adapter
@@ -37,7 +37,7 @@ python:
     ec_model: Build & edit ecModel
     gather_kcats: Gather kcats
     get_enzyme_data: Enzyme & EC data
-    kcat_tuning: kcat sensitivity tuning
+    kcat_tuning: kcat tuning
     limit_proteins: Limit proteins
     adapter: Model adapter
     utilities: Utilities

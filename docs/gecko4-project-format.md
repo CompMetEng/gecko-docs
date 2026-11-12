@@ -30,7 +30,7 @@ The file holds the parameters that an adapter class sets in GECKO 3. Paths are r
 | `[evotune]` | the hyperparameters of the CMA-ES kcat tuning, with the source groups and the prior width per source |
 | `[kcat_assignment]` | a preset or stages, and the options `isozymes` and `standard` (see [Kcat assignment](gecko4-kcat-assignment.md)) |
 | `[kcat_sources.<name>]` | settings of one source, for example `aggregation` of `brenda` and `methods` of `okp` |
-| `[okp]` | the OpenKineticsPredictor settings `method` (default `CataPro`), `handle_long_sequences`, `include_similarity_columns` and `canonicalize_substrates` |
+| `[okp]` | the OpenKineticsPredictor settings `method` (default `KinForm-H`), `handle_long_sequences`, `include_similarity_columns` and `canonicalize_substrates` |
 | `[matlab]` | names of MATLAB functions for the anaerobic model and the protein content of the biomass. GECKO alone reads this section |
 | `[matlab.params]` | parameters that GECKO uses and geckopy does not use |
 
