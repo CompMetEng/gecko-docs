@@ -17,7 +17,7 @@ GECKO 4 assigns the kcat of each reaction from kcat source files, in an order th
 
 ## Sources
 
-A source is the name of a file in `data/kcats` (`custom`, `ec_tree`, `homologs`, `dlkcat`, `okp_<method>`), or one of the BRENDA quality tiers `database_exact`, `database_top` and `database_bottom`, which read `brenda.tsv`. In a stage, `okp` stands for the OpenKineticsPredictor (OKP) methods of `[kcat_sources.okp] methods`, which default to KinForm-H alone.
+A source is the name of a file in `data/kcats` (`custom`, `ec_tree`, `homologs`, `dlkcat`, `okp_<method>`, `wildkcat`, or a file of the project's own), or one of the BRENDA quality tiers `database_exact`, `database_top` and `database_bottom`, which read `brenda.tsv`. In a stage, `okp` stands for the OpenKineticsPredictor (OKP) methods of `[kcat_sources.okp] methods`, which default to KinForm-H alone.
 
 | Source | Content |
 | --- | --- |
@@ -27,6 +27,7 @@ A source is the name of a file in `data/kcats` (`custom`, `ec_tree`, `homologs`,
 | `homologs` | the kcat of measured homologs that act on the same substrate, found with DIAMOND (at least 40 % identity and 80 % coverage of both sequences) |
 | `dlkcat` | DLKcat predictions |
 | `okp_<method>` | OpenKineticsPredictor predictions, with the similarity to the training sequences of the method |
+| `wildkcat` | the kcats of a WILDkCAT run, imported with `kcatsFromWILDkCAT` ([Choose the kcat sources](guide/kcat-sources.md#import-kcats-from-wildkcat)); for `select` stages only |
 
 ## Stages
 

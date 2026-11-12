@@ -117,7 +117,9 @@ mapped_flux
 maxIterations
 maxMissing
 maxRSD
+maxPenalty
 max_flux
+max_penalty
 max_generations
 max_grate
 max_growth_weight

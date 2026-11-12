@@ -90,6 +90,7 @@ flowchart TB
 | `updateKcatSources` | `update_kcat_sources` | gather the source files that the preset reads and that are missing or outdated |
 | `collectKcats` | `collect_kcats` | determine the kcats without changing the model |
 | `assignKcats` | `assign_kcats` | determine the kcats and apply them as enzyme constraints |
+| `kcatsFromWILDkCAT` | `kcats_from_wildkcat` | read the kcats of a WILDkCAT run into a source file |
 
 ## Setup
 
@@ -323,6 +324,43 @@ After the stages, two settings of `[kcat_assignment]` fill the reactions that ar
 - `isozymes` (default true): in a full ecModel, a reaction without a kcat gets the mean kcat of its isozymes. An isozyme reaction with a kcat of 0 has no enzyme cost after `applyKcatConstraints`, so an optimisation uses it in place of the isozymes that have a kcat. A light ecModel uses the most efficient isozyme and skips this step.
 - `standard` (default true): the remaining reactions get the standard kcat, which is the median kcat of the subsystem of the reaction when the subsystem has at least 10 reactions with a kcat, and the median of all kcats otherwise. Reactions without a gene association get the pseudo-enzyme `prot_standard`, with the median molecular weight of the proteins in `data/uniprot.tsv`. Exchange, transport, spontaneous and pseudo-reactions get no standard kcat; list other reactions to leave out in `data/pseudoRxns.tsv` ([Files in the data folder](data-folder-files.md)).
 
+## Import kcats from WILDkCAT
+
+[WILDkCAT](https://sysbiolux.github.io/WILDkCAT/) retrieves kcats from [BRENDA](https://www.brenda-enzymes.org/) and [SABIO-RK](https://sabiork.h-its.org/) for a conventional GEM, and fills gaps with CataPro predictions ([Escoffier et al. 2026](https://doi.org/10.1093/bioinformatics/btag510)). It keeps one value per reaction, EC number, enzyme and direction: the measurement with the lowest penalty score, where 0 is a match of organism, enzyme, substrate, temperature and pH, and higher scores are less close matches. GECKO does not run WILDkCAT; run it on the GEM that the ecModel was made from, following its documentation. WILDkCAT reads the EC numbers, KEGG compound identifiers and UniProt identifiers from the annotations of the GEM.
+
+`kcatsFromWILDkCAT` (Python: `kcats_from_wildkcat`) reads the output table of WILDkCAT, `kcat_full.tsv` (or `kcat_retrieved.tsv`, without the predictions), and writes `data/kcats/wildkcat.tsv`:
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+[kcatList, report] = kcatsFromWILDkCAT(ecModel, 'wildkcat_output/kcat_full.tsv');
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+from geckopy import kcats_from_wildkcat
+
+kcat_list, report = kcats_from_wildkcat(ec_model, "wildkcat_output/kcat_full.tsv")
+```
+:::
+::::
+
+A WILDkCAT row gives its kcat to the reactions of `ec.rxns` with the same reaction (the `_REV` reaction for the direction `reverse`) and the same genes. When several rows match the same reaction, the row with the lowest penalty score is used, and of those the highest kcat. `ec.source` reads `wildkcat`, and the `detail` column of `wildkcat.tsv` keeps the database, the penalty score, and the organism, temperature and pH of the measurement. The option `maxPenalty` (Python: `max_penalty`) leaves out values with a higher penalty score, and `predictions` set to false leaves out the CataPro predictions. `report` counts the rows without a kcat, the rows left out by these options, and the rows that match no reaction of `ec.rxns`.
+
+`wildkcat` is a source that a stage can name. No preset reads it, and `updateKcatSources` reports it as `skipped`: run `kcatsFromWILDkCAT` again after a new WILDkCAT run. The file has no combination parameters, so it can be used in a `select` stage and not in a `combine` stage. These stages use the WILDkCAT value before the EC tree:
+
+```toml
+[[kcat_assignment.stage]]
+action = "select"
+sources = ["custom", "wildkcat", "ec_tree"]
+```
+
+WILDkCAT splits a gene association at `or` before it removes the brackets, so a rule such as `(a or b) and c` gives rows with the genes `a` and `b c`, which are no enzyme of the ecModel. These rows count as unmatched in `report`.
+
 ## Add custom kcats
 
 `data/kcats/custom.tsv` holds the curated kcats of the project. Every preset reads it in its first stage, so a custom kcat is used before all other sources. [Set custom kcats](custom-kcats.md) describes the file, the conversion of `data/customKcats.tsv` of a GECKO 3 project, and how to change a kcat by hand.
@@ -337,6 +375,7 @@ After the stages, two settings of `[kcat_assignment]` fill the reactions that ar
 | BRENDA and the EC tree give kcats for few reactions | many reactions have no EC number | Fill `ec.eccodes` (section [Prepare the inputs](#prepare-the-inputs)) |
 | Few reactions get a predicted kcat | many metabolites have no SMILES | Read `noSMILES` of `findMetSmiles` (Python: the log of `find_met_smiles`, with the number at INFO level and the names at DEBUG level) and correct the metabolite names or `data/smilesDB.tsv` |
 | Error `kcatAssignment:config` (Python: a validation error of the adapter) | an unknown preset, a preset and stages together, or a stage with a wrong option | Correct `[kcat_assignment]` |
+| Many rows of `kcatsFromWILDkCAT` are unmatched | WILDkCAT ran on another version of the GEM, or the gene associations have brackets | Run WILDkCAT on the GEM that the ecModel was made from; the reactions of the unmatched rows get their kcat from a later stage |
 | Kcats set by hand are gone | `assignKcats` replaced them | Write them to `data/kcats/custom.tsv` ([Set custom kcats](custom-kcats.md)) |
 
 ## See also
