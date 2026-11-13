@@ -5,7 +5,7 @@ After the kcats are assigned and the protein pool is set, an ecModel can grow mo
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -23,25 +23,25 @@ flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Set the protein pool"]):::ctx
-  SO{"solveLP: growth reaches the target?"}
   DA{"Measured data"}
-  ST["sensitivityTuning"]
-  CK["check tuned kcats against their source<br/>loadKcatSource"]
-  KC(["Set custom kcats<br/>to keep a curated kcat"]):::ctx
+  ST["sensitivityTuning<br/>no change when growth reaches the target"]
   SF["sigmaFitter"]
+  CK["check tuned kcats against their source<br/>loadKcatSource"]:::opt
+  KC(["Set custom kcats<br/>to keep a curated kcat"]):::ctx
   AT(["Tune kcats against experimental data"]):::ctx
-  PV --> SO
-  SO -->|no| DA
-  DA -->|one maximum growth rate| ST --> CK --> SF
-  CK -.-> KC
-  DA -->|several conditions or fluxes| AT
-  NX(["Next: Constrain enzymes with proteomics"]):::ctx
-  SO -->|yes| NX
-  SF --> NX
+  PV --> DA
+  DA -->|one maximum growth rate| ST --> SF
+  ST -.-> CK -.-> KC
+  DA -->|measured fluxes or several growth rates| AT
+  NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
+  NA(["Next: Analyse an ecModel"]):::ctx
+  SF --> NP
+  SF --> NA
   click PV href "protein-pool.html"
   click KC href "custom-kcats.html"
   click AT href "advanced-tuning.html"
-  click NX href "proteomics.html"
+  click NP href "proteomics.html"
+  click NA href "analysis.html"
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -59,25 +59,25 @@ flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Set the protein pool"]):::ctx
-  SO{"model.slim_optimize: growth reaches the target?"}
   DA{"Measured data"}
-  ST["sensitivity_tuning"]
-  CK["check tuned kcats against their source<br/>load_kcat_source"]
-  KC(["Set custom kcats<br/>to keep a curated kcat"]):::ctx
+  ST["sensitivity_tuning<br/>no change when growth reaches the target"]
   SF["fit_sigma"]
+  CK["check tuned kcats against their source<br/>load_kcat_source"]:::opt
+  KC(["Set custom kcats<br/>to keep a curated kcat"]):::ctx
   AT(["Tune kcats against experimental data"]):::ctx
-  PV --> SO
-  SO -->|no| DA
-  DA -->|one maximum growth rate| ST --> CK --> SF
-  CK -.-> KC
-  DA -->|several conditions or fluxes| AT
-  NX(["Next: Constrain enzymes with proteomics"]):::ctx
-  SO -->|yes| NX
-  SF --> NX
+  PV --> DA
+  DA -->|one maximum growth rate| ST --> SF
+  ST -.-> CK -.-> KC
+  DA -->|measured fluxes or several growth rates| AT
+  NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
+  NA(["Next: Analyse an ecModel"]):::ctx
+  SF --> NP
+  SF --> NA
   click PV href "protein-pool.html"
   click KC href "custom-kcats.html"
   click AT href "advanced-tuning.html"
-  click NX href "proteomics.html"
+  click NP href "proteomics.html"
+  click NA href "analysis.html"
 ```
 :::
 ::::

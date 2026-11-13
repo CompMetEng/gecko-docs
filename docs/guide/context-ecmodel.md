@@ -5,7 +5,7 @@ A context-specific GEM describes the metabolism of one tissue, cell line or stra
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -22,19 +22,20 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: a generic ecModel"]):::ctx
+  PV(["Start: a generic ecModel without proteomics constraints"]):::ctx
   OR{"Order"}
   BE(["Build an ecModel<br/>with the context-specific GEM"]):::ctx
   GS["getSubsetEcModel<br/>with the context-specific GEM"]
-  SP["setProtPoolSize"]
+  SP["setProtPoolSize<br/>protein content of the context"]:::opt
   PV --> OR
   OR -->|context-specific GEM first| BE
   OR -->|generic ecModel first| GS --> SP
-  NX(["Next: Enzyme usage and bottlenecks"]):::ctx
+  NX(["Next: Constrain enzymes with proteomics of the context (optional)"]):::ctx
+  GS --> NX
   SP --> NX
   click PV href "first-ecmodel.html"
   click BE href "first-ecmodel.html"
-  click NX href "enzyme-usage.html"
+  click NX href "proteomics.html"
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -51,19 +52,20 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: a generic ecModel"]):::ctx
+  PV(["Start: a generic ecModel without proteomics constraints"]):::ctx
   OR{"Order"}
   BE(["Build an ecModel<br/>with the context-specific GEM"]):::ctx
   GS["get_subset_ec_model<br/>with the context-specific GEM"]
-  SP["set_prot_pool_size"]
+  SP["set_prot_pool_size<br/>protein content of the context"]:::opt
   PV --> OR
   OR -->|context-specific GEM first| BE
   OR -->|generic ecModel first| GS --> SP
-  NX(["Next: Enzyme usage and bottlenecks"]):::ctx
+  NX(["Next: Constrain enzymes with proteomics of the context (optional)"]):::ctx
+  GS --> NX
   SP --> NX
   click PV href "first-ecmodel.html"
   click BE href "first-ecmodel.html"
-  click NX href "enzyme-usage.html"
+  click NX href "proteomics.html"
 ```
 :::
 ::::

@@ -5,7 +5,7 @@ Raise the usage bounds of the enzymes that keep an ecModel constrained with prot
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -23,8 +23,8 @@ flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Constrain enzymes with proteomics"]):::ctx
-  GR{"Growth reaches the target?"}
-  FX["flexibilizeEnzConcs<br/>perComplex after levelling"]
+  GR{"Growth reaches the measured growth rate?"}
+  FX["flexibilizeEnzConcs (recommended)<br/>perComplex after levelling"]
   RG["relaxProteomicsGreedy"]
   RE["relaxEnzConcs"]
   IN["inspect the result<br/>constrainFluxData on the conventional GEM"]:::opt
@@ -54,8 +54,8 @@ flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Constrain enzymes with proteomics"]):::ctx
-  GR{"Growth reaches the target?"}
-  FX["flexibilize_enz_concs<br/>per_complex after levelling"]
+  GR{"Growth reaches the measured growth rate?"}
+  FX["flexibilize_enz_concs (recommended)<br/>per_complex after levelling"]
   RG["relax_proteomics_greedy"]
   RE["relax_enz_concs"]
   IN["inspect the result<br/>apply_flux_data_constraints on the conventional GEM"]:::opt

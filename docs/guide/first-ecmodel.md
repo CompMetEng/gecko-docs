@@ -5,7 +5,7 @@ These steps build an enzyme-constrained model (ecModel) from a conventional geno
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -25,20 +25,21 @@ flowchart TB
   PV(["Start: Installation"]):::ctx
   S1["<b>1. Create a project</b><br/>createGECKOproject<br/>fill model_adapter.toml"]
   S2["<b>2. Make the ecModel</b><br/>ModelAdapterManager.setDefault<br/>loadConventionalGEM<br/>makeEcModel"]
-  S3["<b>3. Assign kcats</b><br/>getECfromGEM, getECfromDatabase<br/>findMetSmiles<br/>updateKcatSources<br/>assignKcats"]
+  S3["<b>3. Assign kcats</b><br/>getECfromGEM, then getECfromDatabase<br/>findMetSmiles<br/>updateKcatSources<br/>assignKcats"]
   S4["<b>4. Set the protein pool</b><br/>setProtPoolSize"]
-  S5{"<b>5. Check the growth rate</b><br/>solveLP: growth reaches the target?"}
-  S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivityTuning<br/>sigmaFitter"]
+  S5["<b>5. Check the growth rate</b><br/>solveLP"]
+  S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivityTuning (no change when growth reaches the target)<br/>sigmaFitter"]
   S7["<b>7. Save the ecModel</b><br/>saveEcModel"]
-  PV --> S1 --> S2 --> S3 --> S4 --> S5
-  S5 -->|no| S6 --> S7
-  S5 -->|yes| S7
-  NX(["Next: a decision page, to change a default"]):::ctx
+  PV --> S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
+  ND(["A decision page of the guide, to change a default"]):::ctx
+  NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
-  S7 -.-> NX
+  S7 -.-> ND
+  S7 --> NP
   S7 --> NA
   click PV href "../installation/index.html"
-  click NX href "workflow.html"
+  click ND href "index.html"
+  click NP href "proteomics.html"
   click NA href "analysis.html"
 ```
 :::
@@ -59,20 +60,21 @@ flowchart TB
   PV(["Start: Installation"]):::ctx
   S1["<b>1. Create a project</b><br/>geckopy init<br/>fill model_adapter.toml"]
   S2["<b>2. Make the ecModel</b><br/>ModelAdapter.from_folder<br/>load_conventional_gem<br/>make_ec_model"]
-  S3["<b>3. Assign kcats</b><br/>fill_eccodes_from_gem, fill_eccodes_from_database<br/>find_met_smiles<br/>update_kcat_sources<br/>assign_kcats"]
+  S3["<b>3. Assign kcats</b><br/>load_uniprot_tsv, load_kegg_tsv<br/>fill_eccodes_from_gem, then fill_eccodes_from_database<br/>find_met_smiles<br/>update_kcat_sources<br/>assign_kcats"]
   S4["<b>4. Set the protein pool</b><br/>set_prot_pool_size"]
-  S5{"<b>5. Check the growth rate</b><br/>model.slim_optimize: growth reaches the target?"}
-  S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivity_tuning<br/>fit_sigma"]
+  S5["<b>5. Check the growth rate</b><br/>model.slim_optimize"]
+  S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivity_tuning (no change when growth reaches the target)<br/>fit_sigma"]
   S7["<b>7. Save the ecModel</b><br/>save_ec_model"]
-  PV --> S1 --> S2 --> S3 --> S4 --> S5
-  S5 -->|no| S6 --> S7
-  S5 -->|yes| S7
-  NX(["Next: a decision page, to change a default"]):::ctx
+  PV --> S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
+  ND(["A decision page of the guide, to change a default"]):::ctx
+  NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
-  S7 -.-> NX
+  S7 -.-> ND
+  S7 --> NP
   S7 --> NA
   click PV href "../installation/index.html"
-  click NX href "workflow.html"
+  click ND href "index.html"
+  click NP href "proteomics.html"
   click NA href "analysis.html"
 ```
 :::

@@ -5,7 +5,7 @@
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -22,18 +22,20 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: Choose the kcat sources"]):::ctx
-  G3["convertCustomKcats<br/>data/customKcats.tsv of GECKO 3"]:::opt
+  PV(["Previous: Choose the ecModel structure"]):::ctx
+  PT(["Choose a kcat tuning: keep a tuned kcat"]):::ctx
+  G3["convertCustomKcats<br/>required when the GECKO 3 file data/customKcats.tsv exists"]:::opt
   WR["write data/kcats/custom.tsv"]
   AS["assignKcats<br/>custom kcats first"]
   HB["setKcatForReactions<br/>applyKcatConstraints<br/>(model only, lost at the next assignKcats)"]:::opt
   PV --> WR --> AS
-  G3 --> WR
+  PV --> G3 --> WR
+  PT -.-> WR
   PV -.->|change by hand| HB
   NX(["Next: Set the protein pool"]):::ctx
   AS --> NX
-  HB -.-> NX
-  click PV href "kcat-sources.html"
+  click PV href "ecmodel-structure.html"
+  click PT href "kcat-tuning.html"
   click NX href "protein-pool.html"
 ```
 :::
@@ -51,18 +53,20 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: Choose the kcat sources"]):::ctx
-  G3["convert_custom_kcats<br/>data/customKcats.tsv of GECKO 3"]:::opt
+  PV(["Previous: Choose the ecModel structure"]):::ctx
+  PT(["Choose a kcat tuning: keep a tuned kcat"]):::ctx
+  G3["convert_custom_kcats<br/>required when the GECKO 3 file data/customKcats.tsv exists"]:::opt
   WR["write data/kcats/custom.tsv"]
   AS["assign_kcats<br/>custom kcats first"]
   HB["set_kcat_for_reactions<br/>apply_kcat_constraints<br/>(model only, lost at the next assign_kcats)"]:::opt
   PV --> WR --> AS
-  G3 --> WR
+  PV --> G3 --> WR
+  PT -.-> WR
   PV -.->|change by hand| HB
   NX(["Next: Set the protein pool"]):::ctx
   AS --> NX
-  HB -.-> NX
-  click PV href "kcat-sources.html"
+  click PV href "ecmodel-structure.html"
+  click PT href "kcat-tuning.html"
   click NX href "protein-pool.html"
 ```
 :::

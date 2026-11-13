@@ -5,7 +5,7 @@
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -24,15 +24,16 @@ flowchart TB
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Build an ecModel, step 1"]):::ctx
   B1["ModelAdapterManager.setDefault<br/>loadConventionalGEM"]
-  DB["loadDatabases<br/>UniProt and KEGG data of the organism"]
   B3{"Full or light?"}
-  B4["makeEcModel"]
-  B5["makeEcModel, light"]
+  B4["makeEcModel<br/>calls loadDatabases"]
+  B5["makeEcModel, light<br/>calls loadDatabases"]
   B6["getComplexData<br/>applyComplexData"]:::opt
-  PV --> B1 --> DB --> B3
+  PV --> B1 --> B3
   B3 -->|full| B4 --> B6
   B3 -->|light| B5 --> B6
   NX(["Next: Choose the kcat sources"]):::ctx
+  B4 --> NX
+  B5 --> NX
   B6 --> NX
   click PV href "first-ecmodel.html"
   click NX href "kcat-sources.html"
@@ -54,15 +55,16 @@ flowchart TB
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Build an ecModel, step 1"]):::ctx
   B1["ModelAdapter.from_folder<br/>load_conventional_gem"]
-  DB["load_uniprot_tsv, load_kegg_tsv<br/>UniProt and KEGG data of the organism"]
   B3{"Full or light?"}
-  B4["make_ec_model"]
-  B5["make_ec_model, light"]
+  B4["make_ec_model<br/>downloads the UniProt and KEGG data"]
+  B5["make_ec_model, light<br/>downloads the UniProt and KEGG data"]
   B6["get_complex_data<br/>apply_complex_data"]:::opt
-  PV --> B1 --> DB --> B3
+  PV --> B1 --> B3
   B3 -->|full| B4 --> B6
   B3 -->|light| B5 --> B6
   NX(["Next: Choose the kcat sources"]):::ctx
+  B4 --> NX
+  B5 --> NX
   B6 --> NX
   click PV href "first-ecmodel.html"
   click NX href "kcat-sources.html"

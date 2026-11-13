@@ -5,7 +5,7 @@ A flux distribution of a full ecModel gives the amount of each enzyme that it us
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -22,9 +22,9 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: a solution of an ecModel"]):::ctx
+  PV(["Start: a full ecModel"]):::ctx
   ME{"Measure"}
-  US["getEnzymeUsage<br/>reportEnzymeUsage"]
+  US["getEnzymeUsage<br/>reportEnzymeUsage<br/>(of a solution)"]
   BN["getEnzymeBottlenecks"]
   CC["getConcControlCoeffs"]
   PF["getPfbaEnzymes"]
@@ -33,7 +33,8 @@ flowchart TB
   ME -->|enzymes that limit the objective| BN
   ME -->|rise per added enzyme| CC
   ME -->|least enzyme mass| PF
-  click PV href "analysis.html"
+  PF -.->|its solution| US
+  click PV href "first-ecmodel.html"
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -50,9 +51,9 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: a solution of an ecModel"]):::ctx
+  PV(["Start: a full ecModel"]):::ctx
   ME{"Measure"}
-  US["enzyme_usage<br/>report_enzyme_usage"]
+  US["enzyme_usage<br/>report_enzyme_usage<br/>(of a solution)"]
   BN["get_enzyme_bottlenecks"]
   CC["get_conc_control_coeffs"]
   PF["pfba_enzymes"]
@@ -61,7 +62,8 @@ flowchart TB
   ME -->|enzymes that limit the objective| BN
   ME -->|rise per added enzyme| CC
   ME -->|least enzyme mass| PF
-  click PV href "analysis.html"
+  PF -.->|its solution| US
+  click PV href "first-ecmodel.html"
 ```
 :::
 ::::

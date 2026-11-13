@@ -5,7 +5,7 @@ Flux scanning with enforced objective function (FSEOF) finds the reactions whose
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -22,14 +22,11 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: Analyse an ecModel"]):::ctx
+  PV(["Start: a functional or relaxed ecModel"]):::ctx
   TS["production reaction<br/>and carbon source uptake"]
   FS["ecFSEOF"]
   PV --> TS --> FS
-  NX(["Next: Make a context-specific ecModel"]):::ctx
-  FS --> NX
-  click PV href "analysis.html"
-  click NX href "context-ecmodel.html"
+  click PV href "first-ecmodel.html"
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -46,14 +43,11 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: Analyse an ecModel"]):::ctx
+  PV(["Start: a functional or relaxed ecModel"]):::ctx
   TS["production reaction<br/>and carbon source uptake"]
   FS["ec_fseof"]
   PV --> TS --> FS
-  NX(["Next: Make a context-specific ecModel"]):::ctx
-  FS --> NX
-  click PV href "analysis.html"
-  click NX href "context-ecmodel.html"
+  click PV href "first-ecmodel.html"
 ```
 :::
 ::::

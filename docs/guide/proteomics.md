@@ -5,7 +5,7 @@ Load the absolute proteomics data and the exchange fluxes of one experiment, bou
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -22,7 +22,7 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: a functional ecModel"]):::ctx
+  PV(["Previous: a functional full ecModel"]):::ctx
   LD["loadProtData<br/>fillEnzConcs"]
   LV["levelComplexConcs"]:::opt
   CE["constrainEnzConcs"]
@@ -30,8 +30,11 @@ flowchart TB
   PP["calculateFfactor<br/>setProtPoolSize"]
   FL["loadFluxData<br/>constrainFluxData"]:::opt
   PV --> LD --> LV --> CE --> IZ --> PP --> FL
+  LD --> CE
+  CE --> PP
   NX(["Next: Relax proteomics constraints"]):::ctx
   FL --> NX
+  PP --> NX
   click PV href "first-ecmodel.html"
   click NX href "relaxing-proteomics.html"
 ```
@@ -50,7 +53,7 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: a functional ecModel"]):::ctx
+  PV(["Previous: a functional full ecModel"]):::ctx
   LD["load_prot_data<br/>fill_enz_concs"]
   LV["level_complex_concs"]:::opt
   CE["constrain_enz_concs"]
@@ -58,8 +61,11 @@ flowchart TB
   PP["calculate_f_factor<br/>set_prot_pool_size"]
   FL["load_flux_data<br/>apply_flux_data_constraints"]:::opt
   PV --> LD --> LV --> CE --> IZ --> PP --> FL
+  LD --> CE
+  CE --> PP
   NX(["Next: Relax proteomics constraints"]):::ctx
   FL --> NX
+  PP --> NX
   click PV href "first-ecmodel.html"
   click NX href "relaxing-proteomics.html"
 ```

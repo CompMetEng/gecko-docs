@@ -5,7 +5,7 @@ An ecModel has the structure of a conventional GEM, so every method for a conven
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -22,21 +22,25 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: a functional or relaxed ecModel"]):::ctx
+  PV(["Start: a functional or relaxed ecModel"]):::ctx
   OB["set the objective<br/>setParam, solveLP"]
   FV["ecFVA, plotEcFVA"]
-  RS["randomSampling"]
+  RS["randomSampling (RAVEN)"]
   MP["mapRxnsToConv"]
   PV --> OB
   OB --> FV
   OB --> RS
   OB --> MP
+  RS --> MP
   NE(["Find engineering targets"]):::ctx
+  NC(["Make a context-specific ecModel"]):::ctx
   NU(["Enzyme usage and bottlenecks"]):::ctx
-  OB -.-> NE
-  OB -.-> NU
-  click PV href "relaxing-proteomics.html"
+  PV -.-> NE
+  PV -.-> NC
+  PV -.-> NU
+  click PV href "first-ecmodel.html"
   click NE href "engineering-targets.html"
+  click NC href "context-ecmodel.html"
   click NU href "enzyme-usage.html"
 ```
 :::
@@ -54,21 +58,25 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: a functional or relaxed ecModel"]):::ctx
+  PV(["Start: a functional or relaxed ecModel"]):::ctx
   OB["set the objective<br/>model.objective, model.optimize"]
   FV["ec_fva"]
-  RS["random_sampling"]
+  RS["random_sampling (raven-toolbox)"]
   MP["map_rxns_to_conv"]
   PV --> OB
   OB --> FV
   OB --> RS
   OB --> MP
+  RS --> MP
   NE(["Find engineering targets"]):::ctx
+  NC(["Make a context-specific ecModel"]):::ctx
   NU(["Enzyme usage and bottlenecks"]):::ctx
-  OB -.-> NE
-  OB -.-> NU
-  click PV href "relaxing-proteomics.html"
+  PV -.-> NE
+  PV -.-> NC
+  PV -.-> NU
+  click PV href "first-ecmodel.html"
   click NE href "engineering-targets.html"
+  click NC href "context-ecmodel.html"
   click NU href "enzyme-usage.html"
 ```
 :::

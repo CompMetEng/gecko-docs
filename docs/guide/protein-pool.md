@@ -5,7 +5,7 @@ The protein pool limits the total mass of enzymes that an enzyme-constrained mod
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -27,14 +27,20 @@ flowchart TB
   CF["calculateFfactor<br/>f from PAXdb or proteomics"]:::opt
   FD["loadFluxData<br/>Ptot of a condition"]:::opt
   SP["setProtPoolSize"]
-  TU(["Choose a kcat tuning"]):::ctx
+  TU(["Choose a kcat tuning: tune the kcats"]):::ctx
   SF["sigmaFitter<br/>sigma to the growth rate, after the tuning"]
   PV --> AD --> SP
   CF -.-> SP
   FD -.-> SP
   SP --> TU --> SF
+  NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
+  NA(["Next: Analyse an ecModel"]):::ctx
+  SF --> NP
+  SF --> NA
   click PV href "kcat-sources.html"
   click TU href "kcat-tuning.html"
+  click NP href "proteomics.html"
+  click NA href "analysis.html"
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -56,14 +62,20 @@ flowchart TB
   CF["calculate_f_factor<br/>f from PAXdb or proteomics"]:::opt
   FD["load_flux_data<br/>Ptot of a condition"]:::opt
   SP["set_prot_pool_size"]
-  TU(["Choose a kcat tuning"]):::ctx
+  TU(["Choose a kcat tuning: tune the kcats"]):::ctx
   SF["fit_sigma<br/>sigma to the growth rate, after the tuning"]
   PV --> AD --> SP
   CF -.-> SP
   FD -.-> SP
   SP --> TU --> SF
+  NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
+  NA(["Next: Analyse an ecModel"]):::ctx
+  SF --> NP
+  SF --> NA
   click PV href "kcat-sources.html"
   click TU href "kcat-tuning.html"
+  click NP href "proteomics.html"
+  click NA href "analysis.html"
 ```
 :::
 ::::

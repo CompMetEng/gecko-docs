@@ -5,7 +5,7 @@ The advanced kcat tuning fits many kcats at once to maximum growth rates and exc
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -27,14 +27,17 @@ flowchart TB
   CG["[evotune] in model_adapter.toml"]
   SC["screenKcatLeverage<br/>selectTunableMask"]
   RV["reviewKcatAssignment<br/>ecStatsFromBrenda"]
-  CM["cmaesKcatTuning"]
   TP["tunePriorPenaltyWeight<br/>seeds and reproducibility"]:::opt
+  CM["cmaesKcatTuning"]
   PV --> DF --> CG --> SC --> RV --> CM
-  CM -.-> TP
-  NX(["Next: Constrain enzymes with proteomics"]):::ctx
-  CM --> NX
+  RV -.-> TP -.-> CM
+  NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
+  NA(["Next: Analyse an ecModel"]):::ctx
+  CM --> NP
+  CM --> NA
   click PV href "kcat-tuning.html"
-  click NX href "proteomics.html"
+  click NP href "proteomics.html"
+  click NA href "analysis.html"
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -56,14 +59,17 @@ flowchart TB
   CG["[evotune] in model_adapter.toml"]
   SC["screen_kcat_leverage<br/>select_tunable_mask"]
   RV["review_assignment<br/>ec_stats_from_brenda"]
-  CM["cmaes_kcat_tuning"]
   TP["tune_prior_penalty_weight<br/>seeds and reproducibility"]:::opt
+  CM["cmaes_kcat_tuning"]
   PV --> DF --> CG --> SC --> RV --> CM
-  CM -.-> TP
-  NX(["Next: Constrain enzymes with proteomics"]):::ctx
-  CM --> NX
+  RV -.-> TP -.-> CM
+  NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
+  NA(["Next: Analyse an ecModel"]):::ctx
+  CM --> NP
+  CM --> NA
   click PV href "kcat-tuning.html"
-  click NX href "proteomics.html"
+  click NP href "proteomics.html"
+  click NA href "analysis.html"
 ```
 :::
 ::::

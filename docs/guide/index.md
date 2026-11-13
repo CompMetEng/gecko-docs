@@ -80,6 +80,12 @@ introduction
 :caption: Quick path
 
 first-ecmodel
+```
+
+```{toctree}
+:hidden:
+:caption: Workflow
+
 workflow
 ```
 

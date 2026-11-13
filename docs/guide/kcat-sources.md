@@ -5,7 +5,7 @@ GECKO selects one kcat per enzymatic reaction from the kcat source files in `dat
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -24,7 +24,7 @@ flowchart TB
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Choose the ecModel structure"]):::ctx
   PR["preset or stages<br/>[kcat_assignment] in model_adapter.toml"]
-  EC["EC numbers<br/>getECfromGEM, getECfromDatabase"]
+  EC["EC numbers<br/>getECfromGEM, then getECfromDatabase"]
   SM["metabolite SMILES<br/>findMetSmiles"]
   US["updateKcatSources<br/>one file per source in data/kcats"]
   CO["collectKcats<br/>compare presets"]:::opt
@@ -59,7 +59,7 @@ flowchart TB
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Choose the ecModel structure"]):::ctx
   PR["preset or stages<br/>[kcat_assignment] in model_adapter.toml"]
-  EC["EC numbers<br/>fill_eccodes_from_gem, fill_eccodes_from_database"]
+  EC["EC numbers<br/>fill_eccodes_from_gem, then fill_eccodes_from_database"]
   SM["metabolite SMILES<br/>find_met_smiles"]
   US["update_kcat_sources<br/>one file per source in data/kcats"]
   CO["collect_kcats<br/>compare presets"]:::opt
