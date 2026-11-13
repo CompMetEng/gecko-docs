@@ -2,6 +2,71 @@
 
 A flux distribution of a full ecModel gives the amount of each enzyme that it uses. GECKO computes the usage of each enzyme in a solution, the enzymes that run at their limit, the enzymes that limit the objective, and the flux distribution that uses the least enzyme mass. These functions need a full ecModel: a light ecModel has no `usage_prot_<id>` reactions, and the functions raise an error on it ([Choose the ecModel structure](ecmodel-structure.md)).
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: a solution of an ecModel"]):::ctx
+  ME{"Measure"}
+  US["getEnzymeUsage<br/>reportEnzymeUsage"]
+  BN["getEnzymeBottlenecks"]
+  CC["getConcControlCoeffs"]
+  PF["getPfbaEnzymes"]
+  PV --> ME
+  ME -->|absolute or capacity usage| US
+  ME -->|enzymes that limit the objective| BN
+  ME -->|rise per added enzyme| CC
+  ME -->|least enzyme mass| PF
+  click PV href "analysis.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: a solution of an ecModel"]):::ctx
+  ME{"Measure"}
+  US["enzyme_usage<br/>report_enzyme_usage"]
+  BN["get_enzyme_bottlenecks"]
+  CC["get_conc_control_coeffs"]
+  PF["pfba_enzymes"]
+  PV --> ME
+  ME -->|absolute or capacity usage| US
+  ME -->|enzymes that limit the objective| BN
+  ME -->|rise per added enzyme| CC
+  ME -->|least enzyme mass| PF
+  click PV href "analysis.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

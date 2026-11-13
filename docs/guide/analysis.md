@@ -2,6 +2,79 @@
 
 An ecModel has the structure of a conventional GEM, so every method for a conventional GEM runs on it. GECKO adds functions that take the enzyme constraints into account and map the results to the reactions of the conventional GEM. The analyses below set an objective, compute flux ranges or samples, and map the results to the conventional GEM for comparison.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: a functional or relaxed ecModel"]):::ctx
+  OB["set the objective<br/>setParam, solveLP"]
+  FV["ecFVA, plotEcFVA"]
+  RS["randomSampling"]
+  MP["mapRxnsToConv"]
+  PV --> OB
+  OB --> FV
+  OB --> RS
+  OB --> MP
+  NE(["Find engineering targets"]):::ctx
+  NU(["Enzyme usage and bottlenecks"]):::ctx
+  OB -.-> NE
+  OB -.-> NU
+  click PV href "relaxing-proteomics.html"
+  click NE href "engineering-targets.html"
+  click NU href "enzyme-usage.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: a functional or relaxed ecModel"]):::ctx
+  OB["set the objective<br/>model.objective, model.optimize"]
+  FV["ec_fva"]
+  RS["random_sampling"]
+  MP["map_rxns_to_conv"]
+  PV --> OB
+  OB --> FV
+  OB --> RS
+  OB --> MP
+  NE(["Find engineering targets"]):::ctx
+  NU(["Enzyme usage and bottlenecks"]):::ctx
+  OB -.-> NE
+  OB -.-> NU
+  click PV href "relaxing-proteomics.html"
+  click NE href "engineering-targets.html"
+  click NU href "enzyme-usage.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

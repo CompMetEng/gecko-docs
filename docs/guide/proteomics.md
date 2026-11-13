@@ -2,6 +2,71 @@
 
 Load the absolute proteomics data and the exchange fluxes of one experiment, bound the usage of each measured enzyme by its concentration, set the protein pool for the experiment, and constrain the exchange reactions and the growth rate. At the end, the ecModel describes the experiment, and solving it shows whether the ecModel reaches the measured growth rate. Proteomics data require a full ecModel, which has a usage reaction per enzyme; a light ecModel has none (see [Choose the ecModel structure](ecmodel-structure.md)).
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: a functional ecModel"]):::ctx
+  LD["loadProtData<br/>fillEnzConcs"]
+  LV["levelComplexConcs"]:::opt
+  CE["constrainEnzConcs"]
+  IZ["getIsozymeCoverage<br/>zeroUnmeasuredIsozymes"]:::opt
+  PP["calculateFfactor<br/>setProtPoolSize"]
+  FL["loadFluxData<br/>constrainFluxData"]:::opt
+  PV --> LD --> LV --> CE --> IZ --> PP --> FL
+  NX(["Next: Relax proteomics constraints"]):::ctx
+  FL --> NX
+  click PV href "first-ecmodel.html"
+  click NX href "relaxing-proteomics.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: a functional ecModel"]):::ctx
+  LD["load_prot_data<br/>fill_enz_concs"]
+  LV["level_complex_concs"]:::opt
+  CE["constrain_enz_concs"]
+  IZ["get_isozyme_coverage<br/>zero_unmeasured_isozymes"]:::opt
+  PP["calculate_f_factor<br/>set_prot_pool_size"]
+  FL["load_flux_data<br/>apply_flux_data_constraints"]:::opt
+  PV --> LD --> LV --> CE --> IZ --> PP --> FL
+  NX(["Next: Relax proteomics constraints"]):::ctx
+  FL --> NX
+  click PV href "first-ecmodel.html"
+  click NX href "relaxing-proteomics.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

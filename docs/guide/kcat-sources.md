@@ -2,6 +2,85 @@
 
 GECKO selects one kcat per enzymatic reaction from the kcat source files in `data/kcats`, in the order that `[kcat_assignment]` of `model_adapter.toml` defines. The result is a project with a preset (or its own stages) and the source files that the preset reads, and an ecModel with the assigned kcats applied as enzyme constraints.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Choose the ecModel structure"]):::ctx
+  PR["preset or stages<br/>[kcat_assignment] in model_adapter.toml"]
+  EC["EC numbers<br/>getECfromGEM, getECfromDatabase"]
+  SM["metabolite SMILES<br/>findMetSmiles"]
+  US["updateKcatSources<br/>one file per source in data/kcats"]
+  CO["collectKcats<br/>compare presets"]:::opt
+  AS["assignKcats"]
+  CU(["Set custom kcats"]):::ctx
+  PV --> PR
+  PR --> EC --> US
+  PR --> SM --> US
+  US --> CO --> AS
+  US --> AS
+  CU -.-> AS
+  NX(["Next: Set the protein pool"]):::ctx
+  AS --> NX
+  click PV href "ecmodel-structure.html"
+  click CU href "custom-kcats.html"
+  click NX href "protein-pool.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Choose the ecModel structure"]):::ctx
+  PR["preset or stages<br/>[kcat_assignment] in model_adapter.toml"]
+  EC["EC numbers<br/>fill_eccodes_from_gem, fill_eccodes_from_database"]
+  SM["metabolite SMILES<br/>find_met_smiles"]
+  US["update_kcat_sources<br/>one file per source in data/kcats"]
+  CO["collect_kcats<br/>compare presets"]:::opt
+  AS["assign_kcats"]
+  CU(["Set custom kcats"]):::ctx
+  PV --> PR
+  PR --> EC --> US
+  PR --> SM --> US
+  US --> CO --> AS
+  US --> AS
+  CU -.-> AS
+  NX(["Next: Set the protein pool"]):::ctx
+  AS --> NX
+  click PV href "ecmodel-structure.html"
+  click CU href "custom-kcats.html"
+  click NX href "protein-pool.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

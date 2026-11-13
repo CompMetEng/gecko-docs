@@ -2,6 +2,73 @@
 
 The advanced kcat tuning fits many kcats at once to maximum growth rates and exchange fluxes, measured in one or more conditions, by minimising the root-mean-square error (RMSE) between simulated and measured values. It searches with CMA-ES (covariance matrix adaptation evolution strategy), and the trust in the source of each kcat limits how far the kcat moves. The steps are: prepare the data files, configure the tuning, rank the kcats by their effect on the fit, review the assignment of the top kcats, and tune. The result is an ecModel whose selected kcats fit the data, and a list of the changed kcats. [Choose a kcat tuning](kcat-tuning.md) compares this tuning with the standard tuning.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Choose a kcat tuning"]):::ctx
+  DF["prepare the data files<br/>loadEvotuneData"]
+  CG["[evotune] in model_adapter.toml"]
+  SC["screenKcatLeverage<br/>selectTunableMask"]
+  RV["reviewKcatAssignment<br/>ecStatsFromBrenda"]
+  CM["cmaesKcatTuning"]
+  TP["tunePriorPenaltyWeight<br/>seeds and reproducibility"]:::opt
+  PV --> DF --> CG --> SC --> RV --> CM
+  CM -.-> TP
+  NX(["Next: Constrain enzymes with proteomics"]):::ctx
+  CM --> NX
+  click PV href "kcat-tuning.html"
+  click NX href "proteomics.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Choose a kcat tuning"]):::ctx
+  DF["prepare the data files<br/>load_evotune_data"]
+  CG["[evotune] in model_adapter.toml"]
+  SC["screen_kcat_leverage<br/>select_tunable_mask"]
+  RV["review_assignment<br/>ec_stats_from_brenda"]
+  CM["cmaes_kcat_tuning"]
+  TP["tune_prior_penalty_weight<br/>seeds and reproducibility"]:::opt
+  PV --> DF --> CG --> SC --> RV --> CM
+  CM -.-> TP
+  NX(["Next: Constrain enzymes with proteomics"]):::ctx
+  CM --> NX
+  click PV href "kcat-tuning.html"
+  click NX href "proteomics.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

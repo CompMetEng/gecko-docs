@@ -2,6 +2,75 @@
 
 `makeEcModel` turns a conventional genome-scale metabolic model (GEM) into an enzyme-constrained model (ecModel) without kcats: reversible reactions are split by direction, the enzymes of each reaction are recorded in the `ec` structure, and the protein pool is added. The result is a full or a light ecModel without kcats, a list of the genes that have no protein data, and, for an organism in the Complex Portal, the subunit stoichiometry of the enzyme complexes.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Build an ecModel, step 1"]):::ctx
+  B1["ModelAdapterManager.setDefault<br/>loadConventionalGEM"]
+  DB["loadDatabases<br/>UniProt and KEGG data of the organism"]
+  B3{"Full or light?"}
+  B4["makeEcModel"]
+  B5["makeEcModel, light"]
+  B6["getComplexData<br/>applyComplexData"]:::opt
+  PV --> B1 --> DB --> B3
+  B3 -->|full| B4 --> B6
+  B3 -->|light| B5 --> B6
+  NX(["Next: Choose the kcat sources"]):::ctx
+  B6 --> NX
+  click PV href "first-ecmodel.html"
+  click NX href "kcat-sources.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Build an ecModel, step 1"]):::ctx
+  B1["ModelAdapter.from_folder<br/>load_conventional_gem"]
+  DB["load_uniprot_tsv, load_kegg_tsv<br/>UniProt and KEGG data of the organism"]
+  B3{"Full or light?"}
+  B4["make_ec_model"]
+  B5["make_ec_model, light"]
+  B6["get_complex_data<br/>apply_complex_data"]:::opt
+  PV --> B1 --> DB --> B3
+  B3 -->|full| B4 --> B6
+  B3 -->|light| B5 --> B6
+  NX(["Next: Choose the kcat sources"]):::ctx
+  B6 --> NX
+  click PV href "first-ecmodel.html"
+  click NX href "kcat-sources.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

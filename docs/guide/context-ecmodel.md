@@ -2,6 +2,73 @@
 
 A context-specific GEM describes the metabolism of one tissue, cell line or strain. It is made from a generic GEM with a method such as ftINIT (`ftINIT` in RAVEN, `ftinit` in raven-toolbox). `getSubsetEcModel` trims a generic ecModel to the reactions and genes of a context-specific GEM, and `setProtPoolSize` sets the protein pool of the context.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: a generic ecModel"]):::ctx
+  OR{"Order"}
+  BE(["Build an ecModel<br/>with the context-specific GEM"]):::ctx
+  GS["getSubsetEcModel<br/>with the context-specific GEM"]
+  SP["setProtPoolSize"]
+  PV --> OR
+  OR -->|context-specific GEM first| BE
+  OR -->|generic ecModel first| GS --> SP
+  NX(["Next: Enzyme usage and bottlenecks"]):::ctx
+  SP --> NX
+  click PV href "first-ecmodel.html"
+  click BE href "first-ecmodel.html"
+  click NX href "enzyme-usage.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: a generic ecModel"]):::ctx
+  OR{"Order"}
+  BE(["Build an ecModel<br/>with the context-specific GEM"]):::ctx
+  GS["get_subset_ec_model<br/>with the context-specific GEM"]
+  SP["set_prot_pool_size"]
+  PV --> OR
+  OR -->|context-specific GEM first| BE
+  OR -->|generic ecModel first| GS --> SP
+  NX(["Next: Enzyme usage and bottlenecks"]):::ctx
+  SP --> NX
+  click PV href "first-ecmodel.html"
+  click BE href "first-ecmodel.html"
+  click NX href "enzyme-usage.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

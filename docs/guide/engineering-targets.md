@@ -2,6 +2,63 @@
 
 Flux scanning with enforced objective function (FSEOF) finds the reactions whose flux changes with the production of a compound. `ecFSEOF` returns reaction and gene targets for the production of a compound by an ecModel, each with a suggested action: over-express, knock down or knock out.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Analyse an ecModel"]):::ctx
+  TS["production reaction<br/>and carbon source uptake"]
+  FS["ecFSEOF"]
+  PV --> TS --> FS
+  NX(["Next: Make a context-specific ecModel"]):::ctx
+  FS --> NX
+  click PV href "analysis.html"
+  click NX href "context-ecmodel.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Analyse an ecModel"]):::ctx
+  TS["production reaction<br/>and carbon source uptake"]
+  FS["ec_fseof"]
+  PV --> TS --> FS
+  NX(["Next: Make a context-specific ecModel"]):::ctx
+  FS --> NX
+  click PV href "analysis.html"
+  click NX href "context-ecmodel.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

@@ -2,6 +2,77 @@
 
 Raise the usage bounds of the enzymes that keep an ecModel constrained with proteomics below the measured growth rate, until it reaches that growth rate. The result is an ecModel that reaches the growth rate, a list of the enzymes whose bounds were raised and by how much, and an indication of whether the shortfall comes from the proteomics data, the kcats, the protein pool or the metabolic network.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Constrain enzymes with proteomics"]):::ctx
+  GR{"Growth reaches the target?"}
+  FX["flexibilizeEnzConcs<br/>perComplex after levelling"]
+  RG["relaxProteomicsGreedy"]
+  RE["relaxEnzConcs"]
+  IN["inspect the result<br/>constrainFluxData on the conventional GEM"]:::opt
+  PV --> GR
+  GR -->|no, keep the measured bounds| FX --> IN
+  GR -->|no, enzymes at 0 limit growth| RG --> IN
+  GR -->|no, smallest total change| RE --> IN
+  NX(["Next: Analyse an ecModel"]):::ctx
+  GR -->|yes| NX
+  IN --> NX
+  click PV href "proteomics.html"
+  click NX href "analysis.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Constrain enzymes with proteomics"]):::ctx
+  GR{"Growth reaches the target?"}
+  FX["flexibilize_enz_concs<br/>per_complex after levelling"]
+  RG["relax_proteomics_greedy"]
+  RE["relax_enz_concs"]
+  IN["inspect the result<br/>apply_flux_data_constraints on the conventional GEM"]:::opt
+  PV --> GR
+  GR -->|no, keep the measured bounds| FX --> IN
+  GR -->|no, enzymes at 0 limit growth| RG --> IN
+  GR -->|no, smallest total change| RE --> IN
+  NX(["Next: Analyse an ecModel"]):::ctx
+  GR -->|yes| NX
+  IN --> NX
+  click PV href "proteomics.html"
+  click NX href "analysis.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

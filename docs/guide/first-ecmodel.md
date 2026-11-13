@@ -2,6 +2,83 @@
 
 These steps build an enzyme-constrained model (ecModel) from a conventional genome-scale metabolic model (GEM) with the default settings of GECKO and geckopy. At the end, the project folder holds an ecModel with kcats and a protein pool, which reaches the growth rate of the organism, saved as a YAML file. Each step links to the page that describes the other options of that step.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Start: Installation"]):::ctx
+  S1["<b>1. Create a project</b><br/>createGECKOproject<br/>fill model_adapter.toml"]
+  S2["<b>2. Make the ecModel</b><br/>ModelAdapterManager.setDefault<br/>loadConventionalGEM<br/>makeEcModel"]
+  S3["<b>3. Assign kcats</b><br/>getECfromGEM, getECfromDatabase<br/>findMetSmiles<br/>updateKcatSources<br/>assignKcats"]
+  S4["<b>4. Set the protein pool</b><br/>setProtPoolSize"]
+  S5{"<b>5. Check the growth rate</b><br/>solveLP: growth reaches the target?"}
+  S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivityTuning<br/>sigmaFitter"]
+  S7["<b>7. Save the ecModel</b><br/>saveEcModel"]
+  PV --> S1 --> S2 --> S3 --> S4 --> S5
+  S5 -->|no| S6 --> S7
+  S5 -->|yes| S7
+  NX(["Next: a decision page, to change a default"]):::ctx
+  NA(["Next: Analyse an ecModel"]):::ctx
+  S7 -.-> NX
+  S7 --> NA
+  click PV href "../installation/index.html"
+  click NX href "workflow.html"
+  click NA href "analysis.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Start: Installation"]):::ctx
+  S1["<b>1. Create a project</b><br/>geckopy init<br/>fill model_adapter.toml"]
+  S2["<b>2. Make the ecModel</b><br/>ModelAdapter.from_folder<br/>load_conventional_gem<br/>make_ec_model"]
+  S3["<b>3. Assign kcats</b><br/>fill_eccodes_from_gem, fill_eccodes_from_database<br/>find_met_smiles<br/>update_kcat_sources<br/>assign_kcats"]
+  S4["<b>4. Set the protein pool</b><br/>set_prot_pool_size"]
+  S5{"<b>5. Check the growth rate</b><br/>model.slim_optimize: growth reaches the target?"}
+  S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivity_tuning<br/>fit_sigma"]
+  S7["<b>7. Save the ecModel</b><br/>save_ec_model"]
+  PV --> S1 --> S2 --> S3 --> S4 --> S5
+  S5 -->|no| S6 --> S7
+  S5 -->|yes| S7
+  NX(["Next: a decision page, to change a default"]):::ctx
+  NA(["Next: Analyse an ecModel"]):::ctx
+  S7 -.-> NX
+  S7 --> NA
+  click PV href "../installation/index.html"
+  click NX href "workflow.html"
+  click NA href "analysis.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

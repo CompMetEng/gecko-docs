@@ -2,6 +2,73 @@
 
 The protein pool limits the total mass of enzymes that an enzyme-constrained model (ecModel) can use. The result is an ecModel whose `prot_pool_exchange` has an upper bound calculated from $P_{tot}$, $f$ and $\sigma$, with $\sigma$ fitted to the measured maximum growth rate after the kcats are tuned.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Choose the kcat sources"]):::ctx
+  AD["Ptot, f and sigma<br/>of the model adapter"]
+  CF["calculateFfactor<br/>f from PAXdb or proteomics"]:::opt
+  FD["loadFluxData<br/>Ptot of a condition"]:::opt
+  SP["setProtPoolSize"]
+  TU(["Choose a kcat tuning"]):::ctx
+  SF["sigmaFitter<br/>sigma to the growth rate, after the tuning"]
+  PV --> AD --> SP
+  CF -.-> SP
+  FD -.-> SP
+  SP --> TU --> SF
+  click PV href "kcat-sources.html"
+  click TU href "kcat-tuning.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Choose the kcat sources"]):::ctx
+  AD["Ptot, f and sigma<br/>of the model adapter"]
+  CF["calculate_f_factor<br/>f from PAXdb or proteomics"]:::opt
+  FD["load_flux_data<br/>Ptot of a condition"]:::opt
+  SP["set_prot_pool_size"]
+  TU(["Choose a kcat tuning"]):::ctx
+  SF["fit_sigma<br/>sigma to the growth rate, after the tuning"]
+  PV --> AD --> SP
+  CF -.-> SP
+  FD -.-> SP
+  SP --> TU --> SF
+  click PV href "kcat-sources.html"
+  click TU href "kcat-tuning.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |

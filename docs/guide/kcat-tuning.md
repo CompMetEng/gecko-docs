@@ -2,6 +2,87 @@
 
 After the kcats are assigned and the protein pool is set, an ecModel can grow more slowly than the organism. A kcat tuning raises the kcats that limit growth until the ecModel reaches the maximum growth rate of the organism. The result is a tuned ecModel, a list of the changed kcats, and curated values for the changed kcats that the literature supports.
 
+<!-- workflow-place -->
+:::::{dropdown} Place in the workflow
+
+The diagram orders the functions of this page within the [workflow](workflow.md). Dashed boxes are optional, dotted boxes are other pages, and a click on a dotted box opens it.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Set the protein pool"]):::ctx
+  SO{"solveLP: growth reaches the target?"}
+  DA{"Measured data"}
+  ST["sensitivityTuning"]
+  CK["check tuned kcats against their source<br/>loadKcatSource"]
+  KC(["Set custom kcats<br/>to keep a curated kcat"]):::ctx
+  SF["sigmaFitter"]
+  AT(["Tune kcats against experimental data"]):::ctx
+  PV --> SO
+  SO -->|no| DA
+  DA -->|one maximum growth rate| ST --> CK --> SF
+  CK -.-> KC
+  DA -->|several conditions or fluxes| AT
+  NX(["Next: Constrain enzymes with proteomics"]):::ctx
+  SO -->|yes| NX
+  SF --> NX
+  click PV href "protein-pool.html"
+  click KC href "custom-kcats.html"
+  click AT href "advanced-tuning.html"
+  click NX href "proteomics.html"
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```{mermaid}
+:align: left
+
+---
+config:
+  flowchart:
+    useMaxWidth: false
+---
+flowchart TB
+  classDef opt stroke-dasharray: 5 4
+  classDef ctx fill:transparent,stroke-dasharray: 2 3
+  PV(["Previous: Set the protein pool"]):::ctx
+  SO{"model.slim_optimize: growth reaches the target?"}
+  DA{"Measured data"}
+  ST["sensitivity_tuning"]
+  CK["check tuned kcats against their source<br/>load_kcat_source"]
+  KC(["Set custom kcats<br/>to keep a curated kcat"]):::ctx
+  SF["fit_sigma"]
+  AT(["Tune kcats against experimental data"]):::ctx
+  PV --> SO
+  SO -->|no| DA
+  DA -->|one maximum growth rate| ST --> CK --> SF
+  CK -.-> KC
+  DA -->|several conditions or fluxes| AT
+  NX(["Next: Constrain enzymes with proteomics"]):::ctx
+  SO -->|yes| NX
+  SF --> NX
+  click PV href "protein-pool.html"
+  click KC href "custom-kcats.html"
+  click AT href "advanced-tuning.html"
+  click NX href "proteomics.html"
+```
+:::
+::::
+:::::
+
 ## Functions
 
 | MATLAB | Python | Note |
