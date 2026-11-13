@@ -23,6 +23,12 @@ Text outside a MATLAB or Python tab reads the same in both languages. Where it r
 
 - [Build an ecModel](first-ecmodel.md): create a project, make the ecModel, assign kcats, set the protein pool, check the growth rate and save the model, with the default settings.
 
+## Workflow
+
+[![Flowchart of the guide pages: project, ecModel structure, kcat sources, protein pool, kcat tuning, proteomics, relaxation and analysis](../_static/workflow-overview.png){width=200px .no-scaled-link}](workflow.md)
+
+The [workflow overview](workflow.md) shows the order of the pages below, the steps of the quick path, the alternative paths and the functions of each page, in MATLAB and Python.
+
 ## Decisions
 
 The decision pages are in the order of the work.
@@ -74,6 +80,7 @@ introduction
 :caption: Quick path
 
 first-ecmodel
+workflow
 ```
 
 ```{toctree}

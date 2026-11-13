@@ -112,6 +112,13 @@ print(f"Growth rate: {sol.objective_value:.4f} h⁻¹")
 A working ecModel with the default settings, from a project folder to a saved model, in MATLAB and Python.
 :::
 
+:::{grid-item-card} Workflow overview
+:link: guide/workflow
+:link-type: doc
+
+The order of the guide pages from a new project to the analysis, with the alternative paths and the functions of each page, as MATLAB and Python diagrams.
+:::
+
 :::{grid-item-card} Upgrade a GECKO 3 project
 :link: gecko3-upgrade-project
 :link-type: doc
