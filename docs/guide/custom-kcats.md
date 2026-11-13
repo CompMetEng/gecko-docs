@@ -5,7 +5,7 @@
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps, a dotted arrow is an optional path, and a diamond is a choice. Rounded boxes with a dotted outline are the context, other pages or the model to start from, and a click on one opens its page.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -31,7 +31,7 @@ flowchart TB
   PV --> WR --> AS
   PV --> G3 --> WR
   PT -.-> WR
-  PV -.->|change by hand| HB
+  AS -.->|change by hand| HB
   NX(["Next: Set the protein pool"]):::ctx
   AS --> NX
   click PV href "ecmodel-structure.html"
@@ -62,7 +62,7 @@ flowchart TB
   PV --> WR --> AS
   PV --> G3 --> WR
   PT -.-> WR
-  PV -.->|change by hand| HB
+  AS -.->|change by hand| HB
   NX(["Next: Set the protein pool"]):::ctx
   AS --> NX
   click PV href "ecmodel-structure.html"

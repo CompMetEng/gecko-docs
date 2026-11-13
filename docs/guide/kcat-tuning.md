@@ -5,7 +5,7 @@ After the kcats are assigned and the protein pool is set, an ecModel can grow mo
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps, a dotted arrow is an optional path, and a diamond is a choice. Rounded boxes with a dotted outline are the context, other pages or the model to start from, and a click on one opens its page.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -26,7 +26,7 @@ flowchart TB
   DA{"Measured data"}
   ST["sensitivityTuning<br/>no change when growth reaches the target"]
   SF["sigmaFitter"]
-  CK["check tuned kcats against their source<br/>loadKcatSource"]:::opt
+  CK["check tuned kcats against their source<br/>loadKcatSource<br/>setKcatForReactions, applyKcatConstraints"]:::opt
   KC(["Set custom kcats<br/>to keep a curated kcat"]):::ctx
   AT(["Tune kcats against experimental data"]):::ctx
   PV --> DA
@@ -62,7 +62,7 @@ flowchart TB
   DA{"Measured data"}
   ST["sensitivity_tuning<br/>no change when growth reaches the target"]
   SF["fit_sigma"]
-  CK["check tuned kcats against their source<br/>load_kcat_source"]:::opt
+  CK["check tuned kcats against their source<br/>load_kcat_source<br/>set_kcat_for_reactions, apply_kcat_constraints"]:::opt
   KC(["Set custom kcats<br/>to keep a curated kcat"]):::ctx
   AT(["Tune kcats against experimental data"]):::ctx
   PV --> DA

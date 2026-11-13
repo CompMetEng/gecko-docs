@@ -5,7 +5,7 @@ Load the absolute proteomics data and the exchange fluxes of one experiment, bou
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps, a dotted arrow is an optional path, and a diamond is a choice. Rounded boxes with a dotted outline are the context, other pages or the model to start from, and a click on one opens its page.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -27,16 +27,20 @@ flowchart TB
   LV["levelComplexConcs"]:::opt
   CE["constrainEnzConcs"]
   IZ["getIsozymeCoverage<br/>zeroUnmeasuredIsozymes"]:::opt
-  PP["calculateFfactor<br/>setProtPoolSize"]
-  FL["loadFluxData<br/>constrainFluxData"]:::opt
-  PV --> LD --> LV --> CE --> IZ --> PP --> FL
+  FD["loadFluxData<br/>Ptot and fluxes of the condition"]
+  PP["calculateFfactor (optional)<br/>setProtPoolSize"]
+  FL["constrainFluxData<br/>exchange fluxes and growth rate"]
+  GR{"Growth reaches the measured growth rate?"}
+  PV --> LD --> LV --> CE --> IZ --> FD --> PP --> FL --> GR
   LD --> CE
-  CE --> PP
+  CE --> FD
   NX(["Next: Relax proteomics constraints"]):::ctx
-  FL --> NX
-  PP --> NX
+  NA(["Next: Analyse an ecModel"]):::ctx
+  GR -->|no| NX
+  GR -->|yes| NA
   click PV href "first-ecmodel.html"
   click NX href "relaxing-proteomics.html"
+  click NA href "analysis.html"
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -58,16 +62,20 @@ flowchart TB
   LV["level_complex_concs"]:::opt
   CE["constrain_enz_concs"]
   IZ["get_isozyme_coverage<br/>zero_unmeasured_isozymes"]:::opt
-  PP["calculate_f_factor<br/>set_prot_pool_size"]
-  FL["load_flux_data<br/>apply_flux_data_constraints"]:::opt
-  PV --> LD --> LV --> CE --> IZ --> PP --> FL
+  FD["load_flux_data<br/>Ptot and fluxes of the condition"]
+  PP["calculate_f_factor (optional)<br/>set_prot_pool_size"]
+  FL["apply_flux_data_constraints<br/>exchange fluxes and growth rate"]
+  GR{"Growth reaches the measured growth rate?"}
+  PV --> LD --> LV --> CE --> IZ --> FD --> PP --> FL --> GR
   LD --> CE
-  CE --> PP
+  CE --> FD
   NX(["Next: Relax proteomics constraints"]):::ctx
-  FL --> NX
-  PP --> NX
+  NA(["Next: Analyse an ecModel"]):::ctx
+  GR -->|no| NX
+  GR -->|yes| NA
   click PV href "first-ecmodel.html"
   click NX href "relaxing-proteomics.html"
+  click NA href "analysis.html"
 ```
 :::
 ::::

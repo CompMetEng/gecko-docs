@@ -5,7 +5,7 @@ The advanced kcat tuning fits many kcats at once to maximum growth rates and exc
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps, a dotted arrow is an optional path, and a diamond is a choice. Rounded boxes with a dotted outline are the context, other pages or the model to start from, and a click on one opens its page.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -23,14 +23,15 @@ flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Choose a kcat tuning"]):::ctx
-  DF["prepare the data files<br/>loadEvotuneData"]
+  DF["prepare the data files<br/>(read by loadEvotuneData, which the tuning calls)"]
   CG["[evotune] in model_adapter.toml"]
-  SC["screenKcatLeverage<br/>selectTunableMask"]
-  RV["reviewKcatAssignment<br/>ecStatsFromBrenda"]
+  SC["screenKcatLeverage"]
+  RV["reviewKcatAssignment<br/>ecStatsFromBrenda"]:::opt
   TP["tunePriorPenaltyWeight<br/>seeds and reproducibility"]:::opt
-  CM["cmaesKcatTuning"]
-  PV --> DF --> CG --> SC --> RV --> CM
-  RV -.-> TP -.-> CM
+  CM["cmaesKcatTuning<br/>selectTunableMask on the screen"]
+  PV --> DF --> CG --> SC --> CM
+  SC -.-> RV -.-> CM
+  SC -.-> TP -.-> CM
   NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
   CM --> NP
@@ -55,14 +56,15 @@ flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Choose a kcat tuning"]):::ctx
-  DF["prepare the data files<br/>load_evotune_data"]
+  DF["prepare the data files<br/>(read by load_evotune_data, which the tuning calls)"]
   CG["[evotune] in model_adapter.toml"]
-  SC["screen_kcat_leverage<br/>select_tunable_mask"]
-  RV["review_assignment<br/>ec_stats_from_brenda"]
+  SC["screen_kcat_leverage"]
+  RV["review_assignment<br/>ec_stats_from_brenda"]:::opt
   TP["tune_prior_penalty_weight<br/>seeds and reproducibility"]:::opt
-  CM["cmaes_kcat_tuning"]
-  PV --> DF --> CG --> SC --> RV --> CM
-  RV -.-> TP -.-> CM
+  CM["cmaes_kcat_tuning<br/>select_tunable_mask on the screen"]
+  PV --> DF --> CG --> SC --> CM
+  SC -.-> RV -.-> CM
+  SC -.-> TP -.-> CM
   NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
   CM --> NP

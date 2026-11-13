@@ -5,7 +5,7 @@ The protein pool limits the total mass of enzymes that an enzyme-constrained mod
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps, a dotted arrow is an optional path, and a diamond is a choice. Rounded boxes with a dotted outline are the context, other pages or the model to start from, and a click on one opens its page.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -27,7 +27,8 @@ flowchart TB
   CF["calculateFfactor<br/>f from PAXdb or proteomics"]:::opt
   FD["loadFluxData<br/>Ptot of a condition"]:::opt
   SP["setProtPoolSize"]
-  TU(["Choose a kcat tuning: tune the kcats"]):::ctx
+  TU(["Choose a kcat tuning: the standard tuning"]):::ctx
+  AT(["Tune kcats against experimental data"]):::ctx
   SF["sigmaFitter<br/>sigma to the growth rate, after the tuning"]
   PV --> AD --> SP
   CF -.-> SP
@@ -37,6 +38,10 @@ flowchart TB
   NA(["Next: Analyse an ecModel"]):::ctx
   SF --> NP
   SF --> NA
+  SP -.->|advanced tuning, no sigma fit| AT
+  AT --> NP
+  AT --> NA
+  click AT href "advanced-tuning.html"
   click PV href "kcat-sources.html"
   click TU href "kcat-tuning.html"
   click NP href "proteomics.html"
@@ -62,7 +67,8 @@ flowchart TB
   CF["calculate_f_factor<br/>f from PAXdb or proteomics"]:::opt
   FD["load_flux_data<br/>Ptot of a condition"]:::opt
   SP["set_prot_pool_size"]
-  TU(["Choose a kcat tuning: tune the kcats"]):::ctx
+  TU(["Choose a kcat tuning: the standard tuning"]):::ctx
+  AT(["Tune kcats against experimental data"]):::ctx
   SF["fit_sigma<br/>sigma to the growth rate, after the tuning"]
   PV --> AD --> SP
   CF -.-> SP
@@ -72,6 +78,10 @@ flowchart TB
   NA(["Next: Analyse an ecModel"]):::ctx
   SF --> NP
   SF --> NA
+  SP -.->|advanced tuning, no sigma fit| AT
+  AT --> NP
+  AT --> NA
+  click AT href "advanced-tuning.html"
   click PV href "kcat-sources.html"
   click TU href "kcat-tuning.html"
   click NP href "proteomics.html"

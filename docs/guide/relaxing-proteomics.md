@@ -5,7 +5,7 @@ Raise the usage bounds of the enzymes that keep an ecModel constrained with prot
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
 
-The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps. Rounded boxes with a dotted outline are other pages, and a click on one opens it.
+The diagram orders the functions of this page within the [workflow](workflow.md). Boxes with a dashed outline are optional steps, a dotted arrow is an optional path, and a diamond is a choice. Rounded boxes with a dotted outline are the context, other pages or the model to start from, and a click on one opens its page.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -26,12 +26,14 @@ flowchart TB
   GR{"Growth reaches the measured growth rate?"}
   FX["flexibilizeEnzConcs (recommended)<br/>perComplex after levelling"]
   RG["relaxProteomicsGreedy"]
-  RE["relaxEnzConcs"]
-  IN["inspect the result<br/>constrainFluxData on the conventional GEM"]:::opt
+  RE["relaxEnzConcs<br/>compare with flexibilizeEnzConcs"]
+  IN["inspect the result"]
+  GM["constrainFluxData on the conventional GEM<br/>when no method reaches the target"]:::opt
   PV --> GR
   GR -->|no, keep the measured bounds| FX --> IN
   GR -->|no, enzymes at 0 limit growth| RG --> IN
-  GR -->|no, smallest total change| RE --> IN
+  GR -->|no, independent of the order| RE --> IN
+  IN -.-> GM
   NX(["Next: Analyse an ecModel"]):::ctx
   GR -->|yes| NX
   IN --> NX
@@ -57,12 +59,14 @@ flowchart TB
   GR{"Growth reaches the measured growth rate?"}
   FX["flexibilize_enz_concs (recommended)<br/>per_complex after levelling"]
   RG["relax_proteomics_greedy"]
-  RE["relax_enz_concs"]
-  IN["inspect the result<br/>apply_flux_data_constraints on the conventional GEM"]:::opt
+  RE["relax_enz_concs<br/>compare with flexibilize_enz_concs"]
+  IN["inspect the result"]
+  GM["apply_flux_data_constraints on the conventional GEM<br/>when no method reaches the target"]:::opt
   PV --> GR
   GR -->|no, keep the measured bounds| FX --> IN
   GR -->|no, enzymes at 0 limit growth| RG --> IN
-  GR -->|no, smallest total change| RE --> IN
+  GR -->|no, independent of the order| RE --> IN
+  IN -.-> GM
   NX(["Next: Analyse an ecModel"]):::ctx
   GR -->|yes| NX
   IN --> NX
