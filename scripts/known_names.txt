@@ -273,6 +273,7 @@ ravenCobraWrapper
 readYAMLmodel
 read_yaml_model
 setParam
+setRavenSolver
 solveLP
 writeYAMLmodel
 write_yaml_model

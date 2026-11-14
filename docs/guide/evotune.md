@@ -317,12 +317,240 @@ Different kcat vectors can fit the data equally well, so two seeds can move a kc
 | `nGenerations` | `n_generations` | number of generations that ran |
 | `converged` | `converged` | whether the best RMSE reached `rmse_threshold` |
 
-`ec.source` of every kcat that changed gets the tuning status `tuned=cmaes`, with the kcat before the first tuning as `prior` (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). `nChanged` (Python `n_changed`) counts the kcats that differ from their value before tuning by more than 2 %. `parsimonyFrontier` (Python `parsimony_frontier`) sets each kcat that moved less than a threshold, in units of its `sigma0_log`, back to the value before tuning, and scores the result for a series of thresholds with a scoring function that the caller gives. `bestParsimonious` (Python `best_parsimonious`) returns the point with the fewest changed kcats whose RMSE is within 2 % of the best RMSE. In Python, `result.corrections(leverage=...)` returns one row per changed kcat, sorted by the leverage of the screen; `leverage` has one value per entry of `result.rxns`; `corrections_tsv` in `geckopy.kcat_tuning` writes the rows as TSV. Check the tuned model against data that were not used in the fit: an improvement on the fitted conditions without an improvement on other data indicates overfitting. As with `sensitivityTuning`, check the large changes against the source of each kcat (see [Choose a kcat tuning](kcat-tuning.md#check-a-tuned-kcat-against-its-source)), and keep curated values in `data/kcats/custom.tsv`.
+`ec.source` of every kcat that changed gets the tuning status `tuned=cmaes`, with the kcat before the first tuning as `prior` (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). `nChanged` (Python `n_changed`) counts the kcats that differ from their value before tuning by more than 2 %. `parsimonyFrontier` (Python `parsimony_frontier`) sets each kcat that moved less than a threshold, in units of its `sigma0_log`, back to the value before tuning, and scores the result for a series of thresholds with a scoring function that the caller gives. `bestParsimonious` (Python `best_parsimonious`) returns the point with the fewest changed kcats whose RMSE is within 2 % of the best RMSE. In Python, `result.corrections(leverage=...)` returns one row per changed kcat, sorted by the leverage of the screen; `leverage` has one value per entry of `result.rxns`; `corrections_tsv` in `geckopy.kcat_tuning` writes the rows as TSV. Check the tuned model against data that were not used in the fit: an improvement on the fitted conditions without an improvement on other data indicates overfitting (see [Check against data left out of the fit](#check-against-data-left-out-of-the-fit)). As with `sensitivityTuning`, check the large changes against the source of each kcat (see [Choose a kcat tuning](kcat-tuning.md#check-a-tuned-kcat-against-its-source)), and keep curated values in `data/kcats/custom.tsv`.
+
+## Run evotune from start to end
+
+The scripts below run the steps of this page on the project of the tutorial `full_ecModel`: they rank the kcats, tune with two seeds on the same kcats, list the large changes of both seeds and save the tuned ecModel. They start from the ecModel that the tutorial saves before its kcat tuning, with assigned kcats and a set protein pool: `ecYeastGEM_stage_untuned.yml` from `protocol.m` in GECKO, and `ecYeastGEM_stage2.yml` from `protocol.py` in geckopy. Run the tutorial first, and replace `path/to/full_ecModel` with the path of its project. The number of parallel processes is read from the variable `SLURM_CPUS_PER_TASK` of the scheduler, with 8 when it is not set.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+% runEvotune.m: evotune on the project of the tutorial full_ecModel
+ModelAdapterManager.setDefault('path/to/full_ecModel');
+params = ModelAdapterManager.getDefault().getParameters();
+setRavenSolver('gurobi');
+nProc = str2double(getenv('SLURM_CPUS_PER_TASK'));
+if isnan(nProc), nProc = 8; end
+outDir = fullfile(params.path, 'output');
+
+% The ecModel with assigned kcats and a set protein pool, saved by protocol.m
+ecModel = loadEcModel('ecYeastGEM_stage_untuned.yml');
+
+% Rank the kcats
+screen = screenKcatLeverage(ecModel, 'nProc', nProc);
+writetable(removevars(screen, 'positions'), fullfile(outDir, 'evotune_screen.tsv'), ...
+    'FileType', 'text', 'Delimiter', '\t');
+
+% Tune the same kcats with two seeds
+[ecTuned, res0] = cmaesKcatTuning(ecModel, 'screen', screen, 'nProc', nProc, 'seed', 0);
+[~, res1] = cmaesKcatTuning(ecModel, 'screen', screen, 'nProc', nProc, 'seed', 1);
+fprintf('RMSE %.3f (seed 0) and %.3f (seed 1) after %d generations\n', ...
+    res0.rmseTrace(end), res1.rmseTrace(end), res0.nGenerations);
+
+% The kcats that one of the seeds changed more than two-fold
+fold0 = log2(res0.newKcat(:) ./ res0.oldKcat(:));
+fold1 = log2(res1.newKcat(:) ./ res1.oldKcat(:));
+large = abs(fold0) > 1 | abs(fold1) > 1;
+enzymes = cell(numel(res0.rxns), 1);
+for i = 1:numel(res0.rxns)
+    j = strcmp(ecModel.ec.rxns, res0.rxns{i});
+    enzymes{i} = strjoin(ecModel.ec.enzymes(ecModel.ec.rxnEnzMat(j, :) ~= 0), ' + ');
+end
+review = table(res0.rxns(large), enzymes(large), res0.groups(large), ...
+    res0.oldKcat(large), res0.newKcat(large), res1.newKcat(large), ...
+    sign(fold0(large)) == sign(fold1(large)), 'VariableNames', ...
+    {'rxn', 'enzymes', 'group', 'kcat0', 'kcatSeed0', 'kcatSeed1', 'sameDirection'});
+writetable(review, fullfile(outDir, 'evotune_review.tsv'), 'FileType', 'text', 'Delimiter', '\t');
+
+saveEcModel(ecTuned, 'ecYeastGEM_evotune.yml');
+```
+
+The anaerobic rows of `evotuneFluxData.tsv` use the function `anaerobicModel_GECKO` in the `code` folder of the tutorial, which `make_model_anaerobic` in `model_adapter.toml` names.
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+"""run_evotune.py: evotune on the project of the tutorial full_ecModel."""
+import os
+import sys
+
+import numpy as np
+
+from geckopy import ModelAdapter, load_ec_model, save_ec_model
+from geckopy.kcat_tuning import annotate_from_model, corrections_tsv
+from geckopy.kcat_tuning.evotune import cmaes_kcat_tuning, screen_kcat_leverage
+
+project = "path/to/full_ecModel"
+sys.path.insert(0, os.path.join(project, "code"))
+from anaerobic import make_anaerobic  # noqa: E402
+
+adapter = ModelAdapter.from_folder(project)
+n_proc = int(os.environ.get("SLURM_CPUS_PER_TASK", 8))
+out_dir = os.path.join(project, "output")
+
+# The ecModel with assigned kcats and a set protein pool, saved by protocol.py
+ec_model = load_ec_model("ecYeastGEM_stage2.yml", adapter=adapter)
+
+# Rank the kcats
+screen = screen_kcat_leverage(ec_model, make_anaerobic=make_anaerobic, n_proc=n_proc)
+screen.drop(columns="_positions").to_csv(
+    os.path.join(out_dir, "evotune_screen.tsv"), sep="\t", index=False)
+
+# Tune the same kcats with two seeds; each run changes its model in place
+ec_seed1 = ec_model.copy()
+res0 = cmaes_kcat_tuning(ec_model, screen=screen, make_anaerobic=make_anaerobic,
+                         n_proc=n_proc, seed=0)
+res1 = cmaes_kcat_tuning(ec_seed1, screen=screen, make_anaerobic=make_anaerobic,
+                         n_proc=n_proc, seed=1)
+print(f"RMSE {res0.rmse_trace[-1]:.3f} (seed 0) and {res1.rmse_trace[-1]:.3f} "
+      f"(seed 1) after {res0.n_generations} generations")
+
+# The kcats that one of the seeds changed more than two-fold
+fold0 = np.log2(res0.new_kcat / res0.old_kcat)
+fold1 = np.log2(res1.new_kcat / res1.old_kcat)
+for i in np.flatnonzero((np.abs(fold0) > 1) | (np.abs(fold1) > 1)):
+    same = np.sign(fold0[i]) == np.sign(fold1[i])
+    print(f"{res0.rxns[i]} ({res0.groups[i]}): {res0.old_kcat[i]:.3g} -> "
+          f"{res0.new_kcat[i]:.3g} (seed 0), {res1.new_kcat[i]:.3g} (seed 1), "
+          f"same direction: {same}")
+
+# The changes of seed 0, sorted by the leverage of the screen
+leverage = np.zeros(len(ec_model.ec.rxns))
+for _, row in screen.iterrows():
+    leverage[list(row["_positions"])] = row["leverage"]
+positions = [ec_model.ec.rxns.index(r) for r in res0.rxns]
+info = annotate_from_model(ec_model, res0.rxns)
+rows = res0.corrections(leverage=leverage[positions], names=info["names"],
+                        ec_codes=info["ec_codes"])
+with open(os.path.join(out_dir, "evotune_corrections.tsv"), "w") as fh:
+    fh.write(corrections_tsv(rows))
+
+save_ec_model(ec_model, "ecYeastGEM_evotune.yml", adapter=adapter)
+```
+
+The anaerobic rows of `evotuneFluxData.tsv` need `make_anaerobic` from `code/anaerobic.py` of the tutorial; without it, these rows are simulated with oxygen. The function is defined at module level, so the parallel processes of the screen and the tuning can import it.
+:::
+::::
+
+<!-- Run times and RMSE of these scripts on the tutorial: to be added from a measured run. -->
+
+### Run time and the solver
+
+The run time grows with the number of data rows, the number of kcats in the screen, `popsize` and the number of generations: the screen solves one FBA problem per data row for two kcat vectors per kcat, and each generation of the tuning one per data row for `popsize` kcat vectors. The scripts run the screen once and the tuning twice.
+
+Use Gurobi. MATLAB uses the solver that `setRavenSolver` sets; check it with `getpref('RAVEN', 'solver')`. Python uses the solver of cobrapy, which takes Gurobi when the package `gurobipy` can be imported and a licence is found, and otherwise GLPK without an error; GLPK makes the run many times slower. Check the solver before a long run:
+
+```python
+import cobra
+print(cobra.Configuration().solver)
+```
+
+### Run on an HPC cluster
+
+The screen and the tuning run in parallel over `nProc` (Python `n_proc`) processes, so a job on one node with several cores fits. An example job for the Slurm scheduler; the names of the modules and the account depend on the cluster:
+
+```bash
+#!/usr/bin/env bash
+#SBATCH -A <account>
+#SBATCH -N 1
+#SBATCH -c 32
+#SBATCH -t 24:00:00
+#SBATCH -J evotune
+#SBATCH -o evotune.%j.out
+
+module load MATLAB Gurobi
+matlab -batch "runEvotune"
+```
+
+For Python, load the Python environment with geckopy and `gurobipy`, and replace the last line with `python run_evotune.py`. Set the time limit with a margin: when the scheduler stops the job, the files that the script has not yet written are lost, and the scripts save the tuned ecModel at the end. MATLAB needs the Parallel Computing Toolbox for `nProc` above 1.
+
+### Choose the number of kcats and generations
+
+`targetImpactShare` (default 0.9) sets how many kcats the tuning searches: the top rows of the screen up to that share of the weighted effect on the fit. Each searched kcat is a free parameter of the fit, so a higher share fits more kcats to the same data. With few data rows, keep the share low, and compare the fit and the agreement between seeds for two or three values. In Python, `sweep_tunable_mask_size` runs the tuning for a series of values and `recommend_target_impact_share` picks one from the results.
+
+`max_generations` is the most generations the tuning runs. Plot `rmseTrace` (Python `rmse_trace`) against the generation: when the RMSE still falls at the last generation, raise `max_generations`; when it is flat over the last part of the run, the tuning can stop earlier. `popsize` grows with the number of free kcats, so a run with more kcats costs more per generation.
+
+### Check against data left out of the fit
+
+A fit to the data that were used for the tuning does not show that the tuned kcats predict other conditions. Leave some conditions out of the tuning, tune on the others, and compare the RMSE of the left-out conditions before and after the tuning. The example leaves out the maximum growth rates on galactose and maltose by giving their rows the weight 0 in the tuning data. The rows stay in the data, so that their carbon sources stay closed when the other rows are simulated (see [Prepare the data files](#prepare-the-data-files)). The scripts use the names of the scripts above, with the ecModel before the tuning: in MATLAB `ecModel` is not changed by the tuning, while in Python `cmaes_kcat_tuning` changed `ec_model` in place, so the Python script loads it again.
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+evoData = loadEvotuneData();
+test = ismember(evoData.maxGrate.conds, {'galactose', 'maltose'});
+train = evoData;
+train.maxGrate.evotuneRMSEweight = double(~test);
+
+screenTrain = screenKcatLeverage(ecModel, 'evoData', train, 'nProc', nProc);
+ecTrain = cmaesKcatTuning(ecModel, 'evoData', train, 'screen', screenTrain, ...
+    'nProc', nProc, 'seed', 0);
+
+% Score the maximum growth rates of the left-out conditions
+held = evoData;
+held.fluxData = [];
+[~, ~, before] = evotuneScore(ecModel, held);
+[~, ~, after] = evotuneScore(ecTrain, held);
+fprintf('Left-out RMSE: %.3f before, %.3f after the tuning\n', ...
+    mean([before{test, 2}]), mean([after{test, 2}]))
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+import copy
+
+from geckopy.kcat_tuning.evotune import (
+    compute_excarbon, dataset_rmse, load_evotune_data, simulate_evotune_dataset,
+)
+
+ec_model = load_ec_model("ecYeastGEM_stage2.yml", adapter=adapter)
+bio = adapter.params.bio_rxn
+data = load_evotune_data(adapter)
+test = np.isin(data.max_grate.conds, ["galactose", "maltose"])
+train = copy.deepcopy(data)
+train.max_grate.evotune_rmse_weight = (~test).astype(float)
+
+ec_train = ec_model.copy()
+screen_train = screen_kcat_leverage(ec_train, evotune_data=train,
+                                    make_anaerobic=make_anaerobic, n_proc=n_proc)
+cmaes_kcat_tuning(ec_train, evotune_data=train, screen=screen_train,
+                  make_anaerobic=make_anaerobic, n_proc=n_proc, seed=0)
+
+# Score the maximum growth rates of the left-out conditions
+mg = data.max_grate
+excarbon = compute_excarbon(ec_model, mg.exch_rxn_ids, bio)
+for when, model in [("before", ec_model), ("after", ec_train)]:
+    sims = simulate_evotune_dataset(model, mg, constrain=False, zero_flux_rxns=[],
+                                    bio_rxn_id=bio)
+    _, per_row = dataset_rmse(mg, sims, constrain=False, excarbon=excarbon,
+                              bio_rxn_id=bio)
+    print(f"Left-out RMSE {when} the tuning: {per_row[test].mean():.3f}")
+```
+:::
+::::
+
+The screen of this check is run on the tuning data, so that the left-out conditions also take no part in the choice of the kcats. When the RMSE of the left-out conditions falls, the tuning improves conditions it was not fitted to. When it stays the same or rises while the RMSE of the fit falls, the tuning fits the kcats to the particular conditions: search fewer kcats, or raise `prior_penalty_weight`. Repeat the check with other left-out conditions, because one pair of conditions can be easy or hard by chance.
+
+### Keep the corrections
+
+The tuned ecModel holds the tuned kcats, but the next `assignKcats` replaces them with the values of the kcat source files. `evotune_review.tsv` (MATLAB) and `evotune_corrections.tsv` (Python) list the changed kcats with the value before and after the tuning. Check each large change against the source of the kcat (see [Check a tuned kcat against its source](kcat-tuning.md#check-a-tuned-kcat-against-its-source)), and add each value you keep to `data/kcats/custom.tsv` by hand (see [Keep a curated kcat](kcat-tuning.md#keep-a-curated-kcat)), with the evidence in the column `note`. In `custom.tsv`, `rxn` is the reaction of the conventional GEM: remove the suffix `_EXP_<n>` of an isozyme copy. A row without `enzymes` applies to every isozyme of the reaction, which matches isozyme copies that the tuning tied to one kcat; for a single copy, give its enzymes. A large change that differs in direction between the seeds is not supported by the data, and is not a correction to keep.
 
 ## Troubleshooting
 
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
+| The screen or the tuning runs many times longer than expected (Python) | `gurobipy` cannot be imported or finds no licence, and cobrapy uses GLPK | Check `cobra.Configuration().solver` before the run, and install `gurobipy` with a licence |
+| The RMSE still falls at the last generation | `max_generations` ends the search before it converges | Raise `max_generations` |
+| The RMSE of the fit falls, but the RMSE of left-out conditions does not | The tuning fits the kcats to the conditions of the data | Search fewer kcats (`targetImpactShare`), or raise `prior_penalty_weight` |
+| The anaerobic conditions fit badly (Python) | `make_anaerobic` was not given, so these rows are simulated with oxygen | Pass `make_anaerobic` to the screen and the tuning |
 | Error `evotune:noData` (MATLAB), or `ValueError` that `evotune_data` has neither `flux_data` nor `max_grate` (Python) | Neither `evotuneFluxData.tsv` nor `evotuneMaxGrowth.tsv` is in `<project>/data/` | Add one of the files |
 | Error that a carbon source cannot be matched by name with an exchange reaction | The `Condition` of a row differs from every metabolite name in the exchange column headers | Use the metabolite name of the column header as the condition |
 | Error `No tunable kcats` | No kcat is above 0, or the mask excludes every kcat | Assign kcats first, or widen the mask |
