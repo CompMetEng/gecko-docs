@@ -1,6 +1,6 @@
-# Tune kcats against experimental data
+# Tune kcats with evotune
 
-The advanced kcat tuning fits many kcats at once to maximum growth rates and exchange fluxes, measured in one or more conditions, by minimising the root-mean-square error (RMSE) between simulated and measured values. It searches with CMA-ES (covariance matrix adaptation evolution strategy), and the trust in the source of each kcat limits how far the kcat moves. The steps are: prepare the data files, configure the tuning, rank the kcats by their effect on the fit, review the assignment of the top kcats, and tune. The result is an ecModel whose selected kcats fit the data, and a list of the changed kcats. [Choose a kcat tuning](kcat-tuning.md) compares this tuning with the standard tuning.
+Evotune is the kcat tuning of GECKO that fits many kcats at once to maximum growth rates and exchange fluxes, measured in one or more conditions, by minimising the root-mean-square error (RMSE) between simulated and measured values. It searches with CMA-ES (covariance matrix adaptation evolution strategy), and the trust in the source of each kcat limits how far the kcat moves. The steps are: prepare the data files, configure the tuning, rank the kcats by their effect on the fit, review the assignment of the top kcats, and tune. The result is an ecModel whose selected kcats fit the data, and a list of the changed kcats. The functions and settings carry the name: `loadEvotuneData`, `[evotune]` in `model_adapter.toml`, and in Python the module `geckopy.kcat_tuning.evotune`. [Choose a kcat tuning](kcat-tuning.md) compares evotune with `sensitivityTuning`, which reaches one growth rate.
 
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
@@ -22,7 +22,7 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: Choose a kcat tuning"]):::ctx
+  PV(["Previous: Choose a kcat tuning<br/>(protein pool set, sigma not fitted)"]):::ctx
   DF["prepare the data files<br/>(read by loadEvotuneData, which the tuning calls)"]
   CG["[evotune] in model_adapter.toml"]
   SC["screenKcatLeverage"]
@@ -34,9 +34,12 @@ flowchart TB
   SC -.-> TP -.-> CM
   NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
+  CK(["Choose a kcat tuning:<br/>check a tuned kcat"]):::ctx
+  CM -.-> CK
   CM --> NP
   CM --> NA
   click PV href "kcat-tuning.html"
+  click CK href "kcat-tuning.html"
   click NP href "proteomics.html"
   click NA href "analysis.html"
 ```
@@ -55,7 +58,7 @@ config:
 flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
-  PV(["Previous: Choose a kcat tuning"]):::ctx
+  PV(["Previous: Choose a kcat tuning<br/>(protein pool set, sigma not fitted)"]):::ctx
   DF["prepare the data files<br/>(read by load_evotune_data, which the tuning calls)"]
   CG["[evotune] in model_adapter.toml"]
   SC["screen_kcat_leverage"]
@@ -67,9 +70,12 @@ flowchart TB
   SC -.-> TP -.-> CM
   NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
+  CK(["Choose a kcat tuning:<br/>check a tuned kcat"]):::ctx
+  CM -.-> CK
   CM --> NP
   CM --> NA
   click PV href "kcat-tuning.html"
+  click CK href "kcat-tuning.html"
   click NP href "proteomics.html"
   click NA href "analysis.html"
 ```
@@ -255,7 +261,7 @@ open("findings.tsv", "w").write(findings_tsv(findings))
 
 Each finding has the reaction, its EC number, source, kcat and leverage, the number of isozyme copies, the number of other reactions that share an enzyme (with the option `enzymes`), the names of the checks and a `detail` in words. Tied isozyme copies are reported once. Kcats with the source `standard` are reported when `include` lists `standard-fallback`, and the check `tied-isozymes` is added when `include` lists it; the default `include` is empty.
 
-## Run the advanced tuning
+## Run evotune
 
 `cmaesKcatTuning` uses `selectTunableMask` to select the kcats to search: the top rows of the screen, up to the first row at which `cumLeverageShare` reaches `targetImpactShare` (default 0.9). With `screen` the function uses that screen; without it, the function runs a new screen. `tunableMask` (Python `tunable_mask`) gives the set of kcats directly and takes precedence over `screen`.
 
@@ -288,6 +294,12 @@ Each candidate kcat lies between `min(0.01, k0/100)` and `max(10000, 100*k0)` pe
 
 A data row with oxygen uptake 0 or with a value of `Ptot` needs a function that changes the model. MATLAB runs the functions named by `make_model_anaerobic` and `change_protein_biomass` in the `[matlab]` table of `model_adapter.toml` (see [Model adapter parameters](model-adapter-parameters.md#matlab-functions)). Python takes these functions through the arguments `make_anaerobic(model)` and `change_protein_biomass(model, ptot)`; `tutorials/full_ecModel/code/anaerobic.py` in the geckopy repository has an example. Without a function, the condition is simulated without the change.
 
+## The protein pool and sigma
+
+Set the protein pool before evotune, with `setProtPoolSize` and the values of Ptot, f and $\sigma$ in the model adapter (see [Set the protein pool](protein-pool.md)). Evotune simulates each data row with the protein pool of the model; only a row with a value of `Ptot` changes it, through the protein content of the biomass (see [Conditions that change the model](#conditions-that-change-the-model)). The maximum growth rates of `evotuneMaxGrowth.tsv` are part of the fit, so the tuning fits the kcats to these growth rates with that pool.
+
+Do not run `sigmaFitter` (Python `fit_sigma`) after evotune. It changes the protein pool so that the model reaches one growth rate, which moves every simulated growth rate and flux away from the values that the tuning fitted. A $\sigma$ fitted before evotune, to an ecModel with kcats that are too low, makes the pool compensate for the kcats (see [Fit sigma or tune the kcats](protein-pool.md#fit-sigma-or-tune-the-kcats)), and evotune then fits the kcats to that pool.
+
 ## Seeds, reproducibility and parallel runs
 
 `seed` makes a run reproducible. MATLAB and Python have different CMA-ES implementations, so the same seed gives different results in the two toolboxes. In Python, a run with `n_proc` above 1 gives the same result as a run with `n_proc=1` and the same seed. `nProc` has the default 1 in MATLAB; `n_proc` has the default `cobra.Configuration().processes` in Python.
@@ -305,7 +317,7 @@ Different kcat vectors can fit the data equally well, so two seeds can move a kc
 | `nGenerations` | `n_generations` | number of generations that ran |
 | `converged` | `converged` | whether the best RMSE reached `rmse_threshold` |
 
-`ec.source` of every kcat that changed gets the tuning status `tuned=cmaes`, with the kcat before the first tuning as `prior` (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). `nChanged` (Python `n_changed`) counts the kcats that differ from their value before tuning by more than 2 %. `parsimonyFrontier` (Python `parsimony_frontier`) sets each kcat that moved less than a threshold, in units of its `sigma0_log`, back to the value before tuning, and scores the result for a series of thresholds with a scoring function that the caller gives. `bestParsimonious` (Python `best_parsimonious`) returns the point with the fewest changed kcats whose RMSE is within 2 % of the best RMSE. In Python, `result.corrections(leverage=...)` returns one row per changed kcat, sorted by the leverage of the screen; `leverage` has one value per entry of `result.rxns`; `corrections_tsv` in `geckopy.kcat_tuning` writes the rows as TSV. Check the tuned model against data that were not used in the fit: an improvement on the fitted conditions without an improvement on other data indicates overfitting. As with the standard tuning, check the large changes against the source of each kcat (see [Choose a kcat tuning](kcat-tuning.md#check-a-tuned-kcat-against-its-source)), and keep curated values in `data/kcats/custom.tsv`.
+`ec.source` of every kcat that changed gets the tuning status `tuned=cmaes`, with the kcat before the first tuning as `prior` (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). `nChanged` (Python `n_changed`) counts the kcats that differ from their value before tuning by more than 2 %. `parsimonyFrontier` (Python `parsimony_frontier`) sets each kcat that moved less than a threshold, in units of its `sigma0_log`, back to the value before tuning, and scores the result for a series of thresholds with a scoring function that the caller gives. `bestParsimonious` (Python `best_parsimonious`) returns the point with the fewest changed kcats whose RMSE is within 2 % of the best RMSE. In Python, `result.corrections(leverage=...)` returns one row per changed kcat, sorted by the leverage of the screen; `leverage` has one value per entry of `result.rxns`; `corrections_tsv` in `geckopy.kcat_tuning` writes the rows as TSV. Check the tuned model against data that were not used in the fit: an improvement on the fitted conditions without an improvement on other data indicates overfitting. As with `sensitivityTuning`, check the large changes against the source of each kcat (see [Choose a kcat tuning](kcat-tuning.md#check-a-tuned-kcat-against-its-source)), and keep curated values in `data/kcats/custom.tsv`.
 
 ## Troubleshooting
 
@@ -321,7 +333,8 @@ Different kcat vectors can fit the data equally well, so two seeds can move a kc
 
 ## See also
 
-- [Choose a kcat tuning](kcat-tuning.md), the standard tuning and the check of a tuned kcat.
+- [Choose a kcat tuning](kcat-tuning.md), the choice between evotune and `sensitivityTuning`, and the check of a tuned kcat.
+- [Set the protein pool](protein-pool.md), Ptot, f and sigma.
 - [Files in the data folder](data-folder-files.md), every file of the `data` folder.
 - [Model adapter parameters](model-adapter-parameters.md#kcat-tuning), the `[evotune]` settings in both toolboxes.
 - [API reference](../api/index.md), every function in both toolboxes.

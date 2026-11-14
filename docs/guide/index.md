@@ -39,8 +39,9 @@ The decision pages are in the order of the work.
 | [Choose the kcat sources](kcat-sources.md) | the kcat assignment preset, and the treatment of isozymes and of reactions without a kcat |
 | [Set custom kcats](custom-kcats.md) | curated kcats that take precedence over the kcat sources |
 | [Set the protein pool](protein-pool.md) | the values of the total protein content, the enzyme fraction $f$ and the saturation factor $\sigma$ |
-| [Choose a kcat tuning](kcat-tuning.md) | standard or advanced kcat tuning, when the ecModel grows too slowly |
-| [Tune kcats against experimental data](advanced-tuning.md) | the data and the settings of the advanced kcat tuning |
+| [Choose a kcat tuning](kcat-tuning.md) | `sensitivityTuning` or evotune, when the ecModel grows too slowly, and the check of a tuned kcat |
+| [Tune kcats with sensitivityTuning](standard-tuning.md) | the tuning to one maximum growth rate, and the fit of $\sigma$ after it |
+| [Tune kcats with evotune](evotune.md) | the data and the settings of the tuning against measured growth rates and fluxes |
 | [Constrain enzymes with proteomics](proteomics.md) | the integration of measured enzyme concentrations |
 | [Relax proteomics constraints](relaxing-proteomics.md) | the method that loosens proteomics constraints that prevent growth |
 | [Analyse an ecModel](analysis.md) | objectives, flux variability, sampling and the mapping of fluxes to the conventional GEM |
@@ -98,7 +99,8 @@ kcat-sources
 custom-kcats
 protein-pool
 kcat-tuning
-advanced-tuning
+standard-tuning
+evotune
 proteomics
 relaxing-proteomics
 analysis

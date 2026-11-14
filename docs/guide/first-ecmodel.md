@@ -31,6 +31,8 @@ flowchart TB
   S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivityTuning (no change when growth reaches the target)<br/>sigmaFitter"]
   S7["<b>7. Save the ecModel</b><br/>saveEcModel"]
   PV --> S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
+  EV(["Tune kcats with evotune<br/>in place of step 6, with measured fluxes<br/>or several growth rates"]):::ctx
+  S5 -.-> EV -.-> S7
   ND(["A decision page of the guide, to change a default"]):::ctx
   NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
@@ -38,6 +40,7 @@ flowchart TB
   S7 --> NP
   S7 --> NA
   click PV href "../installation/index.html"
+  click EV href "evotune.html"
   click ND href "index.html"
   click NP href "proteomics.html"
   click NA href "analysis.html"
@@ -66,6 +69,8 @@ flowchart TB
   S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivity_tuning (no change when growth reaches the target)<br/>fit_sigma"]
   S7["<b>7. Save the ecModel</b><br/>save_ec_model"]
   PV --> S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
+  EV(["Tune kcats with evotune<br/>in place of step 6, with measured fluxes<br/>or several growth rates"]):::ctx
+  S5 -.-> EV -.-> S7
   ND(["A decision page of the guide, to change a default"]):::ctx
   NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
@@ -73,6 +78,7 @@ flowchart TB
   S7 --> NP
   S7 --> NA
   click PV href "../installation/index.html"
+  click EV href "evotune.html"
   click ND href "index.html"
   click NP href "proteomics.html"
   click NA href "analysis.html"
@@ -292,7 +298,7 @@ print(growth)
 
 ## 6. Tune kcats and fit sigma
 
-When the growth rate is lower than `gr_exp`, the standard kcat tuning raises the kcats that limit growth; when the model already reaches `gr_exp`, `sensitivityTuning` changes no kcat. Then `sigmaFitter` selects the saturation factor at which the growth rate of the model is closest to `gr_exp`, and sets the protein pool with that value.
+This step uses `sensitivityTuning`, which needs one growth rate, `gr_exp`. With measured growth rates of several conditions or measured exchange fluxes, use evotune in place of this step ([Tune kcats with evotune](evotune.md)), without `sigmaFitter`. When the growth rate is lower than `gr_exp`, `sensitivityTuning` raises the kcats that limit growth; when the model already reaches `gr_exp`, it changes no kcat. Then `sigmaFitter` selects the saturation factor at which the growth rate of the model is closest to `gr_exp`, and sets the protein pool with that value.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -317,7 +323,7 @@ sigma = fit_sigma(ec_model).sigma
 :::
 ::::
 
-`sensitivityTuning` selects the enzyme with the highest usage, multiplies the kcat of the reaction that uses the most of this enzyme by 10, and repeats this until the model reaches `gr_exp`. `tunedKcats` lists each changed reaction with its kcat before and after tuning, and `ec.source` of the reaction keeps the origin of the kcat, with the kcat before tuning as `prior`. [Choose a kcat tuning](kcat-tuning.md) describes how to check a tuned kcat and the advanced tuning against measured growth rates and fluxes, and [Set the protein pool](protein-pool.md) describes the fit of $\sigma$.
+`sensitivityTuning` selects the enzyme with the highest usage, multiplies the kcat of the reaction that uses the most of this enzyme by 10, and repeats this until the model reaches `gr_exp`. `tunedKcats` lists each changed reaction with its kcat before and after tuning, and `ec.source` of the reaction keeps the origin of the kcat, with the kcat before tuning as `prior`. [Choose a kcat tuning](kcat-tuning.md) compares the two tunings and describes how to check a tuned kcat, [Tune kcats with sensitivityTuning](standard-tuning.md) describes the options of this step, and [Set the protein pool](protein-pool.md) describes the fit of $\sigma$.
 
 ## 7. Save the ecModel
 
@@ -348,8 +354,9 @@ The file is written to the `models` folder of the project. [ecModel YAML format]
 - [Choose the kcat sources](kcat-sources.md): select another preset and compare presets before they are applied.
 - [Set custom kcats](custom-kcats.md): give reactions curated kcats from the literature or from measurements.
 - [Set the protein pool](protein-pool.md): calculate $f$ from proteomics data and set the protein pool of a condition.
-- [Choose a kcat tuning](kcat-tuning.md): select the standard or the advanced kcat tuning, and check the tuned kcats.
-- [Tune kcats against experimental data](advanced-tuning.md): fit kcats to growth rates and exchange fluxes of one or more conditions.
+- [Choose a kcat tuning](kcat-tuning.md): choose between `sensitivityTuning` and evotune, and check the tuned kcats.
+- [Tune kcats with sensitivityTuning](standard-tuning.md): the options of the tuning of step 6.
+- [Tune kcats with evotune](evotune.md): fit kcats to growth rates and exchange fluxes of one or more conditions.
 - [Constrain enzymes with proteomics](proteomics.md): limit each measured enzyme to its measured concentration.
 - [Relax proteomics constraints](relaxing-proteomics.md): loosen the proteomics constraints that prevent the measured growth rate.
 - [Analyse an ecModel](analysis.md): simulate with other objectives, calculate flux ranges and sample solutions.

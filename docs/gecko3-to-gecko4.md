@@ -96,7 +96,7 @@ kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, thr
 | BRENDA files in `databases/` | `fetchBrendaAsset` downloads the files of the toolbox-assets release `brenda-2026.1-1` into `databases/brenda-2026.1-1` on first use. A project keeps its own files in `data/brenda` |
 | `truncateValues` | `round(x, 6, 'significant')` |
 | `findMaxValue` | `kcatsFromBrenda` or `kcatsFromECTree` |
-| `bayesianSensitivityTuning` and its helpers `abc_max`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels) | `cmaesKcatTuning`, the advanced kcat tuning, with the data files `data/evotune*.tsv` (see [Tune kcats against experimental data](guide/advanced-tuning.md)) |
+| `bayesianSensitivityTuning` and its helpers `abc_max`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels) | `cmaesKcatTuning`, the evotune kcat tuning, with the data files `data/evotune*.tsv` (see [Tune kcats with evotune](guide/evotune.md)) |
 | `getcarbonnum` | `fillCarbonNum` writes the carbon number of each exchange reaction to `model.excarbon` |
 | `anaerobicModel_GECKO`, `changeMedia` | copies in `tutorials/full_ecModel/code`, for *Saccharomyces cerevisiae* |
 

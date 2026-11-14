@@ -27,8 +27,8 @@ flowchart TB
   CF["calculateFfactor<br/>f from PAXdb or proteomics"]:::opt
   FD["loadFluxData<br/>Ptot of a condition"]:::opt
   SP["setProtPoolSize"]
-  TU(["Choose a kcat tuning: the standard tuning"]):::ctx
-  AT(["Tune kcats against experimental data"]):::ctx
+  TU(["Tune kcats with sensitivityTuning"]):::ctx
+  AT(["Tune kcats with evotune"]):::ctx
   SF["sigmaFitter<br/>sigma to the growth rate, after the tuning"]
   PV --> AD --> SP
   CF -.-> SP
@@ -38,12 +38,12 @@ flowchart TB
   NA(["Next: Analyse an ecModel"]):::ctx
   SF --> NP
   SF --> NA
-  SP -.->|advanced tuning, no sigma fit| AT
+  SP -.->|evotune, no sigma fit| AT
   AT --> NP
   AT --> NA
-  click AT href "advanced-tuning.html"
+  click AT href "evotune.html"
   click PV href "kcat-sources.html"
-  click TU href "kcat-tuning.html"
+  click TU href "standard-tuning.html"
   click NP href "proteomics.html"
   click NA href "analysis.html"
 ```
@@ -67,8 +67,8 @@ flowchart TB
   CF["calculate_f_factor<br/>f from PAXdb or proteomics"]:::opt
   FD["load_flux_data<br/>Ptot of a condition"]:::opt
   SP["set_prot_pool_size"]
-  TU(["Choose a kcat tuning: the standard tuning"]):::ctx
-  AT(["Tune kcats against experimental data"]):::ctx
+  TU(["Tune kcats with sensitivity_tuning"]):::ctx
+  AT(["Tune kcats with evotune"]):::ctx
   SF["fit_sigma<br/>sigma to the growth rate, after the tuning"]
   PV --> AD --> SP
   CF -.-> SP
@@ -78,12 +78,12 @@ flowchart TB
   NA(["Next: Analyse an ecModel"]):::ctx
   SF --> NP
   SF --> NA
-  SP -.->|advanced tuning, no sigma fit| AT
+  SP -.->|evotune, no sigma fit| AT
   AT --> NP
   AT --> NA
-  click AT href "advanced-tuning.html"
+  click AT href "evotune.html"
   click PV href "kcat-sources.html"
-  click TU href "kcat-tuning.html"
+  click TU href "standard-tuning.html"
   click NP href "proteomics.html"
   click NA href "analysis.html"
 ```
@@ -278,11 +278,13 @@ A $\sigma$ of 1, or a plateau that ends below the target growth rate, means that
 
 ## Fit sigma or tune the kcats
 
-$\sigma$ changes the protein pool for all enzymes by the same factor. Tuning changes the kcats of the enzymes that limit growth (see [Choose a kcat tuning](kcat-tuning.md)). The order is:
+$\sigma$ changes the protein pool for all enzymes by the same factor. Tuning changes the kcats of the enzymes that limit growth (see [Choose a kcat tuning](kcat-tuning.md)). With `sensitivityTuning`, the order is:
 
 1. Set the pool with the adapter values of $P_{tot}$, $f$ and $\sigma$.
 2. Tune the kcats. `sensitivityTuning` solves the model first and stops without a change when the growth rate is at or above the target. Otherwise it multiplies a kcat by `foldChange` (default 10) in each step until the growth rate reaches the target, so the growth rate after tuning is often above the target.
 3. Fit $\sigma$. `sigmaFitter` selects the $\sigma$ at which the growth rate matches the target; after a tuning that ended above the target, this $\sigma$ is lower than the adapter value.
+
+With evotune, $\sigma$ is not fitted: the pool is set with the adapter values, and evotune fits the kcats to the measured growth rates with that pool (see [The protein pool and sigma](evotune.md#the-protein-pool-and-sigma)).
 
 A $\sigma$ fitted before the tuning, to an ecModel with kcats that are too low, is close to 1, or is the start of a plateau below the target, and makes the pool compensate for the kcats.
 
