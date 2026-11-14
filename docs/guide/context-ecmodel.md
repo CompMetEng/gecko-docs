@@ -96,7 +96,15 @@ There are two ways to get an ecModel of a context:
 | make the context-specific GEM, then build an ecModel from it | the full ecModel workflow per context | each context has its own kcat assignment |
 | build one generic ecModel, then trim it with `getSubsetEcModel` | the generic ecModel and the context-specific GEM | all contexts have the kcats of the generic ecModel |
 
-The second way builds the enzyme data once, which saves time when many contexts are made from one generic model, and gives all contexts the same kcats. The sections below describe the second way. For the first way, follow [Build an ecModel](first-ecmodel.md) with the context-specific GEM as the GEM of the project.
+The second way builds the enzyme data once, which saves time when many contexts are made from one generic model, and gives all contexts the same kcats. The first way fits when a context has its own data to tune the kcats against.
+
+## Build from the context-specific GEM
+
+On this way, the context-specific GEM is the GEM of a project, and every step of [Build an ecModel](first-ecmodel.md) runs for each context. Compared with the trimmed generic ecModel:
+
+- The kcat assignment and the kcat tuning run on the reactions of the context. A kcat tuning fits the kcats to the growth rate or the data of that context, so a kcat can differ between contexts.
+- Ptot, f and sigma in `model_adapter.toml` are the values of the context (see [Set the protein pool](protein-pool.md)).
+- Each context is its own build, so the time of a build is spent once per context. A project folder with its own `model_adapter.toml` per context keeps the values of each context apart.
 
 ## Trim the generic ecModel
 

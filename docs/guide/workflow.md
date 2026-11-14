@@ -40,6 +40,7 @@ flowchart TB
   F -.-> CX
   CX -.->|proteomics of the context| PR
   CX -.-> RD
+  CX -.->|or build an ecModel from the context-specific GEM| P
   RL{"Growth reaches the measured growth rate?"}
   PR --> RL
   RX["<b>Relax proteomics constraints</b><br/>flexibilizeEnzConcs (recommended),<br/>relaxProteomicsGreedy when enzymes at 0 limit,<br/>relaxEnzConcs to compare"]
@@ -107,6 +108,7 @@ flowchart TB
   F -.-> CX
   CX -.->|proteomics of the context| PR
   CX -.-> RD
+  CX -.->|or build an ecModel from the context-specific GEM| P
   RL{"Growth reaches the measured growth rate?"}
   PR --> RL
   RX["<b>Relax proteomics constraints</b><br/>flexibilize_enz_concs (recommended),<br/>relax_proteomics_greedy when enzymes at 0 limit,<br/>relax_enz_concs to compare"]
@@ -166,7 +168,7 @@ Each row is a guide page with the page it runs after and what it leaves behind. 
 - **Kcats:** `updateKcatSources` (Python: `update_kcat_sources`) makes the source files that the preset of `model_adapter.toml` reads, and `assignKcats` (Python: `assign_kcats`) selects one kcat per reaction from them, with the custom kcats first.
 - **Tuning:** [Choose a kcat tuning](kcat-tuning.md) compares the two tunings. `sensitivityTuning` (Python: `sensitivity_tuning`) raises kcats one at a time until one target growth rate is reached, and `sigmaFitter` (Python: `fit_sigma`) then lowers $\sigma$ when the growth rate ended above it; a kcat tuning only raises kcats. Evotune (`cmaesKcatTuning`, Python: `cmaes_kcat_tuning`) fits many kcats to measured growth rates, exchange fluxes or both, of one or more conditions, with $\sigma$ as set before the tuning.
 - **Relaxation:** `flexibilizeEnzConcs` is the method to start with; `relaxProteomicsGreedy` raises enzymes with a bound of 0, and `relaxEnzConcs` gives a result that does not depend on the order in which enzymes become limiting, to compare with ([Relax proteomics constraints](relaxing-proteomics.md)).
-- **Analysis:** the analysis pages do not depend on each other. Enzyme usage and proteomics need a full ecModel. A context-specific ecModel is trimmed from an ecModel without proteomics constraints, and the proteomics of the context are added afterwards.
+- **Analysis:** the analysis pages do not depend on each other. Enzyme usage and proteomics need a full ecModel. A context-specific ecModel is trimmed from an ecModel without proteomics constraints, and the proteomics of the context are added afterwards; the other way builds an ecModel from the context-specific GEM with the steps of Build an ecModel.
 
 ## See also
 
