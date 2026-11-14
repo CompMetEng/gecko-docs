@@ -29,13 +29,15 @@ flowchart TB
   SP["setProtPoolSize"]
   TU(["Tune kcats with sensitivityTuning"]):::ctx
   AT(["Tune kcats with evotune"]):::ctx
-  SF["sigmaFitter<br/>sigma to the growth rate, after the tuning"]
+  SF["sigmaFitter<br/>lowers sigma when growth is above the target"]:::opt
   PV --> AD --> SP
   CF -.-> SP
   FD -.-> SP
-  SP --> TU --> SF
+  SP --> TU -.-> SF
   NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
+  TU --> NP
+  TU --> NA
   SF --> NP
   SF --> NA
   SP -.->|evotune, no sigma fit| AT
@@ -69,13 +71,15 @@ flowchart TB
   SP["set_prot_pool_size"]
   TU(["Tune kcats with sensitivity_tuning"]):::ctx
   AT(["Tune kcats with evotune"]):::ctx
-  SF["fit_sigma<br/>sigma to the growth rate, after the tuning"]
+  SF["fit_sigma<br/>lowers sigma when growth is above the target"]:::opt
   PV --> AD --> SP
   CF -.-> SP
   FD -.-> SP
-  SP --> TU --> SF
+  SP --> TU -.-> SF
   NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
+  TU --> NP
+  TU --> NA
   SF --> NP
   SF --> NA
   SP -.->|evotune, no sigma fit| AT
@@ -276,19 +280,22 @@ print(fit.sigma)
 
 A $\sigma$ of 1, or a plateau that ends below the target growth rate, means that a larger protein pool does not let the ecModel reach the target. The kcats or the nutrient constraints limit growth.
 
-## Fit sigma or tune the kcats
+## Sigma and kcat tuning
 
-$\sigma$ changes the protein pool for all enzymes by the same factor. Tuning changes the kcats of the enzymes that limit growth (see [Choose a kcat tuning](kcat-tuning.md)). With `sensitivityTuning`, the order is:
+$\sigma$ changes the protein pool of all enzymes by the same factor, and a kcat tuning changes the kcats of the enzymes that limit growth (see [Choose a kcat tuning](kcat-tuning.md)). The two correct different errors, so the direction of the error decides which one to change:
+
+- **Growth rate below the target.** Check first that the conventional genome-scale metabolic model (GEM) reaches the target, and that $P_{tot}$, $f$ and $\sigma$ are realistic for the organism. When they are, kcats that are too low limit growth: tune the kcats. Raising $\sigma$ or the pool to reach the target makes the pool compensate for the kcats that are too low; a $\sigma$ fitted to such an ecModel is close to 1, or is the start of a plateau below the target.
+- **Growth rate above the target**, with the adapter values or after a kcat tuning: lower $\sigma$ with `sigmaFitter`. A kcat tuning only raises kcats and cannot lower the growth rate.
+
+With `sensitivityTuning`, the order is:
 
 1. Set the pool with the adapter values of $P_{tot}$, $f$ and $\sigma$.
 2. Tune the kcats. `sensitivityTuning` solves the model first and stops without a change when the growth rate is at or above the target. Otherwise it multiplies a kcat by `foldChange` (default 10) in each step until the growth rate reaches the target, so the growth rate after tuning is often above the target.
-3. Fit $\sigma$. `sigmaFitter` selects the $\sigma$ at which the growth rate matches the target; after a tuning that ended above the target, this $\sigma$ is lower than the adapter value.
+3. When the growth rate is above the target, fit $\sigma$. `sigmaFitter` selects a $\sigma$ lower than the adapter value at which the growth rate matches the target (see [Lower sigma after the tuning](standard-tuning.md#lower-sigma-after-the-tuning)).
 
 With evotune, $\sigma$ is not fitted: the pool is set with the adapter values, and evotune fits the kcats to the measured growth rates with that pool (see [The protein pool and sigma](evotune.md#the-protein-pool-and-sigma)).
 
-A $\sigma$ fitted before the tuning, to an ecModel with kcats that are too low, is close to 1, or is the start of a plateau below the target, and makes the pool compensate for the kcats.
-
-A growth rate below the target can have three causes, checked in this order: the network (the conventional genome-scale metabolic model, GEM, does not reach the target either), the protein pool, and the kcats. To test the pool, remove its bound and compare the growth rate. The minimal protein pool usage at the target growth rate (see [Minimise protein pool usage at fixed growth](analysis.md#minimise-protein-pool-usage-at-fixed-growth)) shows how much enzyme mass the current kcats need. Setting the pool bound to that usage makes the ecModel reach the target, but that bound does not follow from $P_{tot}$, $f$ and $\sigma$; use it as a diagnostic and keep the pool calculated by `setProtPoolSize`.
+Whether the pool limits growth shows when its bound is removed: the growth rate then rises. The minimal protein pool usage at the target growth rate (see [Minimise protein pool usage at fixed growth](analysis.md#minimise-protein-pool-usage-at-fixed-growth)) shows how much enzyme mass the current kcats need. A pool of that size would let the ecModel reach the target, but it does not follow from $P_{tot}$, $f$ and $\sigma$ and it hides the kcats that are too low, so it is a diagnostic and not a way to set the pool.
 
 A fitted $\sigma$ close to 1 means that the enzymes work at their maximum rate on average; check the kcats that limit growth in that case.
 
@@ -301,7 +308,7 @@ A fitted $\sigma$ close to 1 means that the enzymes work at their maximum rate o
 | $f$ is 0 or close to 0 | the protein identifiers of the data do not match `ec.enzymes` | map the identifiers of the data to UniProt identifiers |
 | Error `sigmaFitter:growthRate` (Python: `ValueError`) | the target growth rate, given or read from `gr_exp`, is not above 0 | set `gr_exp`, or give the growth rate |
 | `fit_sigma` raises a `ValueError` that `model.adapter` is None | the ecModel has no adapter attached, and `growth_rate`, `p_tot` or `f` is not given | attach the adapter, or give `growth_rate`, `p_tot` and `f` |
-| The fitted $\sigma$ is 1, or the error is large at every $\sigma$ | the kcats, the nutrient constraints or the network limit growth | see [Fit sigma or tune the kcats](#fit-sigma-or-tune-the-kcats) |
+| The fitted $\sigma$ is 1, or the error is large at every $\sigma$ | the kcats, the nutrient constraints or the network limit growth | see [Sigma and kcat tuning](#sigma-and-kcat-tuning) |
 | The growth rate is free after `sigmaFitter` or `fit_sigma`, although its bounds were fixed before | both set the bounds of the objective reaction to 0 and 1000, and the returned ecModel keeps them | set the bounds of the growth reaction again |
 | `sigmaFitter` and `fit_sigma` give different $\sigma$ values for the same ecModel | on a growth plateau, `fit_sigma` with `method="grid"` has no tolerance for rounding errors of the solver | use `method="bisect"`, or compare the growth rates in `fit.growth_grid` |
 

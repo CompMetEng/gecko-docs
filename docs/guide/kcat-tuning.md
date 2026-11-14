@@ -109,7 +109,7 @@ If both hold, some kcats are too low for the enzymes that carry most of the flux
 | When it stops | the growth rate reaches the target, or growth stops rising | the best root-mean-square error (RMSE) reaches `rmse_threshold` (default 0.2), or after `max_generations` (default 150) generations |
 | Cost in time | one FBA per iteration | one FBA per data row for each kcat vector that is scored: two per kcat in the screen, plus `popsize` per generation in the search; runs in parallel with `nProc` |
 | Settings | the options of the function | the `[evotune]` table of `model_adapter.toml`, plus `targetImpactShare`, `popsize`, `seed` and `nProc` |
-| Protein pool afterwards | `sigmaFitter` fits $\sigma$ to the growth rate | $\sigma$ stays as set before the tuning; the measured growth rates are fitted by the kcats |
+| Protein pool afterwards | `sigmaFitter` lowers $\sigma$ when the growth rate ends above the target | $\sigma$ stays as set before the tuning; the measured growth rates are fitted by the kcats |
 
 In a full ecModel, each iteration of `sensitivityTuning` selects the enzyme whose usage reaction carries the most flux and raises the kcat of the reaction that uses most of that enzyme; in a light ecModel, it raises the kcat of the reaction that draws most from the protein pool. `sensitivityTuning` also stops when an iteration raises growth by 1e-9 per h or less, when the model becomes infeasible, or when no enzyme usage carries flux; Python also stops after `max_iterations` (default 1000).
 

@@ -298,7 +298,7 @@ A data row with oxygen uptake 0 or with a value of `Ptot` needs a function that 
 
 Set the protein pool before evotune, with `setProtPoolSize` and the values of Ptot, f and $\sigma$ in the model adapter (see [Set the protein pool](protein-pool.md)). Evotune simulates each data row with the protein pool of the model; only a row with a value of `Ptot` changes it, through the protein content of the biomass (see [Conditions that change the model](#conditions-that-change-the-model)). The maximum growth rates of `evotuneMaxGrowth.tsv` are part of the fit, so the tuning fits the kcats to these growth rates with that pool.
 
-Do not run `sigmaFitter` (Python `fit_sigma`) after evotune. It changes the protein pool so that the model reaches one growth rate, which moves every simulated growth rate and flux away from the values that the tuning fitted. A $\sigma$ fitted before evotune, to an ecModel with kcats that are too low, makes the pool compensate for the kcats (see [Fit sigma or tune the kcats](protein-pool.md#fit-sigma-or-tune-the-kcats)), and evotune then fits the kcats to that pool.
+Do not run `sigmaFitter` (Python `fit_sigma`) after evotune. It changes the protein pool so that the model reaches one growth rate, which moves every simulated growth rate and flux away from the values that the tuning fitted. A $\sigma$ fitted before evotune, to an ecModel with kcats that are too low, makes the pool compensate for the kcats (see [Sigma and kcat tuning](protein-pool.md#sigma-and-kcat-tuning)), and evotune then fits the kcats to that pool.
 
 ## Seeds, reproducibility and parallel runs
 

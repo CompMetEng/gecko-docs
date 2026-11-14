@@ -24,7 +24,7 @@ flowchart TB
   C["<b>Set custom kcats</b><br/>data/kcats/custom.tsv<br/>convertCustomKcats (required for a<br/>GECKO 3 data/customKcats.tsv)"]:::opt
   PP["<b>Set the protein pool</b><br/>setProtPoolSize<br/>calculateFfactor (optional)"]:::quick
   G{"<b>Choose a kcat tuning</b><br/>measured data"}
-  T["<b>Tune kcats with sensitivityTuning</b><br/>sensitivityTuning<br/>(no change when growth reaches the target)<br/>then sigmaFitter"]:::quick
+  T["<b>Tune kcats with sensitivityTuning</b><br/>sensitivityTuning<br/>(no change when growth reaches the target)<br/>then sigmaFitter when growth is above the target"]:::quick
   A["<b>Tune kcats with evotune</b><br/>screenKcatLeverage<br/>reviewKcatAssignment (optional)<br/>cmaesKcatTuning (selects with selectTunableMask)<br/>no sigmaFitter afterwards"]
   F["<b>Functional ecModel</b><br/>saveEcModel"]:::quick
   P --> S --> K --> PP --> G
@@ -91,7 +91,7 @@ flowchart TB
   C["<b>Set custom kcats</b><br/>data/kcats/custom.tsv<br/>convert_custom_kcats (required for a<br/>GECKO 3 data/customKcats.tsv)"]:::opt
   PP["<b>Set the protein pool</b><br/>set_prot_pool_size<br/>calculate_f_factor (optional)"]:::quick
   G{"<b>Choose a kcat tuning</b><br/>measured data"}
-  T["<b>Tune kcats with sensitivity_tuning</b><br/>sensitivity_tuning<br/>(no change when growth reaches the target)<br/>then fit_sigma"]:::quick
+  T["<b>Tune kcats with sensitivity_tuning</b><br/>sensitivity_tuning<br/>(no change when growth reaches the target)<br/>then fit_sigma when growth is above the target"]:::quick
   A["<b>Tune kcats with evotune</b><br/>screen_kcat_leverage<br/>review_assignment (optional)<br/>cmaes_kcat_tuning (selects with select_tunable_mask)<br/>no fit_sigma afterwards"]
   F["<b>Functional ecModel</b><br/>save_ec_model"]:::quick
   P --> S --> K --> PP --> G
@@ -153,7 +153,7 @@ Each row is a guide page with the page it runs after and what it leaves behind. 
 | [Set custom kcats](custom-kcats.md) (optional) | the ecModel structure, or a kcat tuning whose result is kept; read by the first stage of every preset | `data/kcats/custom.tsv` |
 | [Set the protein pool](protein-pool.md) | applied kcats | upper bound of the protein pool exchange |
 | [Choose a kcat tuning](kcat-tuning.md) | protein pool | the choice between the two tunings; the check of a tuned kcat against its source |
-| [Tune kcats with sensitivityTuning](standard-tuning.md) | protein pool, and one maximum growth rate; changes no kcat when the growth rate reaches the target | tuned `ec.kcat`, and $\sigma$ fitted to the growth rate |
+| [Tune kcats with sensitivityTuning](standard-tuning.md) | protein pool, and one maximum growth rate; changes no kcat when the growth rate reaches the target | tuned `ec.kcat`, and $\sigma$ lowered when the growth rate ended above the target |
 | [Tune kcats with evotune](evotune.md) | protein pool, and measured maximum growth rates, exchange fluxes or both, of one or more conditions; alternative to `sensitivityTuning` | tuned `ec.kcat`; $\sigma$ stays as set |
 | [Constrain enzymes with proteomics](proteomics.md) (optional) | functional full ecModel | proteomics-constrained ecModel |
 | [Relax proteomics constraints](relaxing-proteomics.md) | proteomics-constrained ecModel below the measured growth rate | relaxed ecModel |
@@ -164,7 +164,7 @@ Each row is a guide page with the page it runs after and what it leaves behind. 
 
 - **Quick path:** [Build an ecModel](first-ecmodel.md) runs the boxes with a thick outline in one go, without the functions marked optional and with the default of each decision page. A decision page is needed only to change a default.
 - **Kcats:** `updateKcatSources` (Python: `update_kcat_sources`) makes the source files that the preset of `model_adapter.toml` reads, and `assignKcats` (Python: `assign_kcats`) selects one kcat per reaction from them, with the custom kcats first.
-- **Tuning:** [Choose a kcat tuning](kcat-tuning.md) compares the two tunings. `sensitivityTuning` (Python: `sensitivity_tuning`) raises kcats one at a time until one target growth rate is reached, and `sigmaFitter` (Python: `fit_sigma`) then fits $\sigma$ to that growth rate. Evotune (`cmaesKcatTuning`, Python: `cmaes_kcat_tuning`) fits many kcats to measured growth rates, exchange fluxes or both, of one or more conditions, with $\sigma$ as set before the tuning.
+- **Tuning:** [Choose a kcat tuning](kcat-tuning.md) compares the two tunings. `sensitivityTuning` (Python: `sensitivity_tuning`) raises kcats one at a time until one target growth rate is reached, and `sigmaFitter` (Python: `fit_sigma`) then lowers $\sigma$ when the growth rate ended above it; a kcat tuning only raises kcats. Evotune (`cmaesKcatTuning`, Python: `cmaes_kcat_tuning`) fits many kcats to measured growth rates, exchange fluxes or both, of one or more conditions, with $\sigma$ as set before the tuning.
 - **Relaxation:** `flexibilizeEnzConcs` is the method to start with; `relaxProteomicsGreedy` raises enzymes with a bound of 0, and `relaxEnzConcs` gives a result that does not depend on the order in which enzymes become limiting, to compare with ([Relax proteomics constraints](relaxing-proteomics.md)).
 - **Analysis:** the analysis pages do not depend on each other. Enzyme usage and proteomics need a full ecModel. A context-specific ecModel is trimmed from an ecModel without proteomics constraints, and the proteomics of the context are added afterwards.
 

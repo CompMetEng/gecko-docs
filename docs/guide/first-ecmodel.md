@@ -28,7 +28,7 @@ flowchart TB
   S3["<b>3. Assign kcats</b><br/>getECfromGEM, then getECfromDatabase<br/>findMetSmiles<br/>updateKcatSources<br/>assignKcats"]
   S4["<b>4. Set the protein pool</b><br/>setProtPoolSize"]
   S5["<b>5. Check the growth rate</b><br/>solveLP"]
-  S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivityTuning (no change when growth reaches the target)<br/>sigmaFitter"]
+  S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivityTuning (no change when growth reaches the target)<br/>sigmaFitter when growth is above the target"]
   S7["<b>7. Save the ecModel</b><br/>saveEcModel"]
   PV --> S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
   EV(["Tune kcats with evotune<br/>in place of step 6, with measured fluxes<br/>or several growth rates"]):::ctx
@@ -66,7 +66,7 @@ flowchart TB
   S3["<b>3. Assign kcats</b><br/>load_uniprot_tsv, load_kegg_tsv<br/>fill_eccodes_from_gem, then fill_eccodes_from_database<br/>find_met_smiles<br/>update_kcat_sources<br/>assign_kcats"]
   S4["<b>4. Set the protein pool</b><br/>set_prot_pool_size"]
   S5["<b>5. Check the growth rate</b><br/>model.slim_optimize"]
-  S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivity_tuning (no change when growth reaches the target)<br/>fit_sigma"]
+  S6["<b>6. Tune kcats and fit sigma</b><br/>sensitivity_tuning (no change when growth reaches the target)<br/>fit_sigma when growth is above the target"]
   S7["<b>7. Save the ecModel</b><br/>save_ec_model"]
   PV --> S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
   EV(["Tune kcats with evotune<br/>in place of step 6, with measured fluxes<br/>or several growth rates"]):::ctx
@@ -298,7 +298,7 @@ print(growth)
 
 ## 6. Tune kcats and fit sigma
 
-This step uses `sensitivityTuning`, which needs one growth rate, `gr_exp`. With measured growth rates of several conditions or measured exchange fluxes, use evotune in place of this step ([Tune kcats with evotune](evotune.md)), without `sigmaFitter`. When the growth rate is lower than `gr_exp`, `sensitivityTuning` raises the kcats that limit growth; when the model already reaches `gr_exp`, it changes no kcat. Then `sigmaFitter` selects the saturation factor at which the growth rate of the model is closest to `gr_exp`, and sets the protein pool with that value.
+This step uses `sensitivityTuning`, which needs one growth rate, `gr_exp`. With measured growth rates of several conditions or measured exchange fluxes, use evotune in place of this step ([Tune kcats with evotune](evotune.md)), without `sigmaFitter`. When the growth rate is lower than `gr_exp`, `sensitivityTuning` raises the kcats that limit growth; when the model already reaches `gr_exp`, it changes no kcat. Each step multiplies a kcat by 10, so the growth rate after tuning is often above `gr_exp`. A kcat tuning only raises kcats, so when the growth rate is above `gr_exp`, `sigmaFitter` lowers the saturation factor $\sigma$ until the growth rate matches `gr_exp`, and sets the protein pool with that value.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -306,7 +306,11 @@ This step uses `sensitivityTuning`, which needs one growth rate, `gr_exp`. With 
 
 ```matlab
 [ecModel, tunedKcats] = sensitivityTuning(ecModel);
-[ecModel, sigma] = sigmaFitter(ecModel, 'makePlot', false);
+ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);
+sol = solveLP(ecModel);
+if sol.x(strcmp(ecModel.rxns, params.bioRxn)) > params.gR_exp
+    [ecModel, sigma] = sigmaFitter(ecModel, 'makePlot', false);
+end
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -316,14 +320,16 @@ This step uses `sensitivityTuning`, which needs one growth rate, `gr_exp`. With 
 from geckopy import fit_sigma, sensitivity_tuning
 
 tuned_kcats = sensitivity_tuning(ec_model)
-sigma = fit_sigma(ec_model).sigma
+ec_model.objective = params.bio_rxn
+if ec_model.slim_optimize() > params.gr_exp:
+    sigma = fit_sigma(ec_model).sigma
 ```
 
 `sensitivity_tuning` and `fit_sigma` change `ec_model` in place.
 :::
 ::::
 
-`sensitivityTuning` selects the enzyme with the highest usage, multiplies the kcat of the reaction that uses the most of this enzyme by 10, and repeats this until the model reaches `gr_exp`. `tunedKcats` lists each changed reaction with its kcat before and after tuning, and `ec.source` of the reaction keeps the origin of the kcat, with the kcat before tuning as `prior`. [Choose a kcat tuning](kcat-tuning.md) compares the two tunings and describes how to check a tuned kcat, [Tune kcats with sensitivityTuning](standard-tuning.md) describes the options of this step, and [Set the protein pool](protein-pool.md) describes the fit of $\sigma$.
+`sensitivityTuning` selects the enzyme with the highest usage, multiplies the kcat of the reaction that uses the most of this enzyme by 10, and repeats this until the model reaches `gr_exp`. `tunedKcats` lists each changed reaction with its kcat before and after tuning, and `ec.source` of the reaction keeps the origin of the kcat, with the kcat before tuning as `prior`. [Choose a kcat tuning](kcat-tuning.md) compares the two tunings and describes how to check a tuned kcat, [Tune kcats with sensitivityTuning](standard-tuning.md) describes the options of this step, and [Set the protein pool](protein-pool.md#sigma-and-kcat-tuning) describes when to change $\sigma$ and when the kcats.
 
 ## 7. Save the ecModel
 

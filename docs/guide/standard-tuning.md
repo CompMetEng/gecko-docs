@@ -1,6 +1,6 @@
 # Tune kcats with sensitivityTuning
 
-`sensitivityTuning` (Python `sensitivity_tuning`) raises the kcats that limit growth, one at a time, until the ecModel reaches one target growth rate, the maximum growth rate of the organism. `sigmaFitter` (Python `fit_sigma`) then fits the saturation factor $\sigma$ of the protein pool to the same growth rate. The result is a tuned ecModel and a list of the changed kcats. [Choose a kcat tuning](kcat-tuning.md) compares this tuning with evotune, and describes how to check a tuned kcat against its source.
+`sensitivityTuning` (Python `sensitivity_tuning`) raises the kcats that limit growth, one at a time, until the ecModel reaches one target growth rate, the maximum growth rate of the organism. When the growth rate then ends above the target, `sigmaFitter` (Python `fit_sigma`) lowers the saturation factor $\sigma$ of the protein pool to match it. The result is a tuned ecModel and a list of the changed kcats. [Choose a kcat tuning](kcat-tuning.md) compares this tuning with evotune, and describes how to check a tuned kcat against its source.
 
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
@@ -24,12 +24,14 @@ flowchart TB
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Choose a kcat tuning"]):::ctx
   ST["sensitivityTuning<br/>no change when growth reaches the target"]
-  SF["sigmaFitter"]
+  SF["sigmaFitter<br/>lowers sigma when growth is above the target"]:::opt
   CK(["Choose a kcat tuning:<br/>check a tuned kcat"]):::ctx
-  PV --> ST --> SF
+  PV --> ST -.-> SF
   ST -.-> CK
   NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
+  ST --> NP
+  ST --> NA
   SF --> NP
   SF --> NA
   click PV href "kcat-tuning.html"
@@ -54,12 +56,14 @@ flowchart TB
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Choose a kcat tuning"]):::ctx
   ST["sensitivity_tuning<br/>no change when growth reaches the target"]
-  SF["fit_sigma"]
+  SF["fit_sigma<br/>lowers sigma when growth is above the target"]:::opt
   CK(["Choose a kcat tuning:<br/>check a tuned kcat"]):::ctx
-  PV --> ST --> SF
+  PV --> ST -.-> SF
   ST -.-> CK
   NP(["Next: Constrain enzymes with proteomics (optional)"]):::ctx
   NA(["Next: Analyse an ecModel"]):::ctx
+  ST --> NP
+  ST --> NA
   SF --> NP
   SF --> NA
   click PV href "kcat-tuning.html"
@@ -76,7 +80,7 @@ flowchart TB
 | MATLAB | Python | Note |
 | --- | --- | --- |
 | `sensitivityTuning` | `sensitivity_tuning` | raises the kcat that limits growth most, one at a time, until the model reaches a growth rate |
-| `sigmaFitter` | `fit_sigma` | fits $\sigma$ so that the model reaches the target growth rate, and sets the protein pool with it |
+| `sigmaFitter` | `fit_sigma` | fits $\sigma$ so that the model reaches the target growth rate, and sets the protein pool with it; after the tuning, it lowers $\sigma$ when the growth rate is above the target |
 
 ## Setup
 
@@ -130,17 +134,22 @@ pd.DataFrame({"rxn": tuned.rxns, "enzymes": tuned.enzymes,
 
 The output (`tunedKcats`, Python `TunedKcatsResult`) has one entry per tuned reaction: `rxns`, `rxnNames` (Python `rxn_names`), `enzymes` (joined by `;`), `oldKcat` and `newKcat` (Python `old_kcat`, `new_kcat`), and `source`, the kcat source before tuning. `ec.source` of a tuned reaction keeps its origin and detail and gets the tuning status, for example `brenda (wc=0, origin=1) | tuned=sensitivity (prior=0.05)`, where the prior is the kcat before the first tuning (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). A reaction that an earlier run already tuned keeps the prior of that run. In a light ecModel, every ec row of the tuned reaction gets the status. `ec.notes` does not change. In Python, `tuned.corrections()` returns the changes as a list of `Correction` rows, ordered by fold change.
 
-## Fit sigma after the tuning
+## Lower sigma after the tuning
 
-`sensitivityTuning` multiplies a kcat by `foldChange` in each step, so the growth rate after tuning is often above the target. `sigmaFitter` then selects the $\sigma$ at which the growth rate is closest to the target, and sets the protein pool with that value; after a tuning that ended above the target, this $\sigma$ is lower than the adapter value. Run the tuning first and fit $\sigma$ afterwards: a $\sigma$ fitted before the tuning, to an ecModel with kcats that are too low, makes the pool compensate for the kcats ([Set the protein pool](protein-pool.md#fit-sigma-or-tune-the-kcats)).
+`sensitivityTuning` multiplies a kcat by `foldChange` in each step, so the growth rate after tuning is often above the target. A kcat tuning only raises kcats, so it cannot correct this; `sigmaFitter` (Python `fit_sigma`) then selects a $\sigma$ lower than the adapter value at which the growth rate matches the target, and sets the protein pool with that value. Fit $\sigma$ only when the growth rate is above the target: when the tuning stopped below the target (see [Troubleshooting](#troubleshooting)), `sigmaFitter` would raise $\sigma$ and make the pool compensate for kcats that are too low ([Sigma and kcat tuning](protein-pool.md#sigma-and-kcat-tuning)).
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
 ```matlab
+params = ModelAdapterManager.getDefault().getParameters();
 [ecModel, tunedKcats] = sensitivityTuning(ecModel);
-ecModel = sigmaFitter(ecModel);
+ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);
+sol = solveLP(ecModel);
+if sol.x(strcmp(ecModel.rxns, params.bioRxn)) > params.gR_exp
+    ecModel = sigmaFitter(ecModel, 'makePlot', false);
+end
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -149,8 +158,11 @@ ecModel = sigmaFitter(ecModel);
 ```python
 from geckopy import fit_sigma, sensitivity_tuning
 
+params = ec_model.adapter.params
 tuned = sensitivity_tuning(ec_model)
-fit_sigma(ec_model)
+ec_model.objective = params.bio_rxn
+if ec_model.slim_optimize() > params.gr_exp:
+    fit_sigma(ec_model)
 ```
 :::
 ::::
