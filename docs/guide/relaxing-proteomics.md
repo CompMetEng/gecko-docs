@@ -116,7 +116,7 @@ The loop stops in one of four cases:
 
 In the first two cases, a final pass minimises the protein pool usage at the target growth rate (± 0.25 %), sets each raised bound to the usage in that solution, and restores the measured concentration where the usage is lower. The function also raises the upper bound of the biomass reaction to the target when it is lower. `ec.concs` keeps the measured values.
 
-With `perComplex`, the measured subunits of a complex form one unit. Units are ranked by the reduced costs of their usage reactions, and the subunits of a unit are raised and lowered by the same factor, so levelled concentrations stay levelled. The limit of `iterPerEnzyme` counts per complex.
+With `perComplex`, the measured subunits of a complex (as `getComplexFamilies` groups them, see [Level the concentrations of complexes](proteomics.md#level-the-concentrations-of-complexes)) form one unit. A unit is ranked by the growth gained when all its bounds are raised together: the sum, over the subunits whose usage is above 75 % of the bound, of the reduced cost of the usage reaction times its upper bound. The reduced cost does not include the price of the protein pool, which the shadow price of each `prot_<id>` metabolite includes. When no unit has a score above 0, for example when the solver gives no reduced costs, each candidate unit is tested with its bounds raised by `foldChange` and the protein pool open. The subunits of a unit are raised and lowered by the same factor, so levelled concentrations stay levelled. In a complex that was not levelled, the factor is the one that the most limiting subunit needs, and the bounds of the other subunits are raised by the same factor. The limit of `iterPerEnzyme` counts per complex.
 
 When the ecModel has no solution before the relaxation, the function warns (MATLAB: `flexibilizeEnzConcs:infeasible`) and returns an empty result (MATLAB: a `flexEnz` structure with empty fields).
 
@@ -154,7 +154,7 @@ The copy `flex_model` is changed in place, and `ec_model` keeps the bounds from 
 
 ## Relax with relaxProteomicsGreedy
 
-`relaxProteomicsGreedy` solves the ecModel, takes the enzyme with the largest absolute shadow price of its `prot_<id>` metabolite among the enzymes with a usage bound below 1000, sets that bound to 1000, and solves again. It stops in one of three cases:
+`relaxProteomicsGreedy` is the relaxation of the earlier geckopy package ([Carrasco et al. 2023](https://doi.org/10.1128/spectrum.01705-23)). It solves the ecModel, takes the enzyme with the largest absolute shadow price of its `prot_<id>` metabolite among the enzymes with a usage bound below 1000, sets that bound to 1000, and solves again. It stops in one of three cases:
 
 - The target is reached: `converged` is true.
 - No candidate is left: a warning, and `converged` is false.
