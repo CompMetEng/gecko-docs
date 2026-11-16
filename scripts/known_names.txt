@@ -94,6 +94,7 @@ growthBefore
 growthRate
 growth_grid
 growth_rate
+grRules
 highCapUsage
 high_cap_usage
 iterPerEnzyme

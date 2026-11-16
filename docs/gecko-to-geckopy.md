@@ -17,10 +17,16 @@ GECKO (MATLAB) and geckopy (Python) build and analyse enzyme-constrained models 
 | Aspect | GECKO (MATLAB) | geckopy (Python) |
 |---|---|---|
 | Model | RAVEN struct with the field `ec` | `EcModel(cobra.Model)` with the attribute `ec` |
+| Metabolites, reactions and genes | arrays of the struct, one element per entity, addressed by position | `cobra.Metabolite`, `cobra.Reaction` and `cobra.Gene` objects in `model.metabolites`, `model.reactions` and `model.genes` |
+| Enzyme data | struct `ecModel.ec` | `EcData` dataclass of `raven_toolbox.io`, exported as `geckopy.EcData`: NumPy arrays, with `rxn_enz_mat` as a SciPy sparse matrix |
 | Enzyme access | index into the arrays of `ecModel.ec` | `Enzyme` proxy: `model.enzymes.get_by_id("P00350")` |
+| SMILES of a metabolite | `ecModel.metSmiles` | `metabolite.annotation["smiles"]` |
+| EC numbers of a reaction of the GEM | `model.eccodes` | `reaction.annotation["ec-code"]`, a list |
+| Gene rules | `grRules`, text | `reaction.gpr`, a cobrapy `GPR` object, and `reaction.gene_reaction_rule`, text |
 | Adapter | `TomlAdapter`, or a `ModelAdapter` class | `ModelAdapter.from_folder`, parameters validated as `ModelParameters` |
 | Default adapter | `ModelAdapterManager.getDefault()` | none; `adapter` argument or `model.adapter` |
-| Results | `[model, result] = f(model, ...)` | a function changes the model in place and returns one value, a dataclass where MATLAB returns several |
+| Results | `[model, result] = f(model, ...)` | a function changes the model in place and returns one value, a dataclass where MATLAB returns several. Lists that MATLAB returns as messages, such as `noSMILES` of `findMetSmiles`, are logged with `logging` |
+| Input data | the function reads the files that the adapter names | as MATLAB; some functions also take a path or loaded data, for example `apply_complex_data(ec_model, path=...)`. `fuzzy_kcat_matching` requires the BRENDA data and the phylogenetic distances as arguments (`load_brenda_data`, `load_phyl_dist`) |
 | Tables | structs, cell arrays and MATLAB tables | `pandas.DataFrame` |
 | Names | `camelCase` | `snake_case` |
 | Indexing | 1-based | 0-based |
@@ -69,6 +75,7 @@ The table is a selection; [MATLAB and Python](matlab-vs-python.md) lists all pai
 |---|---|
 | Result and data types | `TunedKcatsResult`, `FlexEnzResult`, `BrendaData`, `PhylDist`, `FluxData`, `Enzyme` |
 | Build steps of `make_ec_model` | `geckopy.ec_model.pipeline.add_protein_usage_reactions` and the other steps that `makeEcModel` runs inline |
+| File readers | `read_kcat_source` reads a kcat source file without an ecModel; GECKO returns the same content in `report.header` and `report.records` of `loadKcatSource` |
 | Algorithms | `level_complex_abundances` (one abundance per complex), `sweep_tunable_mask_size` and `recommend_target_impact_share` (share of kcats that `cmaes_kcat_tuning` tunes) |
 
 ## Differences in behaviour
