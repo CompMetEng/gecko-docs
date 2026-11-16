@@ -44,6 +44,7 @@ deltaG
 desiredGrowthRate
 desired_growth_rate
 dryRun
+ec_codes
 ecModel
 ecRxns
 ecStats
@@ -97,6 +98,8 @@ highCapUsage
 high_cap_usage
 iterPerEnzyme
 iter_per_enzyme
+kcat_prior
+kcat_tuned
 kcatAggregation
 kcatList
 kcatSource
@@ -107,6 +110,7 @@ kcat_list_okp
 kegg_db
 kegg_gene
 levelResult
+leverage_share
 log10_sd
 lower_bound
 makePlot
