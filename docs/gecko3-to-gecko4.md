@@ -10,6 +10,7 @@ A GECKO 3 script keeps running after each change in this box and returns a diffe
 - The protein pool exchange and the enzyme usage reactions run forward, so bounds and fluxes of `prot_pool_exchange` and `usage_prot_*` have the opposite sign ([PR #419](https://github.com/SysBioChalmers/GECKO/pull/419)).
 - `fuzzyKcatMatching` divides a BRENDA kcat by the coefficient of the substrate the kcat was measured on. GECKO 3 divided by the smallest coefficient in the reaction.
 - `assignKcats` and `collectKcats` use the preset `brenda_ec_tree` when `model_adapter.toml` sets no other.
+- `fuzzyKcatMatching` and `loadBRENDAdata` read the BRENDA median kcat by default, as `kcatsFromBrenda` does. GECKO 3 read the maximum unless the adapter set `kcatAggregation`.
 - `calculateFfactor` averages each protein over the samples in which it is measured.
 - `sigmaFitter` returns the smallest sigma within a tolerance of the smallest error, and the returned ecModel has the protein pool of that sigma (see below the first table).
 - `flexibilizeEnzConcs` keeps an upper bound that is higher than the new bound, and stops after a total number of iterations.
@@ -24,6 +25,7 @@ A GECKO 3 script keeps running after each change in this box and returns a diffe
 | --- | --- | --- | --- |
 | Direction of protein reactions | `usage_prot_<id>` and `prot_pool_exchange` run in reverse and carry negative flux | both run forward, and the usage of an enzyme is the positive flux of its usage reaction | Reverse the sign of bounds and fluxes read from these reactions. `upgradeEcModel` turns a GECKO 3 ecModel (see [Upgrade a GECKO 3 project](gecko3-upgrade-project.md)) |
 | Substrate of a BRENDA kcat | the kcat is divided by the smallest coefficient in the reaction | the kcat is divided by the coefficient of the substrate that matched | Rebuild the kcat list. Reactions that are not written per the measured substrate get a lower kcat |
+| BRENDA value of direct calls | `fuzzyKcatMatching` and `loadBRENDAdata` read the maximum per EC number, substrate and organism, unless the adapter sets `kcatAggregation` | `fuzzyKcatMatching`, `kcatsFromBrenda` and `loadBRENDAdata` called without an aggregation read `[kcat_sources.brenda] aggregation` as the kcat assignment resolves it: the median for the default preset `brenda_ec_tree`, the maximum for `gecko_classic` (see [BRENDA aggregation](guide/model-adapter-parameters.md#brenda-aggregation)) | Set `aggregation = "max"` in `[kcat_sources.brenda]`, or give `'kcatAggregation', 'max'` in the call |
 | Default kcat assignment | `selectKcatValue` (`assignKcatValues` in GECKO 4) merges a DLKcat list and a BRENDA list | `assignKcats` determines the kcat from the kcat source files in `data/kcats` with the preset `brenda_ec_tree` | Set `preset = "gecko_classic"` in `[kcat_assignment]` to keep the GECKO 3 order (see [Kcat assignment](gecko4-kcat-assignment.md)) |
 | Protein fraction `f` | `calculateFfactor` averages over all samples, so a protein missing in one sample is left out of both totals | the average is over the samples in which the protein is measured | Recalculate `f` when the proteomics file has missing values |
 | Enzyme bounds of `flexibilizeEnzConcs` | the new upper bound of an enzyme replaces the old bound, also when the old bound is higher; the iterations have no total limit | an upper bound is never lowered, and the iterations have a total limit (see below the table) | Check the warnings and `flexEnz` |
@@ -58,6 +60,15 @@ Functions with name-value arguments also take them positionally, in the GECKO 3 
 
 A GECKO 3 adapter class keeps working. It sets `obj.params` with the MATLAB names of [Model adapter parameters](guide/model-adapter-parameters.md), and `ModelAdapterManager.setDefault` takes the path of its `.m` file. `convertAdapterToToml` writes the parameters of a class as `model_adapter.toml` and lists the methods that the class overrides and the file cannot express. The option `'adapterFormat','class'` of `createGECKOproject` creates a project with a class; both the option and adapter classes as project format are deprecated (see [Deprecated](#deprecated)).
 
+GECKO 4 does not read the fields `kcatAggregation`, `evotune.kcatSources` and `evotune.sigma0logSource` of an adapter class, and `convertAdapterToToml` does not convert them: it prints them as not carried over and returns them in `notCarried` of its report. A class therefore gets the same BRENDA default as `model_adapter.toml`, the median for the default preset. For the maximum, a class sets `obj.params.kcat_sources.brenda.aggregation = 'max'`, and `model_adapter.toml` sets:
+
+```toml
+[kcat_sources.brenda]
+aggregation = "max"
+```
+
+The evotune source groups are tables of `[evotune.source_groups]` (see [Source groups](guide/model-adapter-parameters.md#source-groups)). A class that sets its parameters in code has no source groups, and the evotune functions raise `No evotune source groups: set [evotune.source_groups] in model_adapter.toml`.
+
 A class that needs code beyond the file can read its parameters from the file in the constructor:
 
 ```matlab
@@ -87,7 +98,7 @@ The table lists a selection.
 
 `levelComplexConcs` gives the subunits of a multi-subunit complex one abundance. The complex is then not capped by its least abundant subunit. It runs after `fillEnzConcs` and before `constrainEnzConcs`.
 
-kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, through `kcatsFromOKP`. The default OKP method (`[okp] method`) is KinForm-H, and the `okp` stage of the presets uses the methods of `[kcat_sources.okp] methods`, by default KinForm-H alone. `kcatsFromDLKcat` uses its DLKcat method unless `data/DLKcat.tsv` exists, or the option `'via', 'docker'` selects a local run in the Docker image. The DLKcat Docker context is not part of the GECKO repository (`src/dlkcat-gecko` is removed).
+kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, through `kcatsFromOKP`. `[kcat_sources.okp] methods` names the OKP methods, by default KinForm-H alone: the `okp` stage of the presets uses these methods, and `kcatsFromOKP` without a method uses the first of them. `kcatsFromDLKcat` uses its DLKcat method unless `data/DLKcat.tsv` exists, or the option `'via', 'docker'` selects a local run in the Docker image. The DLKcat Docker context is not part of the GECKO repository (`src/dlkcat-gecko` is removed).
 
 ## Removed
 

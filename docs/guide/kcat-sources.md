@@ -222,14 +222,15 @@ report = update_kcat_sources(ec_model)
 
 | Table | Key | Default |
 | --- | --- | --- |
-| `[kcat_sources.brenda]` | `aggregation`: `max` or `median` of the BRENDA values per EC number, substrate and organism | set by the preset (`max` for `gecko_classic`, `median` for the others); `kcat_aggregate_brenda` with stages in place of a preset |
+| `[kcat_sources.brenda]` | `aggregation`: `max` or `median` of the BRENDA values per EC number, substrate and organism | set by the preset (`median` for `brenda_ec_tree`, `ec_tree_homologs`, `ec_tree_okp` and `gecko_median`, `max` for `gecko_classic`); `max` for the preset `okp` and for stages |
 | `[kcat_sources.brenda]` | `force_wildcard_level`: number of EC levels replaced by a wildcard in every EC number | 0 |
 | `[kcat_sources.ec_tree]` | `k`: shrinkage constant | 5 |
 | `[kcat_sources.homologs]` | `k`: number of homologs | 10 |
 | `[kcat_sources.homologs]` | `min_identity`: minimum sequence identity, as a fraction | 0.4 |
 | `[kcat_sources.homologs]` | `coverage`: minimum coverage of both sequences, as a fraction | 0.8 |
-| `[kcat_sources.okp_<method>]` | `method`: the OpenKineticsPredictor method of the file | the method whose name gives the file name |
-| `[kcat_sources.okp]` | `methods`: the methods that `okp` stands for in a stage | `["KinForm-H"]` |
+| `[kcat_sources.okp]` | `methods`: the OpenKineticsPredictor methods that `okp` stands for in a stage, one file `okp_<method>.tsv` each | `["KinForm-H"]` |
+
+The tables of `custom`, `dlkcat` and `okp_<method>` take no keys; the method of an `okp_<method>` file is the method whose name gives the file name. Any other key is an error when `model_adapter.toml` is read (see [Model adapter parameters](model-adapter-parameters.md#kcat-source-settings)). The BRENDA aggregation also applies to `kcatsFromBrenda` and `fuzzyKcatMatching` called without an aggregation ([BRENDA aggregation](model-adapter-parameters.md#brenda-aggregation)).
 
 The source `dlkcat` (presets `gecko_median` and `gecko_classic`) reads `data/DLKcat.tsv` when the file exists. Without it, `dlkcat` is predicted with the DLKcat method of OpenKineticsPredictor.
 
@@ -336,7 +337,7 @@ After the stages, two settings of `[kcat_assignment]` fill the reactions that ar
 | `No kcat source file <file>; it is left out` | a stage names a source that has no file in `data/kcats` | Run `updateKcatSources`, or remove the source from the stages |
 | BRENDA and the EC tree give kcats for few reactions | many reactions have no EC number | Fill `ec.eccodes` (section [Prepare the inputs](#prepare-the-inputs)) |
 | Few reactions get a predicted kcat | many metabolites have no SMILES | Read `noSMILES` of `findMetSmiles` (Python: the log of `find_met_smiles`, with the number at INFO level and the names at DEBUG level) and correct the metabolite names or `data/smilesDB.tsv` |
-| Error `kcatAssignment:config` (Python: a validation error of the adapter) | an unknown preset, a preset and stages together, or a stage with a wrong option | Correct `[kcat_assignment]` |
+| Error `kcatAssignment:config` (Python: a validation error of the adapter) | an unknown preset, a preset and stages together, a stage with a wrong value, or an unknown OKP method in `[kcat_sources.okp] methods` | Correct `[kcat_assignment]` or `[kcat_sources.okp]` |
 | Kcats set by hand are gone | `assignKcats` replaced them | Write them to `data/kcats/custom.tsv` ([Set custom kcats](custom-kcats.md)) |
 
 ## See also

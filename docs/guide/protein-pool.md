@@ -307,6 +307,7 @@ A fitted $\sigma$ close to 1 means that the enzymes work at their maximum rate o
 | `calculateFfactor` prints a warning and returns 0.5 | there is no `data/paxDB.tsv` and no `protData` was given | add the file, give `protData`, or keep the adapter value of $f$ |
 | $f$ is 0 or close to 0 | the protein identifiers of the data do not match `ec.enzymes` | map the identifiers of the data to UniProt identifiers |
 | Error `sigmaFitter:growthRate` (Python: `ValueError`) | the target growth rate, given or read from `gr_exp`, is not above 0 | set `gr_exp`, or give the growth rate |
+| Error `gr_exp is not set in model_adapter.toml` | no growth rate is given, and `model_adapter.toml` does not set `gr_exp` | set `gr_exp`, or give the growth rate |
 | `fit_sigma` raises a `ValueError` that `model.adapter` is None | the ecModel has no adapter attached, and `growth_rate`, `p_tot` or `f` is not given | attach the adapter, or give `growth_rate`, `p_tot` and `f` |
 | The fitted $\sigma$ is 1, or the error is large at every $\sigma$ | the kcats, the nutrient constraints or the network limit growth | see [Sigma and kcat tuning](#sigma-and-kcat-tuning) |
 | The growth rate is free after `sigmaFitter` or `fit_sigma`, although its bounds were fixed before | both set the bounds of the objective reaction to 0 and 1000, and the returned ecModel keeps them | set the bounds of the growth reaction again |

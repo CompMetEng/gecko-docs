@@ -139,7 +139,7 @@ Fluxes are compared in carbon units: each flux is multiplied by the number of ca
 
 ## Configure the tuning
 
-The settings are in the `[evotune]` table of `model_adapter.toml`. Every setting has a default (see [Model adapter parameters](model-adapter-parameters.md#kcat-tuning)). The template of `createGECKOproject` writes these values:
+The settings are in the `[evotune]` table of `model_adapter.toml`. Every setting has a default (see [Model adapter parameters](model-adapter-parameters.md#kcat-tuning)). The settings with their defaults:
 
 ```toml
 [evotune]
@@ -150,35 +150,36 @@ tie_isozymes = true
 rmse_threshold = 0.2
 max_generations = 150
 
-[evotune.source_groups.dlkcat]
-sources = ["dlkcat"]
+[evotune.source_groups.custom]
+sources = ["custom"]
+sigma0_log = 0.1
 
 [evotune.source_groups.brenda]
 sources = ["brenda"]
+sigma0_log = 0.2
 
-[evotune.source_groups.custom]
-sources = ["custom"]
+[evotune.source_groups.ec_tree]
+sources = ["ec_tree"]
+sigma0_log = 0.3
 
-[evotune.sigma0_log_source]
-dlkcat = 0.4
-brenda = 0.2
-custom = 0.1
+[evotune.source_groups.combined]
+sources = ["combined"]
+sigma0_log = 0.4
 ```
 
 | Setting (MATLAB field) | Meaning |
 | --- | --- |
-| `source_groups` (`kcatSources`) | trust groups, each with the `sources` it covers |
-| `sigma0_log_source` (`sigma0logSource`) | standard deviation in log space for each group; the keys are the group names |
-| `sigma0_log_default` (`sigma0logDefault`) | standard deviation for a kcat whose source is in no group |
+| `source_groups` (`kcatSources`) | trust groups, one table each with the `sources` it covers and its `sigma0_log`, the prior standard deviation of the natural log of the kcat |
+| `sigma0_log_default` (`sigma0logDefault`) | standard deviation of the natural log of a kcat that matches no group |
 | `max_growth_weight` (`maxGrowthWeight`) | weight `w` of the maximum growth rates against the fluxes in the RMSE |
 | `prior_penalty_weight` (`priorPenaltyWeight`) | weight `p` of a penalty for moving kcats; the search minimises `rmse + p * mean(((log k - log k0) / sigma0_log)^2)`. At 0 the objective is the RMSE |
 | `tie_isozymes` (`tieIsozymes`) | isozyme copies of one reaction with the same kcat and the same group get one shared kcat |
 | `rmse_threshold` (`rmseThreshold`) | the search stops when the best RMSE reaches this value; a negative value never stops the search early |
 | `max_generations` (`maxGenerations`) | maximum number of CMA-ES generations |
 
-A smaller `sigma0_log` is more trust: the search moves such a kcat less, and the screen ranks it lower. A kcat belongs to a group when the origin of its `ec.source`, or the whole `ec.source`, equals one of the `sources` of the group, without regard to case (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). `brenda (wc=0, origin=1)` is in the group that lists `brenda`, `combined (sd=0.10, n=2)` in the group that lists `combined`, and a tuned kcat such as `brenda (wc=0, origin=1) | tuned=cmaes (prior=2)` stays in the group of `brenda`. With `match_okp = true`, a group also covers the method of `[okp] method`.
+A smaller `sigma0_log` is more trust: the search moves such a kcat less, and the screen ranks it lower. A kcat belongs to a group when the origin of its `ec.source`, or the whole `ec.source`, equals one of the `sources` of the group, without regard to case (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). `brenda (wc=0, origin=1)` is in the group that lists `brenda`, `combined (sd=0.10, n=2)` in the group that lists `combined`, and a tuned kcat such as `brenda (wc=0, origin=1) | tuned=cmaes (prior=2)` stays in the group of `brenda`. An entry that ends in `*` is a prefix pattern: `okp_*` covers every `okp_<method>` origin. Exact entries are matched before patterns; [Source groups](model-adapter-parameters.md#source-groups) gives the full order. In both toolboxes the group of a kcat, in `screen.sourceGroup` (Python `source_group`) and `result.groups`, is the group name.
 
-The groups depend on the origins in the model. With the default kcat assignment, `ec.source` also holds origins such as `ec_tree`, `combined` and `standard`, which the template groups do not list, so these kcats take `sigma0_log_default`. List the origins of `ec.source` (`parseKcatSource`, Python `parse_kcat_source`, returns the origin of each entry) and add a group for each origin that needs its own trust. MATLAB reads `source_groups` as a flat list of source labels (`kcatSources`) with one width per label (`sigma0logSource`), so in MATLAB the group of a kcat, in `screen.sourceGroup` and `result.groups`, is the matched source label; in Python it is the group name. When a label matches several groups, the first group applies.
+The default groups cover the origins `custom`, `brenda`, `ec_tree` and `combined` of the preset `brenda_ec_tree`; kcats with the origin `standard` take `sigma0_log_default`. Other presets and stages give other origins, such as `homologs`, `dlkcat` or `okp_<method>`. List the origins of `ec.source` (`parseKcatSource`, Python `parse_kcat_source`, returns the origin of each entry) and give each origin that needs its own trust a group. Groups in `model_adapter.toml` replace all default groups, so a file that adds one group lists the default groups it keeps as well. Kcats in no group take `sigma0_log_default`, and the tuning warns when they are more than 20 % of the tunable kcats.
 
 ## Rank the kcats by their effect
 
@@ -555,8 +556,8 @@ The tuned ecModel holds the tuned kcats, but the next `assignKcats` replaces the
 | Error that a carbon source cannot be matched by name with an exchange reaction | The `Condition` of a row differs from every metabolite name in the exchange column headers | Use the metabolite name of the column header as the condition |
 | Error `No tunable kcats` | No kcat is above 0, or the mask excludes every kcat | Assign kcats first, or widen the mask |
 | Error `Only 1 free parameter(s) after masking and tying` | The mask and the isozyme tying leave fewer than two free kcats | Raise `targetImpactShare`, or give a wider `tunableMask` |
-| Error that the keys of `sigma0_log_source` must be the group names of `source_groups` | A group has no width, or a width has no group | Give each group one value in `[evotune.sigma0_log_source]` |
-| Most kcats take `sigma0_log_default` | The `sources` of the groups do not match the origins of `ec.source` in the model | List the origins that occur in `ec.source` (for example `ec_tree`, `combined` or `custom`) in `source_groups` |
+| Error `<file>: evotune.source_groups.<group> needs both sources and sigma0_log` | A group lacks `sources` or `sigma0_log` | Give each group both keys |
+| Warning `<n> of <m> tunable kcats match no evotune source group and get sigma0_log_default` | The `sources` of the groups do not match the origins of `ec.source` in the model | List the origins that the warning names in the `sources` of a group, or use a pattern such as `okp_*` |
 | The large changes differ in direction between seeds | Several kcat vectors fit the data equally well | Increase `prior_penalty_weight`, and compare values with `tunePriorPenaltyWeight` |
 
 ## See also
