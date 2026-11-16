@@ -116,6 +116,16 @@ A project can list its own stages in `[[kcat_assignment.stage]]` tables in place
 
 Against measured kcats hidden from the search, the EC tree was as close as or closer than the BRENDA median at origins 1 to 4 and with EC wildcards, and the EC tree combined with eight OKP methods (CataPro, DLKcat, EITLEM, KinForm-H, KinForm-L, OmniESI, OmniESI-O2DENet and UniKP) was slightly closer than the EC tree; in ecModels, however, values combined with predictions set high-turnover enzymes such as ATP synthase too low ([Kcat assignment](../gecko4-kcat-assignment.md#presets)). No other comparison of the presets has been measured, and KinForm-H alone, the default OKP method, was not compared separately. `brenda_ec_tree`, the default, uses predictions for the reactions without a value from measurements, and is the preset to start with.
 
+### BRENDA median and maximum
+
+`kcat.tsv` of the BRENDA release has one entry per EC number, substrate and organism, with the maximum and the median of the measured kcats of that entry. When several entries match a reaction, for example with an EC wildcard or on any substrate, `fuzzyKcatMatching` (Python: `fuzzy_kcat_matching`) takes the maximum or the median of the matched values as well, with the same setting. The presets `brenda_ec_tree`, `ec_tree_homologs`, `ec_tree_okp` and `gecko_median` use the median, because the maximum is often far above a typical measurement; `gecko_classic` uses the maximum. In `kcat.tsv` of the release `brenda-2026.1-1`, with trypsin (EC 3.4.21.4) left out of the analysis:
+
+- 9,549 of the 39,053 entries (24 %) hold more than one measurement. In these entries, the median of log10(maximum/median) was 0.16 and the mean 0.26 (a factor of 1.4 and 1.8). The maximum was at least 10 times the median in 4.8 % of these entries, and at least 100 times in 1.2 %.
+- For the 1,722 EC numbers with at least five entries, the maximum over all entries of the EC number was at least 10 times the median of the entry medians for 59.5 % of the EC numbers, at least 100 times for 24.2 % and at least 1,000 times for 8.6 %. The mean log10 ratio was 1.45. Of this, 1.38 came from taking the maximum over the entries and 0.06 from taking the maximum within an entry.
+- For esterase (EC 3.1.1.1, 355 entries), the maximum was 431,000 s⁻¹ and the median of the entry medians 24 s⁻¹.
+
+These numbers compare the BRENDA values with each other. They do not compare the predictions of ecModels made with the maximum and with the median.
+
 ## BRENDA origin and wildcard levels
 
 A BRENDA match records how specific it is in two numbers, which `ec.source` shows as `brenda (wc=<wildcard level>, origin=<origin>)` and which the presets use to rank BRENDA values.
