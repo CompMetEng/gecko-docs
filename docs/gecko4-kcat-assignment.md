@@ -17,7 +17,7 @@ GECKO 4 assigns the kcat of each reaction from kcat source files, in an order th
 
 ## Sources
 
-A source is the name of a file in `data/kcats` (`custom`, `ec_tree`, `homologs`, `dlkcat`, `okp_<method>`), or one of the BRENDA quality tiers `database_exact`, `database_top` and `database_bottom`, which read `brenda.tsv`. In a stage, `okp` stands for the OpenKineticsPredictor (OKP) methods of `[kcat_sources.okp] methods`, which default to KinForm-H alone.
+A source is the name of a file in `data/kcats` (`custom`, `ec_tree`, `homologs`, `dlkcat`, `okp_<method>`), or one of the BRENDA quality tiers `database_exact`, `database_top` and `database_bottom`, which read `brenda.tsv`. In a stage, `okp` stands for the file of the OpenKineticsPredictor (OKP) method of `[kcat_sources.okp] method`, which defaults to KinForm-H.
 
 | Source | Content |
 | --- | --- |
@@ -40,10 +40,10 @@ When a stage lists `custom`, `data/kcats/custom.tsv` does not exist and the GECK
 
 | Preset | Stages |
 | --- | --- |
-| `brenda_ec_tree` | custom kcats; the BRENDA median of the organism on the substrate of the reaction (origin 1, no EC wildcards); the EC tree; then the OKP methods for the reactions still open |
-| `ec_tree_homologs` | custom kcats; the BRENDA value of the organism; the EC tree and the homologs combined; then the OKP methods combined |
-| `ec_tree_okp` | custom kcats; the BRENDA value of the organism; the EC tree, the homologs and the OKP methods combined; then the OKP methods combined |
-| `okp` | custom kcats; then the OKP methods combined |
+| `brenda_ec_tree` | custom kcats; the BRENDA median of the organism on the substrate of the reaction (origin 1, no EC wildcards); the EC tree; then the OKP predictions for the reactions still open |
+| `ec_tree_homologs` | custom kcats; the BRENDA value of the organism; the EC tree and the homologs combined; then the OKP predictions |
+| `ec_tree_okp` | custom kcats; the BRENDA value of the organism; the EC tree, the homologs and the OKP predictions combined; then the OKP predictions |
+| `okp` | custom kcats; then the OKP predictions |
 | `gecko_median` | custom kcats; BRENDA median without EC wildcards (origin 1 to 4); DLKcat; then the other BRENDA matches (EC wildcards, origin 3 to 6; specific activities, origin 5 and 6) |
 | `gecko_classic` | as `gecko_median` with the BRENDA maximum and the specific-activity matches above DLKcat (origin up to 6), the order of the GECKO 3 tutorial |
 
@@ -63,7 +63,7 @@ top_origin_limit = 1
 
 A stage has the options `action` (default `select`), `sources`, `criteria` (default `max`), `top_origin_limit` (default 4), `bottom_origin_limit` (default 6) and `wildcard_limit` (default 3).
 
-Against measured kcats hidden from the search, the EC tree was closer than the BRENDA median at origin 2, at origin 4 and with EC wildcards, and as close at origin 1 and 3. The EC tree combined with the OKP methods was slightly closer than the EC tree, and the OKP methods combined were as close. In ecModels, values combined with predictions set high-turnover enzymes such as ATP synthase too low. The default therefore uses predictions where measurements give no value. The OKP methods of this comparison were eight methods combined (CataPro, DLKcat, EITLEM, KinForm-H, KinForm-L, OmniESI, OmniESI-O2DENet and UniKP); the default of `[kcat_sources.okp] methods` is KinForm-H alone, which the comparison did not test separately.
+Against measured kcats hidden from the search, the EC tree was closer than the BRENDA median at origin 2, at origin 4 and with EC wildcards, and as close at origin 1 and 3. The EC tree combined with OKP predictions was slightly closer than the EC tree. In ecModels, values combined with predictions set high-turnover enzymes such as ATP synthase too low. The default therefore uses predictions where measurements give no value. The default of `[kcat_sources.okp] method` is KinForm-H, which the comparison did not test separately.
 
 ## Provenance of a kcat
 

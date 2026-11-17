@@ -32,7 +32,7 @@ The `data` folder of a GECKO 4 project holds the input data of the reconstructio
 | `DLKcat_run.txt` | The number of reactions that the last DLKcat run covered, when it covered a subset of the reactions | `kcatsFromDLKcat` (Python: `kcats_from_dlkcat`) | [Choose the kcat sources](kcat-sources.md) |
 | `DLKcatIgnoreMets.tsv`, `DLKcatCurrencyMets.tsv` | Optional project copies of the metabolites left out of the DLKcat and OKP input and the homolog search (names with SMILES; pairs of currency metabolites). Default: the toolbox files | `kcatsFromOKP`, `kcatsFromDLKcat`, `kcatsFromHomologs` | [Choose the kcat sources](kcat-sources.md) |
 | `OKP.csv` | Input of the last OpenKineticsPredictor job | `kcatsFromOKP` (Python: `kcats_from_okp`) | [Choose the kcat sources](kcat-sources.md) |
-| `OKP_job_<method>.txt`, `OKP_output_<method>.csv` | The job and the result of one OKP method | `kcatsFromOKP` (Python: `kcats_from_okp`) | [Choose the kcat sources](kcat-sources.md) |
+| `OKP_job_<method>.txt`, `OKP_output_<method>.csv` | The job and the result of the OKP method | `kcatsFromOKP` (Python: `kcats_from_okp`) | [Choose the kcat sources](kcat-sources.md) |
 | `OKP_job.txt`, `OKP_output.csv` | The job and the result of a job, written by earlier versions of GECKO. `kcatsFromOKP` adopts them for its method when no job of that method exists | `kcatsFromOKP` (Python: `kcats_from_okp`) | [Choose the kcat sources](kcat-sources.md) |
 | `okpApiKey.txt` | The API key of OpenKineticsPredictor, read when the environment variable `OKP_API_KEY` is not set | `kcatsFromOKP`, `kcatsFromDLKcat` (Python: `kcats_from_okp`, `kcats_from_dlkcat`) | [Choose the kcat sources](kcat-sources.md) |
 

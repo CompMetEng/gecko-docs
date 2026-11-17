@@ -98,7 +98,7 @@ The table lists a selection.
 
 `levelComplexConcs` gives the subunits of a multi-subunit complex one abundance. The complex is then not capped by its least abundant subunit. It runs after `fillEnzConcs` and before `constrainEnzConcs`.
 
-kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, through `kcatsFromOKP`. `[kcat_sources.okp] methods` names the OKP methods, by default KinForm-H alone: the `okp` stage of the presets uses these methods, and `kcatsFromOKP` without a method uses the first of them. `kcatsFromDLKcat` uses its DLKcat method unless `data/DLKcat.tsv` exists, or the option `'via', 'docker'` selects a local run in the Docker image. The DLKcat Docker context is not part of the GECKO repository (`src/dlkcat-gecko` is removed).
+kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, through `kcatsFromOKP`. `[kcat_sources.okp] method` names the OKP method, by default KinForm-H: the `okp` stage of the presets reads the file of this method, and `kcatsFromOKP` without a method uses it. `kcatsFromDLKcat` uses its DLKcat method unless `data/DLKcat.tsv` exists, or the option `'via', 'docker'` selects a local run in the Docker image. The DLKcat Docker context is not part of the GECKO repository (`src/dlkcat-gecko` is removed).
 
 ## Removed
 

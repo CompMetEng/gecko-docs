@@ -72,7 +72,7 @@ A full ecModel has one pseudometabolite and one usage reaction per enzyme, so it
 
 ## Kcat values
 
-The kcat values determine how much protein each reaction costs, so they determine the predictions of an ecModel. Measured kcats come from databases such as [BRENDA](https://www.brenda-enzymes.org/), which covers few enzymes of most organisms. GECKO fills the reactions without a measured kcat with values estimated from other measurements of the same EC number, or predicted from the enzyme sequence and the substrate structure by the methods of the OpenKineticsPredictor service. [Choose the kcat sources](kcat-sources.md) describes the sources and the presets that combine them.
+The kcat values determine how much protein each reaction costs, so they determine the predictions of an ecModel. Measured kcats come from databases such as [BRENDA](https://www.brenda-enzymes.org/), which covers few enzymes of most organisms. GECKO fills the reactions without a measured kcat with values estimated from other measurements of the same EC number, or predicted from the enzyme sequence and the substrate structure by the OpenKineticsPredictor service. [Choose the kcat sources](kcat-sources.md) describes the sources and the presets that combine them.
 
 Most measured kcats are in vitro values, and predicted kcats are estimates. A new ecModel can therefore grow more slowly than the organism. [Choose a kcat tuning](kcat-tuning.md) describes how to find and correct the kcats that limit growth.
 

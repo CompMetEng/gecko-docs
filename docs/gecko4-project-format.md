@@ -29,7 +29,7 @@ The file holds the parameters that an adapter class sets in GECKO 3. Paths are r
 | `[spontaneous]` | reactions without an enzyme: a name fragment (`name_contains`) and a file with reaction identifiers (`file`) |
 | `[evotune]` | the hyperparameters of the CMA-ES kcat tuning, with one table per source group that holds its `sources` and its prior width `sigma0_log` |
 | `[kcat_assignment]` | a preset or stages, and the options `isozymes` and `standard` (see [Kcat assignment](gecko4-kcat-assignment.md)) |
-| `[kcat_sources.<name>]` | settings of one source, for example `aggregation` of `brenda` and `methods` of `okp`, the OpenKineticsPredictor methods |
+| `[kcat_sources.<name>]` | settings of one source, for example `aggregation` of `brenda` and `method` of `okp`, the OpenKineticsPredictor method |
 | `[okp]` | the options of the OpenKineticsPredictor requests: `handle_long_sequences`, `include_similarity_columns` and `canonicalize_substrates` |
 | `[matlab]` | names of MATLAB functions for the anaerobic model and the protein content of the biomass. GECKO alone reads this section |
 | `[matlab.params]` | parameters that GECKO uses and geckopy does not use |

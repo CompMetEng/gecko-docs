@@ -108,7 +108,7 @@ kcat_assignment.stage[1] = select: custom, database_top, ec_tree; top_origin_lim
 kcat_assignment.stage[2] = combine: okp  [preset brenda_ec_tree]
 kcat_sources.brenda.aggregation = median  [preset brenda_ec_tree]
 kcat_sources.ec_tree.k = 5  [preset brenda_ec_tree]
-kcat_sources.okp.methods = KinForm-H  [default]
+kcat_sources.okp.method = KinForm-H  [default]
 ```
 
 A stage line lists the action, the sources, and the criteria and limits that differ from the defaults. With stages in the file, the preset line is `kcat_assignment.preset = none (stages are given)  [file]`.
@@ -172,7 +172,7 @@ A `[kcat_sources.<name>]` table holds the settings with which `updateKcatSources
 | `[kcat_sources.brenda]` | `aggregation` (`"max"` or `"median"`), `force_wildcard_level` |
 | `[kcat_sources.ec_tree]` | `k` |
 | `[kcat_sources.homologs]` | `k`, `min_identity`, `coverage` |
-| `[kcat_sources.okp]` | `methods` |
+| `[kcat_sources.okp]` | `method` |
 | `[kcat_sources.custom]`, `[kcat_sources.dlkcat]`, `[kcat_sources.okp_<method>]` | none |
 
 A table of another source is an unknown key, and so is `[kcat_sources.okp_<x>]` unless `okp_<x>` is the file of an accepted OpenKineticsPredictor method (see [OpenKineticsPredictor](#openkineticspredictor)). An empty table of a known source is accepted. An entry for a known source that is not a table raises `<file>: kcat_sources.<name> must be a table`.
@@ -259,7 +259,7 @@ Groups in the file replace all default groups.
 
 ## OpenKineticsPredictor
 
-`[kcat_sources.okp] methods` is the one setting that names OpenKineticsPredictor (OKP) methods; the default is `["KinForm-H"]`. The `okp` source of the presets and stages stands for these methods, `updateKcatSources` gathers one file `okp_<method>.tsv` per method, and `kcatsFromOKP` (Python: `kcats_from_okp`) called without `method` uses the first method of the list. The `[okp]` table names no method; it holds the options of each request to the OKP service:
+`[kcat_sources.okp] method` is the one setting that names the OpenKineticsPredictor (OKP) method; the default is `"KinForm-H"`. The `okp` source of the presets and stages stands for the file `okp_<method>.tsv` of this method, `updateKcatSources` gathers that file, and `kcatsFromOKP` (Python: `kcats_from_okp`) called without `method` uses it. The `[okp]` table names no method; it holds the options of each request to the OKP service:
 
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
@@ -269,14 +269,16 @@ Groups in the file replace all default groups.
 
 ```toml
 [kcat_sources.okp]
-methods = ["CataPro", "KinForm-H", "UniKP"]
+method = "UniKP"
 ```
 
-`methods` accepts the methods that predict from one enzyme and one substrate: CataPro, CatRange, DLKcat, EITLEM, KinForm-H, KinForm-L, OmniESI, OmniESI-O2DENet and UniKP. CatPred and TurNup read whole reactions, and `kcatsFromOKP` does not submit them. The file of a method is `okp_` followed by the method name in lower case, with each run of characters other than letters and digits replaced by `_`: `okp_kinform_h` for KinForm-H and `okp_omniesi_o2denet` for OmniESI-O2DENet. When the file is read, a name that is not in this list raises:
+`method` accepts the methods that predict from one enzyme and one substrate: CataPro, CatRange, DLKcat, EITLEM, KinForm-H, KinForm-L, OmniESI, OmniESI-O2DENet and UniKP. CatPred and TurNup read whole reactions, and `kcatsFromOKP` does not submit them. The file of a method is `okp_` followed by the method name in lower case, with each run of characters other than letters and digits replaced by `_`: `okp_kinform_h` for KinForm-H and `okp_omniesi_o2denet` for OmniESI-O2DENet. When the file is read, a name that is not in this list raises:
 
 ```text
-Unknown OKP methods in [kcat_sources.okp] methods: <names>; methods: <accepted methods>.
+Unknown OKP method <name> in [kcat_sources.okp] method; supported: <accepted methods>
 ```
+
+A value that is not a string raises `kcat_sources.okp.method must be a string`.
 
 The API key is no parameter. It is an argument of the functions, the environment variable `OKP_API_KEY` or the file `data/okpApiKey.txt`.
 
@@ -300,7 +302,7 @@ A GECKO 3 adapter class sets the same parameters in MATLAB code; [GECKO 3 to GEC
 | `<file>: matlab.params.kcatAggregation is not allowed; set it in [kcat_sources.brenda] aggregation` (or `matlab.params.evotune`, `set it in [evotune]`) | `[matlab.params]` sets a parameter that has a key of its own | Move the setting to `[kcat_sources.brenda]` or `[evotune]` |
 | `<file>: evotune.source_groups.<group> needs both sources and sigma0_log`, or `must be a table with sources and sigma0_log` | a group lacks one of the two keys, or is a single value in place of a table | Write the group as a table with `sources` and `sigma0_log` |
 | `<file>: evotune.source_groups.<group>.sources must be a non-empty list of strings`, or `.sigma0_log must be a positive number` | `sources` is empty or not a list of strings; `sigma0_log` is zero, negative, not finite or not a number | Correct the value |
-| `Unknown OKP methods in [kcat_sources.okp] methods: ...` | a method name is misspelled, or names CatPred or TurNup | Use the names of [OpenKineticsPredictor](#openkineticspredictor) |
+| `Unknown OKP method <name> in [kcat_sources.okp] method; supported: ...` | the method name is misspelled, or is CatPred or TurNup | Use the names of [OpenKineticsPredictor](#openkineticspredictor) |
 | `gr_exp is not set in model_adapter.toml` | a function that needs a target growth rate got none, and the file does not set `gr_exp` | Set `gr_exp`, or give the growth rate in the call |
 | Error about a preset and stages | `[kcat_assignment]` has both `preset` and `[[kcat_assignment.stage]]` | Keep one of the two |
 | `No model_adapter.toml found in <folder>` | the folder given holds no `model_adapter.toml` | Give the folder that holds the file |

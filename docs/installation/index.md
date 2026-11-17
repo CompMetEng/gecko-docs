@@ -148,7 +148,7 @@ GLPK, the default solver of RAVEN, is not recommended for GECKO: ecModels are la
 
 ## OpenKineticsPredictor
 
-`kcatsFromOKP` and `kcatsFromDLKcat` (Python: `kcats_from_okp`, `kcats_from_dlkcat`) predict kcat values with the hosted [OpenKineticsPredictor](https://predictor.openkinetics.org/) service. The service needs an API key, which GECKO reads from the environment variable `OKP_API_KEY` or from `data/okpApiKey.txt` in the project folder. A project made with `createGECKOproject` (Python: `geckopy init`) has a `.gitignore` that keeps that file out of git. [Choose the kcat sources](../guide/kcat-sources.md) describes the methods and the jobs.
+`kcatsFromOKP` and `kcatsFromDLKcat` (Python: `kcats_from_okp`, `kcats_from_dlkcat`) predict kcat values with the hosted [OpenKineticsPredictor](https://predictor.openkinetics.org/) service. The service needs an API key, which GECKO reads from the environment variable `OKP_API_KEY` or from `data/okpApiKey.txt` in the project folder. A project made with `createGECKOproject` (Python: `geckopy init`) has a `.gitignore` that keeps that file out of git. [Choose the kcat sources](../guide/kcat-sources.md) describes the method and the job.
 
 :::{admonition} DLKcat on the local computer
 :class: note

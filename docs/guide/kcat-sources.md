@@ -93,18 +93,18 @@ flowchart TB
 
 ## Setup
 
-The examples start from an ecModel made with `makeEcModel` (Python: `make_ec_model`), full or light ([Choose the ecModel structure](ecmodel-structure.md)). In MATLAB, the project is the default model adapter (`ModelAdapterManager.setDefault`); in Python, `ec_model.adapter` holds the project. The project folder has `data/uniprot.tsv` and `data/kegg.tsv` from making the ecModel. The OpenKineticsPredictor (OKP) methods and DLKcat without `data/DLKcat.tsv` need an OKP API key ([Prepare the inputs](#prepare-the-inputs)). The BRENDA download, the PubChem queries and OpenKineticsPredictor need internet access.
+The examples start from an ecModel made with `makeEcModel` (Python: `make_ec_model`), full or light ([Choose the ecModel structure](ecmodel-structure.md)). In MATLAB, the project is the default model adapter (`ModelAdapterManager.setDefault`); in Python, `ec_model.adapter` holds the project. The project folder has `data/uniprot.tsv` and `data/kegg.tsv` from making the ecModel. The OpenKineticsPredictor (OKP) method and DLKcat without `data/DLKcat.tsv` need an OKP API key ([Prepare the inputs](#prepare-the-inputs)). The BRENDA download, the PubChem queries and OpenKineticsPredictor need internet access.
 
 ## Presets
 
-`[kcat_assignment] preset` selects one of six presets. Each preset is a list of stages, and a stage gives a kcat to the reactions that the earlier stages left without one. Every preset starts with the custom kcats of the project. In the table, "the OKP methods" means the OKP methods of `[kcat_sources.okp] methods`; the default is KinForm-H alone, and a stage with one method uses its prediction with the bias correction of that method.
+`[kcat_assignment] preset` selects one of six presets. Each preset is a list of stages, and a stage gives a kcat to the reactions that the earlier stages left without one. Every preset starts with the custom kcats of the project. In the table, "the OKP predictions" are those of the OKP method of `[kcat_sources.okp] method`; the default is KinForm-H, and a stage uses its prediction with the bias correction of that method.
 
 | Preset | Kcat of a reaction, in this order | Needs |
 | --- | --- | --- |
-| `brenda_ec_tree` (default) | BRENDA median of measurements of the organism on the substrate of the reaction; the EC tree; the OKP methods combined | EC numbers, BRENDA files, SMILES, OKP API key |
-| `ec_tree_homologs` | BRENDA value of the organism; the EC tree and the measured homologs combined; the OKP methods combined | as `brenda_ec_tree`, plus DIAMOND |
-| `ec_tree_okp` | BRENDA value of the organism; the EC tree, the homologs and the OKP methods combined; the OKP methods combined | as `ec_tree_homologs` |
-| `okp` | the OKP methods combined | SMILES, OKP API key |
+| `brenda_ec_tree` (default) | BRENDA median of measurements of the organism on the substrate of the reaction; the EC tree; the OKP predictions | EC numbers, BRENDA files, SMILES, OKP API key |
+| `ec_tree_homologs` | BRENDA value of the organism; the EC tree and the measured homologs combined; the OKP predictions | as `brenda_ec_tree`, plus DIAMOND |
+| `ec_tree_okp` | BRENDA value of the organism; the EC tree, the homologs and the OKP predictions combined; the OKP predictions | as `ec_tree_homologs` |
+| `okp` | the OKP predictions | SMILES, OKP API key |
 | `gecko_median` | BRENDA median of matches without EC wildcards (origin 1 to 4); DLKcat; the other BRENDA matches | EC numbers, BRENDA files, SMILES, OKP API key or `data/DLKcat.tsv` |
 | `gecko_classic` | the order of the GECKO 3 tutorial: as `gecko_median` with the BRENDA maximum, and with the matches from specific activities (origin 5 and 6) before DLKcat | as `gecko_median` |
 
@@ -114,7 +114,7 @@ A project can list its own stages in `[[kcat_assignment.stage]]` tables in place
 
 ### Preset to start with
 
-Against measured kcats hidden from the search, the EC tree was as close as or closer than the BRENDA median at origins 1 to 4 and with EC wildcards, and the EC tree combined with eight OKP methods (CataPro, DLKcat, EITLEM, KinForm-H, KinForm-L, OmniESI, OmniESI-O2DENet and UniKP) was slightly closer than the EC tree; in ecModels, however, values combined with predictions set high-turnover enzymes such as ATP synthase too low ([Kcat assignment](../gecko4-kcat-assignment.md#presets)). No other comparison of the presets has been measured, and KinForm-H alone, the default OKP method, was not compared separately. `brenda_ec_tree`, the default, uses predictions for the reactions without a value from measurements, and is the preset to start with.
+Against measured kcats hidden from the search, the EC tree was as close as or closer than the BRENDA median at origins 1 to 4 and with EC wildcards, and the EC tree combined with OKP predictions was slightly closer than the EC tree; in ecModels, however, values combined with predictions set high-turnover enzymes such as ATP synthase too low ([Kcat assignment](../gecko4-kcat-assignment.md#presets)). No other comparison of the presets has been measured, and KinForm-H, the default OKP method, was not compared separately. `brenda_ec_tree`, the default, uses predictions for the reactions without a value from measurements, and is the preset to start with.
 
 ### BRENDA median and maximum
 
@@ -158,11 +158,11 @@ The sources read different parts of the ecModel and of the project:
 | Input | Read by | How to get it |
 | --- | --- | --- |
 | EC numbers in `ec.eccodes` | BRENDA, EC tree | `getECfromGEM` (from the GEM), `getECfromDatabase` (from UniProt and KEGG) |
-| SMILES of the metabolites | OKP methods, DLKcat | `findMetSmiles`; substrates without a SMILES are left out of a prediction |
-| enzyme sequences in `ec.sequence` | OKP methods, DLKcat, homologs | `makeEcModel` fills them from UniProt ([Choose the ecModel structure](ecmodel-structure.md)) |
+| SMILES of the metabolites | OKP, DLKcat | `findMetSmiles`; substrates without a SMILES are left out of a prediction |
+| enzyme sequences in `ec.sequence` | OKP, DLKcat, homologs | `makeEcModel` fills them from UniProt ([Choose the ecModel structure](ecmodel-structure.md)) |
 | BRENDA files | BRENDA, EC tree, homologs, combined stages | `fetchBrendaAsset` downloads the release `brenda-2026.1-1` on first use. A project folder `data/brenda` takes precedence. MATLAB needs RAVEN 3 for the download |
 | DIAMOND | homologs | the DIAMOND executable of RAVEN (MATLAB) or raven-toolbox (Python) |
-| OpenKineticsPredictor API key | OKP methods, DLKcat without `data/DLKcat.tsv` | generate a key at [predictor.openkinetics.org](https://predictor.openkinetics.org/) |
+| OpenKineticsPredictor API key | OKP, DLKcat without `data/DLKcat.tsv` | generate a key at [predictor.openkinetics.org](https://predictor.openkinetics.org/) |
 
 GECKO looks for the API key in the environment variable `OKP_API_KEY` and then in the file `data/okpApiKey.txt` of the project. The key is never read from `model_adapter.toml`. Do not commit `data/okpApiKey.txt` to a public repository.
 
@@ -226,7 +226,7 @@ report = update_kcat_sources(ec_model)
 :::
 ::::
 
-`report` has one row per source file, with the columns `source`, `status` and `note`. The status is `current`, `gathered`, `pending`, `outdated`, `missing`, `failed` or `skipped`. OpenKineticsPredictor is a web service with a job queue: the first call submits one job per method and reports the source as `pending`, and a later call fetches the result and writes the file. Call `updateKcatSources` again until no source is `pending`. A source that is `failed` has the reason in `note`, for example a missing API key.
+`report` has one row per source file, with the columns `source`, `status` and `note`. The status is `current`, `gathered`, `pending`, `outdated`, `missing`, `failed` or `skipped`. OpenKineticsPredictor is a web service with a job queue: the first call submits the job and reports the source as `pending`, and a later call fetches the result and writes the file. Call `updateKcatSources` again until no source is `pending`. A source that is `failed` has the reason in `note`, for example a missing API key.
 
 `[kcat_sources.<name>]` of `model_adapter.toml` holds the settings with which `updateKcatSources` gathers a source file. A preset sets `aggregation` of `brenda` and `k` of `ec_tree`. A `[kcat_sources.<name>]` table in `model_adapter.toml` overrides the keys that it sets and keeps the other settings of the preset. A source file gathered before a change of these settings is then reported as `outdated`.
 
@@ -238,7 +238,7 @@ report = update_kcat_sources(ec_model)
 | `[kcat_sources.homologs]` | `k`: number of homologs | 10 |
 | `[kcat_sources.homologs]` | `min_identity`: minimum sequence identity, as a fraction | 0.4 |
 | `[kcat_sources.homologs]` | `coverage`: minimum coverage of both sequences, as a fraction | 0.8 |
-| `[kcat_sources.okp]` | `methods`: the OpenKineticsPredictor methods that `okp` stands for in a stage, one file `okp_<method>.tsv` each | `["KinForm-H"]` |
+| `[kcat_sources.okp]` | `method`: the OpenKineticsPredictor method whose file `okp_<method>.tsv` `okp` stands for in a stage | `"KinForm-H"` |
 
 The tables of `custom`, `dlkcat` and `okp_<method>` take no keys; the method of an `okp_<method>` file is the method whose name gives the file name. Any other key is an error when `model_adapter.toml` is read (see [Model adapter parameters](model-adapter-parameters.md#kcat-source-settings)). The BRENDA aggregation also applies to `kcatsFromBrenda` and `fuzzyKcatMatching` called without an aggregation ([BRENDA aggregation](model-adapter-parameters.md#brenda-aggregation)).
 
@@ -342,12 +342,12 @@ After the stages, two settings of `[kcat_assignment]` fill the reactions that ar
 
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
-| OKP sources stay `pending` | the OpenKineticsPredictor jobs are still running | Call `updateKcatSources` again later |
+| OKP sources stay `pending` | the OpenKineticsPredictor job is still running | Call `updateKcatSources` again later |
 | OKP sources are `failed` with `No OpenKineticsPredictor API key found` | no key in `OKP_API_KEY` or in `data/okpApiKey.txt` | Generate a key and store it in one of the two places |
 | `No kcat source file <file>; it is left out` | a stage names a source that has no file in `data/kcats` | Run `updateKcatSources`, or remove the source from the stages |
 | BRENDA and the EC tree give kcats for few reactions | many reactions have no EC number | Fill `ec.eccodes` (section [Prepare the inputs](#prepare-the-inputs)) |
 | Few reactions get a predicted kcat | many metabolites have no SMILES | Read `noSMILES` of `findMetSmiles` (Python: the log of `find_met_smiles`, with the number at INFO level and the names at DEBUG level) and correct the metabolite names or `data/smilesDB.tsv` |
-| Error `kcatAssignment:config` (Python: a validation error of the adapter) | an unknown preset, a preset and stages together, a stage with a wrong value, or an unknown OKP method in `[kcat_sources.okp] methods` | Correct `[kcat_assignment]` or `[kcat_sources.okp]` |
+| Error `kcatAssignment:config` (Python: a validation error of the adapter) | an unknown preset, a preset and stages together, a stage with a wrong value, or an unknown OKP method in `[kcat_sources.okp] method` | Correct `[kcat_assignment]` or `[kcat_sources.okp]` |
 | Kcats set by hand are gone | `assignKcats` replaced them | Write them to `data/kcats/custom.tsv` ([Set custom kcats](custom-kcats.md)) |
 
 ## See also
