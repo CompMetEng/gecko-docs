@@ -98,15 +98,17 @@ show_adapter_params(ModelAdapter.from_folder(project_path))
 Each line has the form `<key> = <value>  [<origin>]`, in the order of `adapterParameters.tsv`. The origin is `file` (set in `model_adapter.toml`, or by an adapter class), `default`, `preset <name>` (set by the kcat assignment preset) or `not set`. Strings are printed without quotes, lists comma-separated, and whole numbers without decimals. The kcat assignment stages, the settings of each kcat source and the evotune source groups are printed as they are resolved. Some of the lines for a project that sets `gr_exp` and no kcat assignment:
 
 ```text
-gr_exp = 0.41  [file]
 sigma = 0.5  [default]
+gr_exp = 0.41  [file]
+complex.taxonomic_id =  [not set]
+evotune.source_groups.custom = custom; sigma0_log 0.1  [default]
+evotune.max_growth_weight = 1  [default]
 kcat_assignment.preset = brenda_ec_tree  [default]
 kcat_assignment.stage[1] = select: custom, database_top, ec_tree; top_origin_limit=1  [preset brenda_ec_tree]
 kcat_assignment.stage[2] = combine: okp  [preset brenda_ec_tree]
 kcat_sources.brenda.aggregation = median  [preset brenda_ec_tree]
 kcat_sources.ec_tree.k = 5  [preset brenda_ec_tree]
 kcat_sources.okp.methods = KinForm-H  [default]
-evotune.source_groups.custom = custom; sigma0_log 0.1  [default]
 ```
 
 A stage line lists the action, the sources, and the criteria and limits that differ from the defaults. With stages in the file, the preset line is `kcat_assignment.preset = none (stages are given)  [file]`.
@@ -173,7 +175,7 @@ A `[kcat_sources.<name>]` table holds the settings with which `updateKcatSources
 | `[kcat_sources.okp]` | `methods` |
 | `[kcat_sources.custom]`, `[kcat_sources.dlkcat]`, `[kcat_sources.okp_<method>]` | none |
 
-A table of another source is an unknown key, and so is `[kcat_sources.okp_<x>]` unless `okp_<x>` is the file of an accepted OpenKineticsPredictor method (see [OpenKineticsPredictor](#openkineticspredictor)). An empty table of a known source is accepted. An entry of `[kcat_sources]` other than a table raises `<file>: kcat_sources.<name> must be a table`.
+A table of another source is an unknown key, and so is `[kcat_sources.okp_<x>]` unless `okp_<x>` is the file of an accepted OpenKineticsPredictor method (see [OpenKineticsPredictor](#openkineticspredictor)). An empty table of a known source is accepted. An entry for a known source that is not a table raises `<file>: kcat_sources.<name> must be a table`.
 
 ### BRENDA aggregation
 

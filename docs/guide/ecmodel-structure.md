@@ -116,7 +116,7 @@ Build a full ecModel unless the size of the full model makes the simulations too
 |---|---|---|
 | Constrain enzymes with proteomics | `constrainEnzConcs` raises an error, so the functions that relax these constraints have nothing to act on; `relaxProteomicsGreedy` and `getIsozymeCoverage` raise an error themselves | `constrain_enz_concs` raises a `ValueError`; the flux, bound, shadow price and concentration setter of `Enzyme` raise a `NotImplementedError` |
 | Enzyme usage and bottlenecks | `getEnzymeUsage`, `getEnzymeBottlenecks` and `getPfbaEnzymes` raise an error | `enzyme_usage` and `pfba_enzymes` raise a `NotImplementedError`; `get_enzyme_bottlenecks` raises a `KeyError`, because the `prot_<UniProt>` constraints it reads do not exist |
-| Fill kcats from other isozymes | `getKcatAcrossIsozymes` raises an error | `fill_kcats_from_isozymes` raises a `NotImplementedError` |
+| Fill kcats from other isozymes | `fillKcatsFromIsozymes` raises an error | `fill_kcats_from_isozymes` raises a `NotImplementedError` |
 | Add reactions to an ecModel | `addNewRxnsToEC` raises an error | `add_new_rxns_to_ec` raises a `NotImplementedError` |
 | Convert `customKcats.tsv` to `custom.tsv` | `convertCustomKcats` raises an error | `convert_custom_kcats` raises a `ValueError` |
 

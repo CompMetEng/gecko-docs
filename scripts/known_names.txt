@@ -104,9 +104,6 @@ kcat_tuned
 kcatAggregation
 kcatList
 kcatSource
-kcat_aggregate_brenda
-kcat_aggregate_candidates
-kcat_aggregate_isozymes
 kcat_list_okp
 kegg_db
 kegg_gene
@@ -208,7 +205,6 @@ shadowPrice
 shadow_price
 sigma0_log
 sigma0_log_default
-sigma0_log_source
 sigma_grid
 snake_case
 sourcePriority
@@ -285,7 +281,6 @@ write_yaml_model
 frozenset
 getExchangeRxns
 evoData
-okp_method
 handle_long_sequences
 include_similarity_columns
 canonicalize_substrates

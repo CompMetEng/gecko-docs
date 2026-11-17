@@ -46,7 +46,7 @@ The table is a selection; [MATLAB and Python](matlab-vs-python.md) lists all pai
 | `evotuneScore` | `evotune_distance` |
 | `getEcRxnKeys` | `ec_rxn_keys` |
 | `assignKcatValues` | `apply_kcat_list` |
-| `getKcatAcrossIsozymes` | `fill_kcats_from_isozymes` |
+| `fillKcatsFromIsozymes` | `fill_kcats_from_isozymes` |
 | `getStandardKcat` | `assign_standard_kcat` |
 | `getEnzymeUsage` | `enzyme_usage` |
 | `getComplexFamilies` | `complex_families` |
