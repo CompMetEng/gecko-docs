@@ -144,6 +144,7 @@ modelID
 multipleActive
 multiple_active
 nGenerations
+notCarried
 nProc
 nSteps
 name_contains
@@ -353,6 +354,8 @@ restrictTo
 restrict_to
 poolWeight
 okp_kinform_h
+okp_omniesi_o2denet
+okp_unikp
 submitOpenKineticsPredictor
 fetchOpenKineticsPredictor
 writeOpenKineticsPredictorInput
