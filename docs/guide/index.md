@@ -48,6 +48,7 @@ The decision pages are in the order of the work.
 | [Find engineering targets](engineering-targets.md) | the reactions and genes to change for the production of a compound |
 | [Make a context-specific ecModel](context-ecmodel.md) | an ecModel of a tissue, cell line or strain, trimmed from a generic ecModel |
 | [Enzyme usage and bottlenecks](enzyme-usage.md) | which enzymes a solution uses and which enzymes limit the objective |
+| [Compare the kcats of the sources for a reaction](kcat-evidence.md) | the kcat of every source file next to the kcat of the ecModel and its tuned value, and a kcat prediction for a few reactions |
 
 ## Background
 
@@ -107,6 +108,7 @@ analysis
 engineering-targets
 context-ecmodel
 enzyme-usage
+kcat-evidence
 ```
 
 ```{toctree}

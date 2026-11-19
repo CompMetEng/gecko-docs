@@ -369,3 +369,7 @@ findMaxValue
 find_max_value
 anaerobicModel_GECKO
 changeMedia
+jobTag
+job_tag
+flexed_enzymes
+src_ec_tree
