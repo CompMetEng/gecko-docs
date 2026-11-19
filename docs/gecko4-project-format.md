@@ -20,17 +20,17 @@ A GECKO 4 project is a folder with a configuration file, input data, kcat source
 
 ## model_adapter.toml
 
-The file holds the parameters that an adapter class sets in GECKO 3. Paths are relative to the project folder. Keys that are left out get the default listed, with their MATLAB names, in `src/model_adapter/adapterParameters.tsv` of GECKO. A key that `adapterParameters.tsv` does not list is an error in both toolboxes.
+The file holds the parameters that an adapter class sets in GECKO 3. Paths are relative to the project folder. Keys that are left out get the default listed, with their MATLAB names, in `src/model_adapter/adapterParameters.tsv` of GECKO. A key that `adapterParameters.tsv` does not list, or that a table does not take, is an error in both toolboxes. `showAdapterParams` (Python: `geckopy adapter show`) prints the resolved parameters and the origin of each value (see [Model adapter parameters](guide/model-adapter-parameters.md)).
 
 | Section | Content |
 | --- | --- |
-| top level | `project_format`, `conv_gem`, `org_name`, `sigma`, `p_tot`, `f`, `gr_exp`, `c_source`, `bio_rxn`, `enzyme_comp`, `kcat_aggregate_brenda`, and for geckopy `kcat_aggregate_candidates` and `kcat_aggregate_isozymes` |
+| top level | `project_format`, `conv_gem`, `org_name`, `sigma`, `p_tot`, `f`, `gr_exp`, `c_source`, `bio_rxn`, `enzyme_comp` |
 | `[kegg]`, `[uniprot]`, `[complex]` | the organism and gene identifiers for the database downloads |
 | `[spontaneous]` | reactions without an enzyme: a name fragment (`name_contains`) and a file with reaction identifiers (`file`) |
-| `[evotune]` | the hyperparameters of the CMA-ES kcat tuning, with the source groups and the prior width per source |
+| `[evotune]` | the hyperparameters of the CMA-ES kcat tuning, with one table per source group that holds its `sources` and its prior width `sigma0_log` |
 | `[kcat_assignment]` | a preset or stages, and the options `isozymes` and `standard` (see [Kcat assignment](gecko4-kcat-assignment.md)) |
-| `[kcat_sources.<name>]` | settings of one source, for example `aggregation` of `brenda` and `methods` of `okp` |
-| `[okp]` | the OpenKineticsPredictor settings `method` (default `CataPro`), `handle_long_sequences`, `include_similarity_columns` and `canonicalize_substrates` |
+| `[kcat_sources.<name>]` | settings of one source, for example `aggregation` of `brenda` and `method` of `okp`, the OpenKineticsPredictor method |
+| `[okp]` | the options of the OpenKineticsPredictor requests: `handle_long_sequences`, `include_similarity_columns` and `canonicalize_substrates` |
 | `[matlab]` | names of MATLAB functions for the anaerobic model and the protein content of the biomass. GECKO alone reads this section |
 | `[matlab.params]` | parameters that GECKO uses and geckopy does not use |
 
@@ -61,7 +61,7 @@ A kcat source file stores the kcats of one source. Each row is keyed by the conv
 
 GECKO does not include BRENDA data. `fetchBrendaAsset` downloads the files `kcat.tsv`, `sa.tsv`, `mw.tsv` and `measurements.tsv` of the toolbox-assets release `brenda-2026.1-1` (BRENDA 2026.1, CC BY 4.0) on first use, checks them against the checksums of the toolbox-assets manifest, and unpacks them into `databases/brenda-2026.1-1` in the GECKO folder. The release also holds `sequences.fasta`, `substrates.tsv` and `kcatCombineParams.tsv`. geckopy reads the same release (`fetch_brenda_asset`).
 
-`kcat.tsv` and `sa.tsv` record a maximum and a median per EC number, substrate and organism. `kcat_aggregate_brenda = "max"` (default) or `"median"` selects the value for `fuzzyKcatMatching` and `loadBRENDAdata`, and `'kcatAggregation'` sets it for one call.
+`kcat.tsv` and `sa.tsv` record a maximum and a median per EC number, substrate and organism. `[kcat_sources.brenda] aggregation` (`"max"` or `"median"`) selects the value for `kcatsFromBrenda`, `fuzzyKcatMatching` and `loadBRENDAdata`; without it, the value is the one of the kcat assignment preset, `median` for the default preset `brenda_ec_tree` (see [BRENDA aggregation](guide/model-adapter-parameters.md#brenda-aggregation)). The option `aggregation` of `kcatsFromBrenda` and the option `kcatAggregation` of `fuzzyKcatMatching` and `loadBRENDAdata` set it for one call.
 
 ## See also
 

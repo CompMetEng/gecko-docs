@@ -254,7 +254,8 @@ def check_text(site: Path, files: list[Path]) -> list[Finding]:
         except UnicodeDecodeError:
             continue
         for i, line in enumerate(text.splitlines(), 1):
-            if EM_DASH in line:
+            # reference/ holds verbatim copies of published texts, with their own punctuation.
+            if EM_DASH in line and not rel.startswith("reference/"):
                 out.append(Finding("S", "error", rel, "em dash", i))
             if rel in RULE_FILES:
                 continue
