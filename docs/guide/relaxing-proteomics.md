@@ -280,6 +280,62 @@ print(f"Growth rate of the GEM: {model.slim_optimize():g} /h")
 :::
 ::::
 
+## Check the kcats of the relaxed enzymes
+
+A kcat that is too low makes an enzyme limit growth, and the relaxation then raises the bound of that enzyme. `kcatEvidence` (Python `kcat_evidence`) lists, for the reactions of the relaxed enzymes, the kcat of the ecModel next to the kcat of every source file (see [Compare kcat sources](kcat-evidence.md)):
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+[ecModel, flexEnz] = flexibilizeEnzConcs(ecModel);
+[evidence, summary] = kcatEvidence(ecModel, 'enzymes', flexEnz.uniprotIDs);
+summary(1:6, :)
+```
+
+In the tutorial, `flexibilizeEnzConcs` relaxed 48 enzymes. `summary` has one row per reaction of these enzymes. `tuned` is false, because these kcats were not tuned:
+
+```text
+         ecRxn           kcat     tuned    fold    prior      origin            enzymes                eccodes           src_brenda    src_custom    src_ec_tree    src_okp_kinform_h
+    ________________    ______    _____    ____    _____    ___________    _________________    _____________________    __________    __________    ___________    _________________
+
+    {'r_0001_EXP_2'}    3.9075    false    NaN      NaN     {'ec_tree'}    {'P32891;P00044'}    {'1.1.2.4'          }       4.185         NaN          3.9075             5.0797
+    {'r_0001_EXP_4'}    3.9075    false    NaN      NaN     {'ec_tree'}    {'P39976;P00044'}    {'1.1.2.4;1.1.99.40'}       4.185         NaN          3.9075             5.0797
+    {'r_0002_EXP_2'}    3.9075    false    NaN      NaN     {'ec_tree'}    {'P46681;P00044'}    {'1.1.2.4;1.1.99.40'}       4.185         NaN          3.9075             5.0797
+    {'r_0004_EXP_2'}    175.75    false    NaN      NaN     {'brenda' }    {'P00044;P00175'}    {'1.1.2.3'          }      175.75         NaN          95.722             5.3818
+    {'r_0091_EXP_2'}        10    false    NaN      NaN     {'custom' }    {'P38858'       }    {'3.1.1.31'         }        31.8          10          16.199             8.5428
+    {'r_0151'      }    1.3258    false    NaN      NaN     {'ec_tree'}    {'Q05911'       }    {'4.3.2.2'          }         2.9         NaN          1.3258             0.6294
+```
+
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+from geckopy import kcat_evidence
+
+result = kcat_evidence(ec_model, enzymes=list(flex_result.uniprot_ids))
+result.summary.drop(columns=["eccodes"]).head(6)
+```
+
+In the tutorial, `flexibilize_enz_concs` relaxed 50 enzymes. `summary` has one row per reaction of these enzymes. `tuned` is false, because these kcats were not tuned:
+
+```text
+         ec_rxn        kcat  tuned  fold  prior   origin        enzymes  src_brenda  src_custom  src_ec_tree  src_okp_kinform_h
+0  r_0001_EXP_2    3.907492  False   NaN    NaN  ec_tree  P32891;P00044       4.185         NaN     3.907492           5.079698
+1  r_0001_EXP_4    3.907492  False   NaN    NaN  ec_tree  P39976;P00044       4.185         NaN     3.907492           5.079698
+2  r_0002_EXP_2    3.907492  False   NaN    NaN  ec_tree  P46681;P00044       4.185         NaN     3.907492           5.079698
+3  r_0004_EXP_2  175.750000  False   NaN    NaN   brenda  P00044;P00175     175.750         NaN    95.721999           5.381835
+4  r_0091_EXP_2   10.000000  False   NaN    NaN   custom         P38858      31.800        10.0    16.198521           8.542798
+5        r_0151    1.325842  False   NaN    NaN  ec_tree         Q05911       2.900         NaN     1.325842           0.629403
+```
+
+:::
+::::
+
+A kcat that is lower than the values of the other sources can be replaced by one of them in `custom.tsv` (see [Set custom kcats](custom-kcats.md)), which removes the cause of the relaxation. A kcat within the range of the sources does not explain the relaxation, and the protein pool, the exchange fluxes and the measured concentrations remain to be checked. `flexEnz.uniprotIDs` also lists `prot_pool` after `relaxEnzConcs` when the protein pool exchange was raised; remove it before the call, because `prot_pool` is a pseudo-enzyme that `ec.enzymes` does not list.
+
 ## Troubleshooting
 
 | Problem | Possible reason | Solution |
@@ -296,3 +352,4 @@ print(f"Growth rate of the GEM: {model.slim_optimize():g} /h")
 - [Constrain enzymes with proteomics](proteomics.md), where the bounds come from.
 - [Enzyme usage and bottlenecks](enzyme-usage.md), to find the enzymes that limit growth without changing the bounds.
 - [Choose a kcat tuning](kcat-tuning.md), for an enzyme whose kcat is too low.
+- [Compare kcat sources](kcat-evidence.md), the kcats of every source for the reactions of the relaxed enzymes.
