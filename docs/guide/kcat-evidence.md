@@ -13,7 +13,7 @@
 
 ## Setup
 
-The examples need an ecModel with assigned kcats and source files in `data/kcats` (see [Choose the kcat sources](kcat-sources.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python). The sources are read as they are: a source file that is outdated is not gathered again. The OKP predictions need an API key (see [Choose the kcat sources](kcat-sources.md#prepare-the-inputs)) and use the daily prediction quota of the key.
+The printed output of the MATLAB examples comes from the ecModel of the `full_ecModel` tutorial of GECKO (yeast-GEM); the Python functions return the same columns as data frames. The examples need an ecModel with assigned kcats and source files in `data/kcats` (see [Choose the kcat sources](kcat-sources.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python). The sources are read as they are: a source file that is outdated is not gathered again. The OKP predictions need an API key (see [Choose the kcat sources](kcat-sources.md#prepare-the-inputs)) and use the daily prediction quota of the key.
 
 ## Select the reactions
 
@@ -57,6 +57,20 @@ tuned.evidence
 :::
 ::::
 
+The tutorial ecModel of yeast tuned 26 kcats. The first rows of `summary` (MATLAB output, the columns `enzymes` and `eccodes` left out):
+
+```text
+           ecRxn             kcat         origin       tuned     prior      fold    src_brenda    src_custom    src_ec_tree    src_okp_kinform_h
+    ____________________    _______    ____________    _____    ________    ____    __________    __________    ___________    _________________
+
+    {'r_0005_EXP_3'    }     33.451    {'ec_tree' }    true       3.3451     10       1.3782          NaN          3.3451            2.6606
+    {'r_0109'          }     55.125    {'ec_tree' }    true      0.55125    100        0.294          NaN         0.55125            2.6506
+    {'r_0157'          }     5.4102    {'ec_tree' }    true      0.54102     10         8.95          NaN         0.54102            2.9454
+    {'r_0209'          }     3.9054    {'ec_tree' }    true      0.39054     10          3.8          NaN         0.39054            3.3459
+    {'r_0220'          }      2.657    {'ec_tree' }    true       0.2657     10          6.3          NaN          0.2657            18.417
+    {'r_0279'          }    0.86522    {'ec_tree' }    true     0.086522     10         0.87          NaN        0.086522            3.0441
+```
+
 `summary` has one row per reaction:
 
 | Column (Python) | Content |
@@ -67,7 +81,18 @@ tuned.evidence
 | `tuned`, `prior`, `fold` | whether the kcat has a tuning status in `ec.source`, the kcat before the first tuning (`NaN` without one), and `kcat / prior` (`NaN` without a positive prior) |
 | `src_<source>` | the median of the kcats that the source file `<source>` gives for the row; `NaN` when it gives none |
 
-`evidence` has one row per kcat of a source, with the columns `ecRxn` (`ec_rxn`), `source`, `kcat`, `substrate`, `detail` and `assigned`. `assigned` is true when the kcat equals the kcat that was assigned to the reaction, that is, the kcat before tuning for a tuned reaction and the kcat of the ecModel for any other. The comparison allows a relative difference of $10^{-5}$, because `ec.source` stores the prior with six significant digits. Two sources with the same kcat are both marked. The column `detail` has the detail of the source file, for example the number of measurements and the EC level of an EC-tree value.
+`evidence` has one row per kcat of a source, with the columns `ecRxn` (`ec_rxn`), `source`, `kcat`, `substrate`, `detail` and `assigned`. `assigned` is true when the kcat equals the kcat that was assigned to the reaction, that is, the kcat before tuning for a tuned reaction and the kcat of the ecModel for any other. The comparison allows a relative difference of $10^{-5}$, because `ec.source` stores the prior with six significant digits. Two sources with the same kcat are both marked. The column `detail` has the detail of the source file, for example the number of measurements and the EC level of an EC-tree value. The first rows of `evidence` of the tuning above:
+
+```text
+         ecRxn            source       kcat                        substrate                             detail          assigned
+    ________________    __________    ______    _______________________________________________    __________________    ________
+
+    {'r_0005_EXP_3'}    {'brenda'}    1.3782    {'UDP-D-glucose'                              }    {'wc=0; origin=5'}     false
+    {'r_0109'      }    {'brenda'}     0.294    {'acetyl-CoA; ATP; bicarbonate'               }    {'wc=0; origin=2'}     false
+    {'r_0157'      }    {'brenda'}      8.95    {'ATP; L-alanine; tRNA(Ala)'                  }    {'wc=0; origin=2'}     false
+    {'r_0209'      }    {'brenda'}       3.8    {'ATP; L-arginine; tRNA(Arg)'                 }    {'wc=0; origin=2'}     false
+```
+
 
 The tuned kcat and the sources are on one scale, so `fold` and the `src_` columns show which source the tuned kcat moves toward. A tuned kcat that is within the range of one source supports that source. A tuned kcat above all sources is a prompt to check the measurement or the enzyme, and is not evidence for the value itself.
 
@@ -95,6 +120,19 @@ result = kcat_evidence(ec_model, enzymes=flexed_enzymes)
 :::
 ::::
 
+The first rows of `summary` for the 48 enzymes that `flexibilizeEnzConcs` relaxed in the tutorial (`tuned` is false, because these kcats were not tuned):
+
+```text
+         ecRxn               enzymes                eccodes            kcat       origin       tuned    prior    fold    src_brenda    src_custom    src_ec_tree    src_okp_kinform_h
+    ________________    _________________    _____________________    ______    ___________    _____    _____    ____    __________    __________    ___________    _________________
+
+    {'r_0001_EXP_2'}    {'P32891;P00044'}    {'1.1.2.4'          }    3.9075    {'ec_tree'}    false     NaN     NaN        4.185         NaN          3.9075             5.0797
+    {'r_0001_EXP_4'}    {'P39976;P00044'}    {'1.1.2.4;1.1.99.40'}    3.9075    {'ec_tree'}    false     NaN     NaN        4.185         NaN          3.9075             5.0797
+    {'r_0002_EXP_2'}    {'P46681;P00044'}    {'1.1.2.4;1.1.99.40'}    3.9075    {'ec_tree'}    false     NaN     NaN        4.185         NaN          3.9075             5.0797
+    {'r_0004_EXP_2'}    {'P00044;P00175'}    {'1.1.2.3'          }    175.75    {'brenda' }    false     NaN     NaN       175.75         NaN          95.722             5.3818
+    {'r_0091_EXP_2'}    {'P38858'       }    {'3.1.1.31'         }        10    {'custom' }    false     NaN     NaN         31.8          10          16.199             8.5428
+```
+
 In Python, `flexed_enzymes` is the list `flex_enz.uniprot_ids` of the `FlexEnzResult` that the relaxation function returned. `flexEnz.uniprotIDs` also lists `prot_pool` after `relaxEnzConcs` when the protein pool exchange was raised; remove it before the call, because `prot_pool` is a pseudo-enzyme that `ec.enzymes` does not list.
 
 ## Get the kcats for one reaction
@@ -120,6 +158,29 @@ result = kcats_for_reactions(ec_model, ["MAR03905", "MAR03905_REV"])
 ```
 :::
 ::::
+
+The result for `r_0005_EXP_3`, a reaction that `sensitivityTuning` tuned (`summary`, then `evidence`; the project has the OKP predictions of KinForm-H for all reactions):
+
+```text
+         ecRxn               enzymes               eccodes            kcat       origin       tuned    prior     fold    src_brenda    src_custom    src_okp_kinform_h    src_ec_tree
+    ________________    _________________    ____________________    ______    ___________    _____    ______    ____    __________    __________    _________________    ___________
+
+    {'r_0005_EXP_3'}    {'Q04952;P06780'}    {'2.4.1.34;3.6.5.2'}    33.451    {'ec_tree'}    true     3.3451     10       1.3782         NaN             2.6606            3.3451
+```
+
+```text
+         ecRxn               source           kcat         substrate              detail          assigned
+    ________________    _________________    ______    _________________    __________________    ________
+
+    {'r_0005_EXP_3'}    {'brenda'       }    1.3782    {'UDP-D-glucose'}    {'wc=0; origin=5'}     false
+    {'r_0005_EXP_3'}    {'okp_kinform_h'}    1.1771    {'UDP-D-glucose'}    {'similarity=0'  }     false
+    {'r_0005_EXP_3'}    {'okp_kinform_h'}    2.6426    {'UDP-D-glucose'}    {'similarity=0'  }     false
+    {'r_0005_EXP_3'}    {'okp_kinform_h'}    2.6785    {'UDP-D-glucose'}    {'similarity=0'  }     false
+    {'r_0005_EXP_3'}    {'okp_kinform_h'}    2.7391    {'UDP-D-glucose'}    {'similarity=0'  }     false
+    {'r_0005_EXP_3'}    {'ec_tree'      }    3.3451    {0x0 char       }    {'n=1; depth=4'  }     true
+```
+
+The tuned kcat of 33.451 is 10 times the EC-tree estimate of 3.3451, the kcat before tuning, and is above the BRENDA kcat of 1.3782 and the four predictions of KinForm-H.
 
 ## Predict the kcats of a few reactions with OKP
 
