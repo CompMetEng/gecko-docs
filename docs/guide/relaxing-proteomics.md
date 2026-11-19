@@ -319,7 +319,7 @@ result = kcat_evidence(ec_model, enzymes=list(flex_result.uniprot_ids))
 result.summary.drop(columns=["eccodes"]).head(6)
 ```
 
-In the tutorial, `flexibilize_enz_concs` relaxed 50 enzymes. `summary` has one row per reaction of these enzymes. `tuned` is false, because these kcats were not tuned:
+In the tutorial, `flexibilize_enz_concs` relaxed 48 enzymes. `summary` has one row per reaction of these enzymes. `tuned` is false, because these kcats were not tuned:
 
 ```text
          ec_rxn        kcat  tuned  fold  prior   origin        enzymes  src_brenda  src_custom  src_ec_tree  src_okp_kinform_h

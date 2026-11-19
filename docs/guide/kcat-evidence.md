@@ -13,7 +13,7 @@
 
 ## Setup
 
-The printed output comes from the ecModel of the `full_ecModel` tutorial project of GECKO (yeast-GEM), built once in MATLAB and once in Python. The two toolboxes build the model separately, so the numbers differ slightly. The examples need an ecModel with assigned kcats and source files in `data/kcats` (see [Choose the kcat sources](kcat-sources.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python). The sources are read as they are: a source file that is outdated is not gathered again. The OKP predictions need an API key (see [Choose the kcat sources](kcat-sources.md#prepare-the-inputs)) and use the daily prediction quota of the key.
+The printed output comes from the ecModel of the `full_ecModel` tutorial project of GECKO (yeast-GEM), built once in MATLAB and once in Python. MATLAB and Python print the tables in different formats. The examples need an ecModel with assigned kcats and source files in `data/kcats` (see [Choose the kcat sources](kcat-sources.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python). The sources are read as they are: a source file that is outdated is not gathered again. The OKP predictions need an API key (see [Choose the kcat sources](kcat-sources.md#prepare-the-inputs)) and use the daily prediction quota of the key.
 
 ## Select the reactions
 
@@ -88,7 +88,7 @@ result = kcat_evidence(ec_model, tuned=tuned)
 result.summary.drop(columns=["enzymes", "eccodes"]).head(6)
 ```
 
-The tutorial ecModel of yeast tuned 24 kcats. `summary` has one row per tuned reaction (here without the columns `enzymes` and `eccodes`):
+The tutorial ecModel of yeast tuned 26 kcats. `summary` has one row per tuned reaction (here without the columns `enzymes` and `eccodes`):
 
 ```text
          ec_rxn       kcat  tuned       fold     prior   origin  src_brenda  src_custom  src_ec_tree  src_okp_kinform_h
@@ -154,10 +154,10 @@ The tuned kcat and the sources are on one scale, so `fold` and the `src_` column
 `summary` of `r_0005_EXP_3`, a reaction that `sensitivityTuning` tuned. The project has the OKP predictions of KinForm-H for all reactions:
 
 ```text
-         ecRxn           kcat     tuned    fold    prior       origin            enzymes               eccodes           src_brenda    src_custom    src_okp_kinform_h    src_ec_tree
-    ________________    ______    _____    ____    ______    ___________    _________________    ____________________    __________    __________    _________________    ___________
+         ecRxn           kcat     tuned    fold    prior       origin            enzymes               eccodes           src_brenda    src_custom    src_ec_tree    src_okp_kinform_h
+    ________________    ______    _____    ____    ______    ___________    _________________    ____________________    __________    __________    ___________    _________________
 
-    {'r_0005_EXP_3'}    33.451    true      10     3.3451    {'ec_tree'}    {'Q04952;P06780'}    {'2.4.1.34;3.6.5.2'}      1.3782         NaN             2.6606            3.3451
+    {'r_0005_EXP_3'}    33.451    true      10     3.3451    {'ec_tree'}    {'Q04952;P06780'}    {'2.4.1.34;3.6.5.2'}      1.3782         NaN          3.3451            2.6606
 ```
 
 `evidence` of the same reaction:
@@ -192,8 +192,8 @@ result.summary
 `summary` of `r_0005_EXP_3`, a reaction that `sensitivity_tuning` tuned. The project has the OKP predictions of KinForm-H for all reactions:
 
 ```text
-         ec_rxn       kcat  tuned       fold    prior   origin        enzymes           eccodes  src_brenda  src_custom  src_okp_kinform_h  src_ec_tree
-0  r_0005_EXP_3  33.450611   True  10.000003  3.34506  ec_tree  Q04952;P06780  2.4.1.34;3.6.5.2      1.3782         NaN            2.66057     3.345061
+         ec_rxn       kcat  tuned       fold    prior   origin        enzymes           eccodes  src_brenda  src_custom  src_ec_tree  src_okp_kinform_h
+0  r_0005_EXP_3  33.450611   True  10.000003  3.34506  ec_tree  Q04952;P06780  2.4.1.34;3.6.5.2      1.3782         NaN     3.345061            2.66057
 ```
 
 ```python
