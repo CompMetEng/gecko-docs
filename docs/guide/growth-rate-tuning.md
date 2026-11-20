@@ -378,10 +378,57 @@ The options are the same in both toolboxes (MATLAB name first):
 | `modelAdapter` | | default model adapter | model adapter that supplies the parameters (Python reads `ec_model.adapter`) |
 | | `max_iterations` | `1000` | upper limit of the iterations |
 | | `bio_rxn` | `params.bio_rxn` | biomass reaction set as the objective |
+| `fluxData` | `flux_data` | none | measured condition to tune to (see [Tune to a measured condition](#tune-to-a-measured-condition)) |
+| `condition` | `condition` | `1` (Python `0`) | name or row of the condition in `fluxData` |
+| `fluxTolerance` | `flux_tolerance` | `0.1` | relative band around each measured flux |
+| `fluxAbsTolerance` | `flux_abs_tolerance` | `1e-3` | absolute widening of the band, in mmol/gDCW/h |
+| `fluxTolerances` | `flux_tolerances` | none | tolerance of single reactions, a two-column cell of reaction ID and tolerance in MATLAB, a dict in Python |
 
 MATLAB accepts the options as name-value pairs (`sensitivityTuning(ecModel, 'foldChange', 5)`) or positionally (`sensitivityTuning(ecModel, desiredGrowthRate, modelAdapter, foldChange, protToIgnore, verbose)`); a call uses one of the two forms. Python takes keyword arguments. The tuning stops with a warning when an iteration raises the growth rate by less than 1e-9, which indicates that the uptake or pool constraints limit growth and that the kcats do not.
 
 Both toolboxes also provide a CMA-ES-based kcat tuning (`cmaesKcatTuning` in MATLAB, `cmaes_kcat_tuning` in Python), described in [Tuning against experimental data](tuning-against-experimental-data.md).
+
+### Tune to a measured condition
+
+A growth rate alone is reached by raising the kcats of the enzymes that are needed for growth, whatever the exchange fluxes then are. With the growth rate and the exchange fluxes of one condition (the format of `fluxData.tsv`, read by `loadFluxData` in MATLAB and `load_flux_data` in Python), the tuning targets all of them:
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+fluxData = loadFluxData();
+[ecModel, tunedKcats] = sensitivityTuning(ecModel, 'fluxData', fluxData, 'condition', 'Std');
+tunedKcats.status
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+flux_data = load_flux_data(params.path / "data" / "fluxData.tsv")
+result = sensitivity_tuning(ec_model, flux_data=flux_data, condition="Std")
+result.status
+```
+:::
+::::
+
+The condition is met when the model grows at the measured rate and every measured exchange flux lies within `fluxTolerance` of its value (the band is widened by `fluxAbsTolerance`, which fluxes near zero need). An exchange of `-1000` or `1000` stays unconstrained in that direction, and `NaN` is not measured. The medium of the ecModel is kept apart from the measured exchanges. `desiredGrowthRate` (Python `desired_growth_rate`) replaces the measured growth rate.
+
+Each iteration checks the condition. If it is infeasible, the protein pool is lifted as a limit and the protein drawn from it is minimised, and the kcat of the enzyme that draws the most protein in that solution is raised by `foldChange`. The measured fluxes then decide which enzyme is raised, where a growth rate alone picks the enzyme that limits growth. The bounds of the condition apply only during the tuning, and the ecModel does not keep them.
+
+A kcat cannot fix every condition. If the condition stays infeasible when the pool limit is lifted, the measurement conflicts with the model (for example an uptake that is too low for the measured growth rate) or a limit other than the pool applies, and the tuning stops without a change. The `status` of the result says why the tuning stopped:
+
+| Status | Meaning |
+| --- | --- |
+| `reached` | the target is met |
+| `unfixable` | the condition is infeasible without the pool limit, so no kcat can meet it |
+| `stalled` | raising the next kcat does not lower the protein that the condition needs |
+| `infeasible` | the model has no optimal solution (growth-rate target) |
+| `noCandidate` (Python `no_candidate`) | no enzyme is left to raise |
+| `maxIterations` (Python `max_iterations`) | the target is not reached within the iteration limit |
+
+Raising kcats only relaxes the protein limit, so a flux that the model overshoots is not corrected by this tuning; [Tuning against experimental data](tuning-against-experimental-data.md) fits kcats in both directions against several conditions.
 
 `tunedKcats` (Python `tuning_result`) documents which kcat values were changed, with their previous value, source and the catalysed reaction. It is inspected to check whether a changed value was gathered incorrectly from a kcat source. In a full ecModel, `ec.source` of a tuned reaction reads `sensitivityTuning`, and `ec.notes` holds the kcat before the tuning and its source (`preTuneKcat=<value> | source:<source>`). A reaction that an earlier run has tuned keeps the notes of that run. In a light ecModel, `ec.source` and `ec.notes` are not changed. Python `TunedKcatsResult.corrections()` returns the changes as the list of corrections that [Tuning against experimental data](tuning-against-experimental-data.md#read-the-result) describes.
 
