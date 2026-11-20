@@ -94,7 +94,7 @@ The GECKO 4 releases of geckopy and the releases of raven-toolbox that it depend
 pip install --pre geckopy
 ```
 
-The dependency of geckopy on raven-toolbox names a pre-release, so `--pre` also selects the pre-release of raven-toolbox, which does not need naming separately. A version of geckopy is pinned with `==` and the version number from the [PyPI release history](https://pypi.org/project/geckopy/#history):
+The dependency of geckopy on raven-toolbox names a pre-release, so `--pre` also selects the pre-release of raven-toolbox, which does not need naming separately. A version of geckopy is pinned with `==` and the version number from the [PyPI release history](https://pypi.org/project/geckopy/):
 
 ```bash
 pip install --pre geckopy==<version>
