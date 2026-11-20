@@ -42,6 +42,7 @@ The decision pages are in the order of the work.
 | [Choose a kcat tuning](kcat-tuning.md) | `sensitivityTuning` or evotune, when the ecModel grows too slowly, and the check of a tuned kcat |
 | [Tune kcats with sensitivityTuning](standard-tuning.md) | the tuning to one maximum growth rate, and the fit of $\sigma$ after it |
 | [Tune kcats with evotune](evotune.md) | the data and the settings of the tuning against measured growth rates and fluxes |
+| [Compare kcat sources](kcat-evidence.md) | the kcat of every source file next to the kcat of the ecModel and its tuned value, and a kcat prediction for a few reactions |
 | [Constrain enzymes with proteomics](proteomics.md) | the integration of measured enzyme concentrations |
 | [Relax proteomics constraints](relaxing-proteomics.md) | the method that loosens proteomics constraints that prevent growth |
 | [Analyse an ecModel](analysis.md) | objectives, flux variability, sampling and the mapping of fluxes to the conventional GEM |
@@ -101,6 +102,7 @@ protein-pool
 kcat-tuning
 standard-tuning
 evotune
+kcat-evidence
 proteomics
 relaxing-proteomics
 analysis
