@@ -38,7 +38,7 @@ flowchart TB
   EC --> TR
   SM --> DL
   SM --> OK
-  AS["<b>Applying kcats</b><br/>assignKcats (preview: collectKcats)<br/>getKcatAcrossIsozymes, getStandardKcat (optional)<br/>applyKcatConstraints<br/>setProtPoolSize"]
+  AS["<b>Applying kcats</b><br/>assignKcats (preview: collectKcats)<br/>fillKcatsFromIsozymes, getStandardKcat (optional)<br/>applyKcatConstraints<br/>setProtPoolSize"]
   BR --> AS
   TR --> AS
   HO --> AS
@@ -161,7 +161,7 @@ Each row is a stage with the stage it runs after, its functions and what it leav
 | [Getting started](getting-started.md) | none | `createGECKOproject`, then edit `model_adapter.toml`; `loadDatabases('kegg')` (optional) | project folder |
 | [Building an empty ecModel](building-ec-model.md) | project and model adapter | `ModelAdapterManager.setDefault`, `loadConventionalGEM`, `makeEcModel` (full or light), `getComplexData, applyComplexData` (optional), `saveEcModel` | ecModel file |
 | [Gathering kcats](gathering-kcats.md) | built ecModel | any subset of `kcatsFromBrenda`, `kcatsFromECTree`, `kcatsFromHomologs`, `kcatsFromDLKcat`, `kcatsFromOKP`; `updateKcatSources` gathers all sources of `model_adapter.toml` | `data/kcats/<source>.tsv` |
-| [Applying kcats](applying-kcats.md) | at least one source file or `custom.tsv` | `assignKcats` (preview: `collectKcats`), `getKcatAcrossIsozymes` and `getStandardKcat` (optional), `applyKcatConstraints`, `setProtPoolSize` | `ec.kcat`, constrained ecModel |
+| [Applying kcats](applying-kcats.md) | at least one source file or `custom.tsv` | `assignKcats` (preview: `collectKcats`), `fillKcatsFromIsozymes` and `getStandardKcat` (optional), `applyKcatConstraints`, `setProtPoolSize` | `ec.kcat`, constrained ecModel |
 | [Growth-rate tuning](growth-rate-tuning.md) | applied kcats, growth rate below the target | `sensitivityTuning`, then `sigmaFitter` | tuned `ec.kcat` |
 | [Tuning against experimental data](tuning-against-experimental-data.md) | applied kcats, growth rates and fluxes of several conditions | alternative to sensitivity tuning: `screenKcatLeverage`, `reviewKcatAssignment`, `cmaesKcatTuning` | tuned `ec.kcat` |
 | [Proteomics integration](proteomics-integration.md) | functional ecModel | `loadProtData`, `fillEnzConcs`, `levelComplexConcs`, `constrainEnzConcs`, `calculateFfactor, setProtPoolSize`, `loadFluxData, constrainFluxData` (optional) | proteomics-constrained ecModel |

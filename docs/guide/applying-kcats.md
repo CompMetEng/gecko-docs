@@ -27,7 +27,7 @@ flowchart TB
   AS["assignKcats<br/>preview: collectKcats"]
   PV --> AS
   CU --> AS
-  AS --> IS["getKcatAcrossIsozymes<br/>getStandardKcat (optional)"]:::opt --> AK["applyKcatConstraints<br/>setProtPoolSize"]
+  AS --> IS["fillKcatsFromIsozymes<br/>getStandardKcat (optional)"]:::opt --> AK["applyKcatConstraints<br/>setProtPoolSize"]
   NX(["Next: Growth-rate tuning"]):::ctx
   AK --> NX
 ```
@@ -67,7 +67,7 @@ flowchart TB
 | `collectKcats` | `collect_kcats` | decide the kcats without changing the model |
 | `convertCustomKcats` | `convert_custom_kcats` | convert `data/customKcats.tsv` into `data/kcats/custom.tsv` |
 | `applyCustomKcats` | `apply_custom_kcats` | apply the kcats of `data/customKcats.tsv` |
-| `getKcatAcrossIsozymes` | `fill_kcats_from_isozymes` | fill missing kcats with the mean of their isozymes |
+| `fillKcatsFromIsozymes` | `fill_kcats_from_isozymes` | fill missing kcats with the mean of their isozymes |
 | `getStandardKcat` | `assign_standard_kcat` | assign a standard kcat to reactions without a gene association |
 | `assignKcatValues` | `apply_kcat_list` | write one kcat per reaction from a kcat list to `ec.kcat` |
 | `applyKcatConstraints` | `apply_kcat_constraints` | apply `ec.kcat` to the stoichiometry of the ecModel |
@@ -195,7 +195,7 @@ When a kcat is not defined for every isozymatic variant of a reaction, the varia
 :sync: matlab
 
 ```matlab
-ecModel = getKcatAcrossIsozymes(ecModel);
+ecModel = fillKcatsFromIsozymes(ecModel);
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -207,11 +207,11 @@ from geckopy import fill_kcats_from_isozymes
 fill_kcats_from_isozymes(ec_model)
 ```
 
-`get_kcat_across_isozymes` also exists as a deprecated alias. `fill_kcats_from_isozymes` updates `ec_model.ec.kcat`, as `getKcatAcrossIsozymes` does; `apply=True` also calls `apply_kcat_constraints` for the reactions it filled. The option `aggregate` (`mean`, `median` or `max`) sets how the kcats of the isozymes are combined; the default is `kcat_aggregate_isozymes` of the model adapter, which is `mean`.
+`fill_kcats_from_isozymes` updates `ec_model.ec.kcat`, as `fillKcatsFromIsozymes` does; `apply=True` also calls `apply_kcat_constraints` for the reactions it filled. The option `aggregate` (`mean`, `median` or `max`) sets how the kcats of the isozymes are combined; the default is `kcat_aggregate_isozymes` of the model adapter, which is `mean`.
 :::
 ::::
 
-This step does not apply to light ecModels, where the most efficient isozyme sets the cost; `getKcatAcrossIsozymes` raises an error on a light ecModel (Python: `fill_kcats_from_isozymes` raises `NotImplementedError`).
+This step does not apply to light ecModels, where the most efficient isozyme sets the cost; `fillKcatsFromIsozymes` raises an error on a light ecModel (Python: `fill_kcats_from_isozymes` raises `NotImplementedError`).
 
 :::{admonition} Example output
 :class: note
@@ -378,9 +378,9 @@ In Python, `ec.n_rxns` and `ec.n_enzymes` return the m and n sizes above, and `e
 | `No kcat source file <file>; it is left out` | a stage names a source that has no file in `data/kcats` | Gather the file with `updateKcatSources`, or remove the source from the stage |
 | Kcats set with `setKcatForReactions` are gone after `assignKcats` | `assignKcats` replaces the kcats of the model | Place the kcats in `data/kcats/custom.tsv`, or set them after the assignment and apply the constraints again |
 | `notMatch` of `applyCustomKcats` is not empty | the enzymes of an entry match the reaction in part | Curate `data/customKcats.tsv` or `custom.tsv` for the enzyme set of the reaction |
-| `No kcat values are provided in model.ec.kcat` | every kcat is 0 when `getKcatAcrossIsozymes` or `applyKcatConstraints` runs; `applyKcatConstraints` also clears existing enzyme constraints, `getKcatAcrossIsozymes` leaves the model unchanged | Run `assignKcats` first |
+| `No kcat values are provided in model.ec.kcat` | every kcat is 0 when `fillKcatsFromIsozymes` or `applyKcatConstraints` runs; `applyKcatConstraints` also clears existing enzyme constraints, `fillKcatsFromIsozymes` leaves the model unchanged | Run `assignKcats` first |
 | `convertCustomKcats` raises an error that `custom.tsv` exists | the target file is not overwritten | Remove the file or give another `outFile` |
-| `getKcatAcrossIsozymes` raises an error on a light ecModel | isozymes are not split in a light ecModel | Skip the step; the constraint uses the most efficient isozyme |
+| `fillKcatsFromIsozymes` raises an error on a light ecModel | isozymes are not split in a light ecModel | Skip the step; the constraint uses the most efficient isozyme |
 | Growth rate far from the experimental value | sigma, $P_{tot}$ or f differs from the cell | See [Growth-rate tuning](growth-rate-tuning.md) |
 
 ## See also

@@ -82,7 +82,7 @@ name_contains = "spontaneous"
 | `kcat_aggregate_candidates` | none | `"max"` | Used by geckopy. Aggregation of several candidate kcats of one reaction in `apply_kcat_list` when `criteria` is not given: `max`, `min`, `median` or `mean` |
 | `kcat_aggregate_isozymes` | none | `"mean"` | Used by geckopy. Aggregation of the kcats of the isozymes in `fill_kcats_from_isozymes` when `aggregate` is not given: `max`, `median` or `mean` |
 
-GECKO accepts the two geckopy keys in the file and does not use them. `getKcatAcrossIsozymes` uses the mean.
+GECKO accepts the two geckopy keys in the file and does not use them. `fillKcatsFromIsozymes` uses the mean.
 
 ## Database identifiers
 

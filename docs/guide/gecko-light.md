@@ -41,7 +41,7 @@ A light ecModel has no per-enzyme pseudo-metabolites and no usage reactions. The
 | Enzyme usage and bottlenecks | `getEnzymeUsage`, `getEnzymeBottlenecks` and `getPfbaEnzymes` raise an error; `reportEnzymeUsage` takes the output of `getEnzymeUsage` | `enzyme_usage`, `get_enzyme_bottlenecks` and `pfba_enzymes` raise `NotImplementedError`; `report_enzyme_usage` takes the output of `enzyme_usage` |
 | Flux, capacity usage or shadow price of one enzyme | no `usage_prot_<id>` reaction to read | `Enzyme.flux`, `Enzyme.cap_usage`, `Enzyme.upper_bound` and `Enzyme.shadow_price` raise `NotImplementedError` |
 | Concentration or kcat of one enzyme | not applicable | the setters of `Enzyme.concentration` and `Enzyme.kcats` raise `NotImplementedError` |
-| Isozyme-based functions | `getKcatAcrossIsozymes`, `addNewRxnsToEC` and `convertCustomKcats` raise an error | `fill_kcats_from_isozymes` and `add_new_rxns_to_ec` raise `NotImplementedError`, `convert_custom_kcats` raises `ValueError` |
+| Isozyme-based functions | `fillKcatsFromIsozymes`, `addNewRxnsToEC` and `convertCustomKcats` raise an error | `fill_kcats_from_isozymes` and `add_new_rxns_to_ec` raise `NotImplementedError`, `convert_custom_kcats` raises `ValueError` |
 
 See [Proteomics integration](proteomics-integration.md), [Relaxing overconstrained proteomics](relaxing-constraints.md) and [Enzyme usage and bottlenecks](enzyme-usage-and-bottlenecks.md) for what these functions do on a full ecModel.
 
