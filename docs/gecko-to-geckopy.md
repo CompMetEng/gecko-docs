@@ -37,7 +37,8 @@ The table is a selection; [MATLAB and Python](matlab-vs-python.md) lists all pai
 | `constrainFluxData` | `apply_flux_data_constraints` |
 | `getECfromDatabase` | `fill_eccodes_from_database` |
 | `getECfromGEM` | `fill_eccodes_from_gem` |
-| `evotuneScore` | `evotune_distance` |
+| `loadEvotuneData` | `load_experiment_data` in `raven_toolbox.experiments` |
+| `evotuneScore` | `simulate_conditions` and `experiment_distance` in `raven_toolbox.experiments` |
 | `getEcRxnKeys` | `ec_rxn_keys` |
 | `assignKcatValues` | `apply_kcat_list` |
 | `getKcatAcrossIsozymes` | `fill_kcats_from_isozymes` |
