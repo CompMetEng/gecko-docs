@@ -53,7 +53,12 @@ exclude_patterns = [
 ]
 
 # External links that reject crawlers go here, each with the reason.
-linkcheck_ignore: list[str] = []
+linkcheck_ignore: list[str] = [
+    # These sites answer the link checker with 403 but open in a browser.
+    r"https://doi\.org/10\.1128/spectrum\.01705-23",  # ASM journals
+    r"https://doi\.org/10\.3390/biom12010065",  # MDPI
+    r"https://mathworks\.com/.*",  # MathWorks
+]
 linkcheck_timeout = 20
 linkcheck_retries = 2
 
