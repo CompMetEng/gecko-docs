@@ -69,13 +69,13 @@ flowchart TB
 
 - An ecModel with a model adapter and the project folders `models/` and `data/` (see [Getting started](getting-started.md) and [Building an empty ecModel](building-ec-model.md)), with kcats assigned (see [Kcat assignment](../gecko4-kcat-assignment.md)).
 - Python: `pip install geckopy[evotune]`. The CMA-ES package `cma` is an optional dependency that the base installation does not include. MATLAB needs no additional package; `cmaesKcatTuning` contains its own separable (diagonal-covariance) CMA-ES.
-- Experimental data in at least one of the files `fluxData.tsv` (measured exchange fluxes per condition) and `maxGrowth.tsv` (measured maximum growth rates per carbon source). Both together pin the shape of metabolism (fluxes) and its rate (growth rate). Python raises a `ValueError` when neither file exists.
+- Experimental data in at least one of the files `fluxData.tsv` (flux conditions: measured growth rate and exchange fluxes, with the uptake of the carbon source limited to the measured rate) and `maxGrowth.tsv` (maximum-growth conditions: measured maximum growth rate with each carbon source, with the uptake unlimited). Both together pin the shape of metabolism (fluxes) and its rate (growth rate). Python raises a `ValueError` when neither file exists.
 
 ## Prepare the experimental data
 
-Three tab-separated files are read from `<project>/data/`: `fluxData.tsv` (measured exchange fluxes per condition), `maxGrowth.tsv` (measured maximum growth rate per condition, with one active carbon source per row) and `zeroFlux.tsv` (reaction IDs that carry no flux in any condition). A missing file is skipped. [Experimental data](experimental-data.md) describes the columns of the files and how the tuning scores a model against them. The `full_ecModel` tutorial of GECKO has all three in its `data` folder.
+Three tab-separated files are read from `<project>/data/`: `fluxData.tsv` (the flux conditions), `maxGrowth.tsv` (the maximum-growth conditions, one active carbon source per row) and `zeroFlux.tsv` (reaction IDs that carry no flux in any condition). A missing file is skipped. [Experimental data](experimental-data.md) describes the columns of the files and how the tuning scores a model against them. The `full_ecModel` tutorial of GECKO has all three in its `data` folder.
 
-The tuning uses every row of `fluxData.tsv` and `maxGrowth.tsv` that has a `weight` other than `0`. The column `weight` scales the error of a row in the score, so that a row of lower quality counts less. A row with the weight `0` is left out of the simulation and of the score. The first row of `fluxData.tsv` in the `full_ecModel` tutorial, `Std`, has the weight `0`: it holds the standard condition of the protein-constraint step, which the tuning does not use.
+The tuning scores the model by its distance to the measurements: the carbon-weighted RMSE of the flux conditions and of the maximum-growth conditions, combined with `max_growth_weight`. It uses every row of `fluxData.tsv` and `maxGrowth.tsv` that has a `weight` other than `0`. The column `weight` scales the error of a row in the distance, so that a row of lower quality counts less. A row with the weight `0` is left out of the simulation and of the score. The first row of `fluxData.tsv` in the `full_ecModel` tutorial, `Std`, has the weight `0`: it holds the standard condition of the protein-constraint step, which the tuning does not use.
 
 ## Configure evotune in model_adapter.toml
 
@@ -84,7 +84,7 @@ Every setting has a default, so the `[evotune]` table can be omitted. A configur
 ```toml
 [evotune]
 sigma0_log_default = 0.3   # trust for any source not listed below
-max_growth_weight = 2.0    # weight the growth-rate data double against flux data
+max_growth_weight = 2.0    # count the maximum-growth conditions twice as much as the flux conditions
 
 [evotune.source_groups.okp]
 sources = ["CataPro"]

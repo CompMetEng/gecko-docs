@@ -2,7 +2,7 @@
 
 <!-- docs-site: concept-page -->
 
-Measured growth rates and exchange fluxes of growth conditions constrain an ecModel and test it. A project keeps them in three files of the `data` folder: `fluxData.tsv`, `maxGrowth.tsv` and `zeroFlux.tsv`. GECKO (MATLAB) and geckopy (Python) read the same files. The functions that read the files, set the conditions in a model and score a model against the measurements need no enzymes, so they are part of RAVEN (MATLAB, folder `src/experiments`) and raven-toolbox (Python, package `raven_toolbox.experiments`).
+Measured growth rates and exchange fluxes of growth conditions constrain an ecModel and test it. A project keeps them in three files of the `data` folder: `fluxData.tsv` with the flux conditions, `maxGrowth.tsv` with the maximum-growth conditions and `zeroFlux.tsv` with the reactions that carry no flux. In a **flux condition** the uptake of the carbon source is limited to its measured rate, and the growth rate and the measured exchange fluxes of the model are compared with the measurements. In a **maximum-growth condition** the uptake of the carbon source is unlimited, and only the maximal growth rate of the model is compared. GECKO (MATLAB) and geckopy (Python) read the same files. The functions that read the files, set the conditions in a model and score a model against the measurements need no enzymes, so they are part of RAVEN (MATLAB, folder `src/experiments`) and raven-toolbox (Python, package `raven_toolbox.experiments`).
 
 ## Functions
 
@@ -12,9 +12,9 @@ Measured growth rates and exchange fluxes of growth conditions constrain an ecMo
 | `loadExperimentData` | `load_experiment_data` | read the three files of a folder |
 | `loadEvotuneData` | `load_experiment_data` | read the three files of the `data` folder of the model adapter; Python takes the folder, `params.path / "data"` |
 | `constrainFluxData` | `apply_flux_data_constraints` | constrain the exchange reactions and the growth rate of a model with one condition |
-| `simulateConditions` | `simulate_conditions` | simulate every condition of a dataset in a model |
+| `simulateConditions` | `simulate_conditions` | simulate the flux conditions or the maximum-growth conditions of one file in a model |
 | `computeCarbonWeights` | `compute_carbon_weights` | weight of each exchange reaction in the score |
-| `datasetRmse`, `experimentDistance` | `dataset_rmse`, `experiment_distance` | distance of a simulation to the measurements of one dataset and of both datasets |
+| `datasetRmse`, `experimentDistance` | `dataset_rmse`, `experiment_distance` | distance between the simulation and the measurements, for one kind of condition and for both kinds combined |
 
 `constrainFluxData` and `apply_flux_data_constraints` take the biomass reaction and the preferred carbon source from the model adapter and pass them on to RAVEN's `applyFluxDataConstraints` and raven-toolbox's `apply_flux_data_constraints`. The tuning functions of [Tuning against experimental data](tuning-against-experimental-data.md) call the loaders and the scoring functions.
 
@@ -24,8 +24,8 @@ The files are read from `<project>/data/`. Each file is optional, and a missing 
 
 | File | Content | Used by |
 | --- | --- | --- |
-| `fluxData.tsv` | Growth rate, protein content and measured exchange fluxes of each condition, one row per condition. | the constraints of [Proteomics integration](proteomics-integration.md), and the kcat tuning |
-| `maxGrowth.tsv` | Maximum growth rate of each condition, with one active carbon source per row at `-1000` (unconstrained). | the kcat tuning |
+| `fluxData.tsv` | Flux conditions: growth rate, protein content and measured exchange fluxes of each condition, one row per condition. | the constraints of [Proteomics integration](proteomics-integration.md), and the kcat tuning |
+| `maxGrowth.tsv` | Maximum-growth conditions: the maximum growth rate with each carbon source, one carbon source per row, at `-1000` (unconstrained). | the kcat tuning |
 | `zeroFlux.tsv` | Reaction IDs that carry no flux in any condition. The header is `Rxns` and each following line holds one reaction ID. | the kcat tuning |
 
 ## Columns of the flux files
@@ -55,8 +55,8 @@ A row with the weight `0` can hold a condition that the tuning does not use but 
 
 The kcat tuning simulates every row of `fluxData.tsv` and `maxGrowth.tsv` whose `weight` is not `0`.
 
-1. For a row of `fluxData.tsv`, the uptake of the carbon source is fixed at the measured value. Exchange reactions that are the carbon source of some row are blocked in every other row. The growth rate and the measured exchange fluxes are compared with the simulation, and so is the flux of each reaction of `zeroFlux.tsv`, which adds a term only when its simulated flux is not zero.
-2. For a row of `maxGrowth.tsv`, the uptake of the carbon source is opened to `-1000`, and only the growth rate is compared.
+1. For a flux condition (a row of `fluxData.tsv`), the uptake of the carbon source is fixed at the measured value. Exchange reactions that are the carbon source of some row are blocked in every other row. The growth rate and the measured exchange fluxes are compared with the simulation, and so is the flux of each reaction of `zeroFlux.tsv`, which adds a term only when its simulated flux is not zero.
+2. For a maximum-growth condition (a row of `maxGrowth.tsv`), the uptake of the carbon source is opened to `-1000`, and only the growth rate is compared.
 3. Each difference is multiplied by the carbon weight of its reaction: the carbon number of the exchanged metabolite, with `1` for a metabolite without carbon or without a formula, and `41` for the growth rate. The error of a condition is the root mean square of its weighted differences, and it is `99` when the model is infeasible in that condition.
 4. The error of a dataset is the mean, over its conditions with a `weight` other than `0`, of the error of each condition multiplied by its `weight`. A condition with the weight `0` is not simulated, has no error (`NaN` in the per-condition errors) and does not count in the mean. A dataset in which every condition has the weight `0` is left out of the score. The score is `(rmse_flux + w * rmse_max_growth) / (w + 1)`, where `w` is `max_growth_weight` of the `[evotune]` table.
 
@@ -105,7 +105,7 @@ Output in the `full_ecModel` tutorial:
 34 flux conditions, 8 max-growth conditions, 219 zero-flux reactions
 ```
 
-`experiment_data` is an `ExperimentData` with the attributes `flux_data`, `max_growth` and `zero_flux`. The two flux datasets are `FluxData` objects with the attributes `conds`, `p_tot`, `gr_rate`, `exch_fluxes`, `exch_mets`, `exch_rxn_ids`, `weight` and `source`.
+`experiment_data` is an `ExperimentData` with the attributes `flux_data`, `max_growth` and `zero_flux`. `flux_data` and `max_growth` are `FluxData` objects with the attributes `conds`, `p_tot`, `gr_rate`, `exch_fluxes`, `exch_mets`, `exch_rxn_ids`, `weight` and `source`.
 :::
 ::::
 
