@@ -75,7 +75,7 @@ flowchart TB
 
 Three tab-separated files are read from `<project>/data/`: `fluxData.tsv` (measured exchange fluxes per condition), `maxGrowth.tsv` (measured maximum growth rate per condition, with one active carbon source per row) and `zeroFlux.tsv` (reaction IDs that carry no flux in any condition). A missing file is skipped. [Experimental data](experimental-data.md) describes the columns of the files and how the tuning scores a model against them. The `full_ecModel` tutorial of GECKO has all three in its `data` folder.
 
-The tuning uses every row of `fluxData.tsv` and `maxGrowth.tsv`. The column `weight` scales the error of a row in the score, so that a row of lower quality counts less. A weight of `0` adds nothing to the score.
+The tuning uses every row of `fluxData.tsv` and `maxGrowth.tsv` that has a `weight` other than `0`. The column `weight` scales the error of a row in the score, so that a row of lower quality counts less. A row with the weight `0` is left out of the simulation and of the score. The first row of `fluxData.tsv` in the `full_ecModel` tutorial, `Std`, has the weight `0`: it holds the standard condition of the protein-constraint step, which the tuning does not use.
 
 ## Configure evotune in model_adapter.toml
 

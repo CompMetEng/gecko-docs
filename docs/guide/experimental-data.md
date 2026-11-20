@@ -38,12 +38,14 @@ glucose     NaN    0.41     -1000              NaN                 ...   1      
 fructose    NaN    0.338    NaN                -1000               ...   1        DLKcat
 ```
 
-- `Condition` names the row. In the files of the kcat tuning, the name is the name of the carbon source of the row and equals the metabolite name of one exchange column, for example `glucose` for `glucose (r_1714)`. A name that matches no exchange column raises an error.
+- `Condition` names the row. In the files of the kcat tuning, the name is the name of the carbon source of the row and equals the metabolite name of one exchange column, for example `glucose` for `glucose (r_1714)`. A name that matches no exchange column raises an error, except in a row with the `weight` 0.
 - `Ptot` is the measured protein content in g/gDCW, and `NaN` when it is not measured.
 - `grRate` is the measured growth rate in 1/h.
 - Each exchange column is headed `<metabolite> (<reaction ID>)` and holds the flux of that reaction in mmol/gDCW/h. Uptake is negative and excretion is positive. The header is split at the parenthesis that closes it, so a reaction ID may contain parentheses (`X (EX_a(e))` is the metabolite `X` and the reaction `EX_a(e)`). A flux of `-1000` or `1000` leaves uptake or excretion unconstrained, and an empty or non-numeric cell is read as `NaN`, which means not measured.
-- `weight` is optional and scales the error of the row in the score of the kcat tuning. A weight of `0` adds nothing to the score. A file with the column `evotuneRMSEweight` raises an error that names `weight`.
+- `weight` is optional and scales the error of the row in the score of the kcat tuning. A row with the weight `0` is left out of the simulation and of the score, and its `Condition` need not match an exchange column. Without the column every row has the weight 1. A file with the column `evotuneRMSEweight` raises an error that names `weight`.
 - `source` is optional free text that names where the data come from. The columns `weight` and `source` may stand in any position after `grRate`.
+
+A row with the weight `0` can hold a condition that the tuning does not use but another step reads. The first row of `fluxData.tsv` in the `full_ecModel` tutorial is `Std`, with `Ptot` 0.4228, the growth rate 0.1 and the glucose uptake -1.1. Its weight is `0`, so the tuning leaves it out, and the protein-constraint step of the tutorial reads it as the first condition (`condition=0` in Python, `'condition',1` in MATLAB).
 
 ## Constraining a model with one condition
 
@@ -51,12 +53,12 @@ fructose    NaN    0.338    NaN                -1000               ...   1      
 
 ## Scoring a model against all conditions
 
-The kcat tuning simulates every row of `fluxData.tsv` and `maxGrowth.tsv`.
+The kcat tuning simulates every row of `fluxData.tsv` and `maxGrowth.tsv` whose `weight` is not `0`.
 
 1. For a row of `fluxData.tsv`, the uptake of the carbon source is fixed at the measured value. Exchange reactions that are the carbon source of some row are blocked in every other row. The growth rate and the measured exchange fluxes are compared with the simulation, and so is the flux of each reaction of `zeroFlux.tsv`, which adds a term only when its simulated flux is not zero.
 2. For a row of `maxGrowth.tsv`, the uptake of the carbon source is opened to `-1000`, and only the growth rate is compared.
 3. Each difference is multiplied by the carbon weight of its reaction: the carbon number of the exchanged metabolite, with `1` for a metabolite without carbon or without a formula, and `41` for the growth rate. The error of a condition is the root mean square of its weighted differences, and it is `99` when the model is infeasible in that condition.
-4. The error of a dataset is the mean over its conditions of the error of each condition multiplied by its `weight`. The score is `(rmse_flux + w * rmse_max_growth) / (w + 1)`, where `w` is `max_growth_weight` of the `[evotune]` table.
+4. The error of a dataset is the mean, over its conditions with a `weight` other than `0`, of the error of each condition multiplied by its `weight`. A condition with the weight `0` is not simulated, has no error (`NaN` in the per-condition errors) and does not count in the mean. A dataset in which every condition has the weight `0` is left out of the score. The score is `(rmse_flux + w * rmse_max_growth) / (w + 1)`, where `w` is `max_growth_weight` of the `[evotune]` table.
 
 Two steps depend on the organism and are passed as functions: an anaerobic switch, which runs for a row whose `oxygen` column is exactly `0`, and a change of the protein content, which runs for a row with a `Ptot` value. Without the function, the row is simulated without that step.
 
@@ -111,7 +113,7 @@ Output in the `full_ecModel` tutorial:
 
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
-| Error that a carbon source in the provided flux data or max-growth data cannot be matched by name with an exchange reaction | The `Condition` of a row is not the metabolite name of an exchange column | Rename the condition to the metabolite name of the column of its carbon source |
+| Error that a carbon source in the provided flux data or max-growth data cannot be matched by name with an exchange reaction | The `Condition` of a row with a `weight` other than `0` is not the metabolite name of an exchange column | Rename the condition to the metabolite name of the column of its carbon source, or set its `weight` to `0` if the row is not for the tuning |
 | Error that the header has fewer than three columns, or that a row has a different number of cells than the header | The file is not tab-separated, or a line is incomplete | Correct the line that the message names |
 | Error that the column `evotuneRMSEweight` is called `weight` | The file has the column `evotuneRMSEweight` | Rename the column to `weight` |
 | Error that there are no exchange-flux columns | No column after `grRate` is headed `<metabolite> (<reaction ID>)` | Head each exchange column in that form |
