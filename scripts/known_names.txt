@@ -58,9 +58,16 @@ enz_usage_flux
 enzyme_comp
 error_grid
 evotuneRMSEweight
-evotune_data
+exchFluxes
+exchMets
+exchRxnIDs
+exch_fluxes
+exch_mets
+exch_rxn_ids
 expGrowth
 exp_growth
+experimentData
+experiment_data
 familyName
 fillMissing
 fill_missing
@@ -69,6 +76,7 @@ filter_data
 flexConcs
 flexEnz
 flex_concs
+fluxData
 flux_data
 foldChange
 forceWClvl
@@ -88,6 +96,7 @@ gene_reaction_rule
 givenName
 grRate
 gr_exp
+gr_rate
 growthAfter
 growthBefore
 growthRate
@@ -114,12 +123,14 @@ make_anaerobic
 make_model_anaerobic
 mappedFlux
 mapped_flux
+maxGrowth
 maxIterations
 maxMissing
 maxRSD
 max_flux
 max_generations
 max_grate
+max_growth
 max_growth_weight
 max_iterations
 max_missing
@@ -246,6 +257,8 @@ wildcard_limit
 writeReport
 write_report
 write_to
+zeroFlux
+zero_flux
 
 # -- functions and methods of RAVEN, raven-toolbox, cobrapy, the tutorials and the earlier geckopy package --
 Path
@@ -278,7 +291,6 @@ writeYAMLmodel
 write_yaml_model
 frozenset
 getExchangeRxns
-evoData
 okp_method
 handle_long_sequences
 include_similarity_columns
@@ -289,3 +301,17 @@ database_sources
 plot_light_vs_full
 printFluxes
 exportToExcelFormat
+applyFluxDataConstraints
+computeCarbonWeights
+compute_carbon_weights
+datasetRmse
+dataset_rmse
+experimentDistance
+experiment_distance
+find_met_smiles
+loadExperimentData
+load_experiment_data
+loadFluxData
+load_flux_data
+simulateConditions
+simulate_conditions

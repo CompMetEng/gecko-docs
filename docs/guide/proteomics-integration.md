@@ -232,14 +232,14 @@ set_prot_pool_size(ec_model, p_tot=0.5, f=f)
 
 ## Constrain with experimentally measured exchange fluxes
 
-Because the integrated enzyme concentrations come from one particular experiment, any exchange reaction for which that experiment has measured data, such as glucose uptake, ethanol production or CO2 exchange rate, is constrained too. `data/fluxData.tsv` can hold multiple experiments and as many reaction fluxes as needed; a flux of zero blocks the corresponding exchange reaction, and a flux of -1000 or 1000 leaves uptake or excretion unconstrained. Load it:
+Because the integrated enzyme concentrations come from one particular experiment, any exchange reaction for which that experiment has measured data, such as glucose uptake, ethanol production or CO2 exchange rate, is constrained too. `data/fluxData.tsv` can hold multiple experiments and as many reaction fluxes as needed; a flux of zero blocks the corresponding exchange reaction, and a flux of -1000 or 1000 leaves uptake or excretion unconstrained. [Experimental data](experimental-data.md) describes the columns of the file. Load it:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
 ```matlab
-fluxData = loadFluxData();
+fluxData = loadFluxData(fullfile(params.path, 'data', 'fluxData.tsv'));
 ```
 :::
 :::{tab-item} 🐍 Python

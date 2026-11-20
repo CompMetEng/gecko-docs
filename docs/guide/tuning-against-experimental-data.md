@@ -55,7 +55,7 @@ flowchart TB
 
 | MATLAB | Python | Note |
 | --- | --- | --- |
-| `loadEvotuneData` | `load_evotune_data` | loads the three data files; the tuning functions call it when no data are given |
+| `loadEvotuneData` | `load_experiment_data` | loads the three data files (see [Experimental data](experimental-data.md)); the tuning functions call it when no data are given |
 | `screenKcatLeverage` | `screen_kcat_leverage` | reports which kcats the data can inform, without any optimisation |
 | `selectTunableMask` | `select_tunable_mask` | turns the screen into the set of kcats that are searched |
 | `reviewKcatAssignment` | `review_assignment` | flags kcat assignments that deserve a second look, independent of the data |
@@ -69,27 +69,13 @@ flowchart TB
 
 - An ecModel with a model adapter and the project folders `models/` and `data/` (see [Getting started](getting-started.md) and [Building an empty ecModel](building-ec-model.md)), with kcats assigned (see [Kcat assignment](../gecko4-kcat-assignment.md)).
 - Python: `pip install geckopy[evotune]`. The CMA-ES package `cma` is an optional dependency that the base installation does not include. MATLAB needs no additional package; `cmaesKcatTuning` contains its own separable (diagonal-covariance) CMA-ES.
-- Experimental data in at least one of the files `evotuneFluxData.tsv` (measured exchange fluxes per condition) and `evotuneMaxGrowth.tsv` (measured maximum growth rates per carbon source). Both together pin the shape of metabolism (fluxes) and its rate (growth rate). Python raises a `ValueError` when neither file exists.
+- Experimental data in at least one of the files `fluxData.tsv` (measured exchange fluxes per condition) and `maxGrowth.tsv` (measured maximum growth rates per carbon source). Both together pin the shape of metabolism (fluxes) and its rate (growth rate). Python raises a `ValueError` when neither file exists.
 
 ## Prepare the experimental data
 
-Three tab-separated files are read from `<project>/data/`. A missing file is skipped. The `full_ecModel` tutorial of GECKO has all three in its `data` folder.
+Three tab-separated files are read from `<project>/data/`: `fluxData.tsv` (measured exchange fluxes per condition), `maxGrowth.tsv` (measured maximum growth rate per condition, with one active carbon source per row) and `zeroFlux.tsv` (reaction IDs that carry no flux in any condition). A missing file is skipped. [Experimental data](experimental-data.md) describes the columns of the files and how the tuning scores a model against them. The `full_ecModel` tutorial of GECKO has all three in its `data` folder.
 
-| File | Contents | Required |
-| --- | --- | --- |
-| `evotuneFluxData.tsv` | Measured exchange fluxes, one row per condition. | One of these two |
-| `evotuneMaxGrowth.tsv` | Measured maximum growth rate, one row per condition, one active carbon source per row (at `-1000`, unconstrained). | One of these two |
-| `evotuneZeroExch.tsv` | Reaction IDs assumed to carry zero flux in every condition. | No |
-
-The two flux files share the column layout of the regular flux data file, read by `loadFluxData` (Python `load_flux_data`):
-
-```
-Condition   Ptot   grRate   glucose (r_1714)   fructose (r_1709)   ...   evotuneRMSEweight   source
-glucose     NaN    0.41     -1000              NaN                ...   1                     DLKcat
-fructose    NaN    0.338    NaN                -1000              ...   1                     DLKcat
-```
-
-`Condition` names the row, `grRate` is the measured growth rate and `Ptot` is the measured protein content (`NaN` if not measured). Each `<met> (<rxn>)` column holds a measured or fixed flux of that exchange reaction. `evotuneRMSEweight` scales the contribution of the row to the RMSE (usually `1`), and `source` is free text. `evotuneZeroExch.tsv` has a `Rxns` header followed by one reaction ID per line.
+The tuning uses every row of `fluxData.tsv` and `maxGrowth.tsv`. The column `weight` scales the error of a row in the score, so that a row of lower quality counts less. A weight of `0` adds nothing to the score.
 
 ## Configure evotune in model_adapter.toml
 
@@ -241,7 +227,7 @@ save_ec_model(model, "ecModel_tuned.yml", adapter=adapter)
 :::
 ::::
 
-After the call, every tunable kcat of the ecModel holds the best value that CMA-ES found, and the kcat constraints are applied. Python changes `model` in place; MATLAB copies structs on assignment, so the output `ecModel` has to be captured. The other options are `popsize` (the CMA-ES population size, default `4 + floor(3*log(n))` for `n` free parameters), `nProc` and `seed`. The remaining settings come from the `[evotune]` table. The API reference lists the remaining options (`verbose`, `evoData` and `modelAdapter` in MATLAB; `okp_method`, `bio_rxn`, `params` and `evotune_data` in Python).
+After the call, every tunable kcat of the ecModel holds the best value that CMA-ES found, and the kcat constraints are applied. Python changes `model` in place; MATLAB copies structs on assignment, so the output `ecModel` has to be captured. The other options are `popsize` (the CMA-ES population size, default `4 + floor(3*log(n))` for `n` free parameters), `nProc` and `seed`. The remaining settings come from the `[evotune]` table. The API reference lists the remaining options (`verbose`, `experimentData` and `modelAdapter` in MATLAB; `verbose`, `bio_rxn`, `params` and `experiment_data` in Python).
 
 Growth that needs special handling for the organism, such as forced anaerobic conditions or a protein pool scaled with a condition-specific biomass composition, is set with functions. In Python these are the arguments `make_anaerobic` and `change_protein_biomass`, which default to `None`; `tutorials/full_ecModel/code/anaerobic.py` in the geckopy repository has an example. In MATLAB the `[matlab]` table of `model_adapter.toml` names the functions with the keys `make_model_anaerobic` and `change_protein_biomass`.
 
@@ -290,7 +276,7 @@ open("corrections.tsv", "w").write(corrections_tsv(rows))
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
 | `ImportError` that names the `evotune` extra | The package `cma` is not installed | Run `pip install geckopy[evotune]` |
-| Error that `evotune_data` has neither `flux_data` nor `max_grate` | Neither `evotuneFluxData.tsv` nor `evotuneMaxGrowth.tsv` is in `<project>/data/` | Add one of the files, or pass the loaded data |
+| Error that `experiment_data` has neither `flux_data` nor `max_growth` (MATLAB: `evotune:noData`) | Neither `fluxData.tsv` nor `maxGrowth.tsv` is in `<project>/data/` | Add one of the files, or pass the loaded data (see [Experimental data](experimental-data.md)) |
 | Error `No tunable kcats` | `ec.kcat` is not positive anywhere, or `tunableMask` excludes every kcat with a value | Assign kcats first, or widen the mask |
 | Error `Only 1 free parameter(s) after masking and tying` | The mask and `tie_isozymes` leave fewer than two free parameters | Widen `tunableMask` or raise `targetImpactShare` |
 | Most kcats take `sigma0_log_default` | The labels in `source_groups` do not match the `ec.source` entries of the model | List the labels that occur in `ec.source` (for example `ec_tree`, `combined` or `custom`) in `source_groups` |
@@ -299,5 +285,6 @@ open("corrections.tsv", "w").write(corrections_tsv(rows))
 ## See also
 
 - [Growth-rate tuning](growth-rate-tuning.md), the iterative single-target tuning of kcats.
+- [Experimental data](experimental-data.md), the files, columns and scoring of the data that the tuning fits.
 - [Kcat assignment](../gecko4-kcat-assignment.md) and [Applying kcats](applying-kcats.md), where the kcats and sources used here come from.
 - [API reference](../api/index.md), every function in both toolboxes.

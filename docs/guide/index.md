@@ -45,6 +45,7 @@ Background, the reference material that the steps link to:
 - [GECKO light and full ecModels](gecko-light.md), the two ecModel layouts and the choice between them.
 - [ecModel YAML format](yaml-format.md), the file format that both toolboxes read and write.
 - [Files in the data folder](data-folder-files.md), every file that the `data` folder of a project can hold.
+- [Experimental data](experimental-data.md), the growth rates and exchange fluxes of growth conditions that constrain and test an ecModel.
 - [Model adapter parameters](model-adapter-parameters.md), every parameter of `model_adapter.toml` in both languages.
 - [Basic model operations](basic-model-operations.md), bounds, objectives, FBA, flux inspection and export for conventional GEMs and ecModels.
 
@@ -107,6 +108,7 @@ enzyme-usage-and-bottlenecks
 gecko-light
 yaml-format
 data-folder-files
+experimental-data
 model-adapter-parameters
 basic-model-operations
 ```
