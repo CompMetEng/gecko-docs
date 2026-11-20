@@ -417,12 +417,13 @@ The condition is met when the model grows at the measured rate and every measure
 
 Each iteration checks the condition. If it is infeasible, the protein pool is lifted as a limit and the protein drawn from it is minimised, and the kcat of the enzyme that draws the most protein in that solution is raised by `foldChange`. The measured fluxes then decide which enzyme is raised, where a growth rate alone picks the enzyme that limits growth. The bounds of the condition apply only during the tuning, and the ecModel does not keep them.
 
-A kcat cannot fix every condition. If the condition stays infeasible when the pool limit is lifted, the measurement conflicts with the model (for example an uptake that is too low for the measured growth rate) or a limit other than the pool applies, and the tuning stops without a change. The `status` of the result says why the tuning stopped:
+A kcat cannot fix every condition. The tuning first checks the condition in the model without any enzyme limit, which is the model without enzyme constraints. If the condition is infeasible there, the measurements conflict with the model (for example an uptake that is too low for the measured growth rate), no kcat can meet it, and the tuning stops without a change. Such a condition is better left out of the tuning altogether: `infeasibleConditions` (Python `infeasible_conditions`) lists the conditions of a flux data table that fail this check, and a `weight` of 0 in `fluxData.tsv` leaves them out. A condition that passes the check but is infeasible with the protein pool lifted is stopped by the limit of a single enzyme, for example a measured enzyme concentration. The `status` of the result says why the tuning stopped:
 
 | Status | Meaning |
 | --- | --- |
 | `reached` | the target is met |
-| `unfixable` | the condition is infeasible without the pool limit, so no kcat can meet it |
+| `infeasibleInGem` (Python `infeasible_in_gem`) | the condition is infeasible without any enzyme limit, so no kcat can meet it and the condition should not be used |
+| `unfixable` | the condition is feasible without enzyme limits and infeasible with the pool lifted, so the limit of a single enzyme stops it |
 | `stalled` | raising the next kcat does not lower the protein that the condition needs |
 | `infeasible` | the model has no optimal solution (growth-rate target) |
 | `noCandidate` (Python `no_candidate`) | no enzyme is left to raise |
