@@ -269,7 +269,7 @@ from geckopy import find_met_smiles
 find_met_smiles(ec_model, cache_path=params.path / "data" / "smilesDB.tsv")
 ```
 
-`find_met_smiles` mutates `ec_model` in place and reads and writes through the `cache_path` TSV. No PubChem network access is needed when every metabolite name is in the cache, as with the cache included in the tutorial. Unmatched metabolites are logged rather than returned as a `noSMILES` list: the number of unique metabolite names with a SMILES and the number without are logged at INFO level, counting only the names looked up in PubChem, and each name without a SMILES at DEBUG level. As in MATLAB, curate metabolite names (`metabolite.name`) if a formula suffix or similar naming issue prevents matching.
+`find_met_smiles` mutates `ec_model` in place and reads and writes through the `cache_path` TSV. The enzyme metabolites (`prot_<id>`) are skipped. No PubChem network access is needed when every metabolite name is in the cache, as with the cache included in the tutorial. Unmatched metabolites are logged rather than returned as a `noSMILES` list: the number of unique metabolite names with a SMILES and the number without are logged at INFO level, counting only the names looked up in PubChem, and each name without a SMILES at DEBUG level. As in MATLAB, curate metabolite names (`metabolite.name`) if a formula suffix or similar naming issue prevents matching.
 :::
 ::::
 

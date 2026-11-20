@@ -57,10 +57,12 @@ The kcat tuning simulates every row of `fluxData.tsv` and `maxGrowth.tsv` whose 
 
 1. For a flux condition (a row of `fluxData.tsv`), the uptake of the carbon source is fixed at the measured value. Exchange reactions that are the carbon source of some row are blocked in every other row. The growth rate and the measured exchange fluxes are compared with the simulation, and so is the flux of each reaction of `zeroFlux.tsv`, which adds a term only when its simulated flux is not zero.
 2. For a maximum-growth condition (a row of `maxGrowth.tsv`), the uptake of the carbon source is opened to `-1000`, and only the growth rate is compared.
-3. Each difference is multiplied by the carbon weight of its reaction: the carbon number of the exchanged metabolite, with `1` for a metabolite without carbon or without a formula, and `41` for the growth rate. The error of a condition is the root mean square of its weighted differences, and it is `99` when the model is infeasible in that condition.
+3. Each difference is multiplied by the carbon weight of its reaction: the carbon number of the exchanged metabolite, with `1` for a metabolite without carbon, without a formula or with a formula that cannot be read, and `41` for the growth rate. A formula is read as element symbols with an optional integer or decimal count (`C6H12O6`, `C2.5H5`); a charge sign and a `*` between parts of the formula are ignored, and a formula with parentheses (`C6H12O6(H2O)2`) or an unknown element symbol cannot be read. The error of a condition is the root mean square of its weighted differences, and it is `99` when the model is infeasible in that condition.
 4. The error of a dataset is the mean, over its conditions with a `weight` other than `0`, of the error of each condition multiplied by its `weight`. A condition with the weight `0` is not simulated, has no error (`NaN` in the per-condition errors) and does not count in the mean. A dataset in which every condition has the weight `0` is left out of the score. The score is `(rmse_flux + w * rmse_max_growth) / (w + 1)`, where `w` is `max_growth_weight` of the `[evotune]` table.
 
 Two steps depend on the organism and are passed as functions: an anaerobic switch, which runs for a row whose `oxygen` column is exactly `0`, and a change of the protein content, which runs for a row with a `Ptot` value. Without the function, the row is simulated without that step.
+
+The model objective must be the maximisation of the growth. The tuning does not set the objective: each condition is solved with the objective that the model has, and the growth rate is the flux of the biomass reaction `bioRxn` in that solution. With another objective, a maximum-growth condition compares a flux that is not the maximal growth rate with the measurement.
 
 ## Examples
 
@@ -115,7 +117,7 @@ Output in the `full_ecModel` tutorial:
 | --- | --- | --- |
 | Error that a carbon source in the provided flux data or max-growth data cannot be matched by name with an exchange reaction | The `Condition` of a row with a `weight` other than `0` is not the metabolite name of an exchange column | Rename the condition to the metabolite name of the column of its carbon source, or set its `weight` to `0` if the row is not for the tuning |
 | Error that the header has fewer than three columns, or that a row has a different number of cells than the header | The file is not tab-separated, or a line is incomplete | Correct the line that the message names |
-| Error that the column `evotuneRMSEweight` is called `weight` | The file has the column `evotuneRMSEweight` | Rename the column to `weight` |
+| Error from `loadEvotuneData` or the tuning functions that names the column `weight` | `fluxData.tsv` or `maxGrowth.tsv` has the column `evotuneRMSEweight` | Rename the column to `weight` |
 | Error that there are no exchange-flux columns | No column after `grRate` is headed `<metabolite> (<reaction ID>)` | Head each exchange column in that form |
 | Error that the experimental data have neither flux data nor max-growth data | `fluxData.tsv` and `maxGrowth.tsv` are missing from `<project>/data/` | Add one of the files, or pass the loaded data |
 | A condition scores `99` | The model is infeasible in that condition | Check the carbon source, the oxygen flux and the bounds of the measured fluxes |
