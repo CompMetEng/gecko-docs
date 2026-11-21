@@ -37,10 +37,10 @@ The table is a selection; [MATLAB and Python](matlab-vs-python.md) lists all pai
 | `constrainFluxData` | `apply_flux_data_constraints` |
 | `getECfromDatabase` | `fill_eccodes_from_database` |
 | `getECfromGEM` | `fill_eccodes_from_gem` |
-| `evotuneScore` | `evotune_distance` |
+| `loadEvotuneData` | `load_experiment_data` in `raven_toolbox.experiments` |
+| `evotuneScore` | `simulate_conditions` and `experiment_distance` in `raven_toolbox.experiments` |
 | `getEcRxnKeys` | `ec_rxn_keys` |
 | `assignKcatValues` | `apply_kcat_list` |
-| `getKcatAcrossIsozymes` | `fill_kcats_from_isozymes` |
 | `getStandardKcat` | `assign_standard_kcat` |
 | `getEnzymeUsage` | `enzyme_usage` |
 | `getComplexFamilies` | `complex_families` |
@@ -49,8 +49,6 @@ The table is a selection; [MATLAB and Python](matlab-vs-python.md) lists all pai
 | `reviewKcatAssignment` | `review_assignment` |
 | `upgradeGECKOproject` | `upgrade_project`, command `geckopy upgrade` |
 | `createGECKOproject` | command `geckopy init` |
-| `writeOpenKineticsPredictorInput` | `build_okp_input_csv` in `geckopy.gather_kcats.open_kinetics_predictor` |
-| `readOpenKineticsPredictorOutput` | `parse_okp_output` in `geckopy.gather_kcats.open_kinetics_predictor` |
 
 ## Functions of one implementation
 
@@ -60,7 +58,6 @@ The table is a selection; [MATLAB and Python](matlab-vs-python.md) lists all pai
 |---|---|
 | `ModelAdapterManager` | geckopy has no global default adapter. |
 | `plotEcFVA` | A plot is drawn from the DataFrame that `ec_fva` returns, with matplotlib or seaborn. |
-| `updateProtPool` | `setProtPoolSize` and `set_prot_pool_size` supersede it. |
 | `convertAdapterToToml` | geckopy adapters are configured by `model_adapter.toml`, so there is no adapter class to convert. |
 
 `ecTreeEstimate` and `kcatAssignmentConfig` have a counterpart in geckopy (`ECTree.estimate` and `kcat_assignment_config` in `geckopy.gather_kcats`) that `geckopy` does not export.

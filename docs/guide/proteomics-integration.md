@@ -207,7 +207,7 @@ Enzyme concentrations must be in mg/gDCW. Relative proteomics data loaded with t
 
 ## Set the protein pool from the proteomics data
 
-A proteomics experiment may reflect a physiology different from the default assumption. The pool size is recomputed from a sample-specific total protein content (for example 0.5 g/gDCW) in place of the adapter default `Ptot` (Python: `p_tot`), and from the f-factor of the proteomics data, the fraction of the measured protein mass that is accounted for by enzymes of the model. With several experiments in `protData`, `calculateFfactor` averages the abundance of each protein over the experiments in which it is measured. `updateProtPool` is a function of GECKO 4 that raises an error when a usage reaction with an upper bound other than 1000 draws from the protein pool, which is the case for every ecModel with concentration-bounded usage reactions from GECKO 3.2 on; `setProtPoolSize` sizes the pool for such ecModels.
+A proteomics experiment may reflect a physiology different from the default assumption. The pool size is recomputed from a sample-specific total protein content (for example 0.5 g/gDCW) in place of the adapter default `Ptot` (Python: `p_tot`), and from the f-factor of the proteomics data, the fraction of the measured protein mass that is accounted for by enzymes of the model. With several experiments in `protData`, `calculateFfactor` averages the abundance of each protein over the experiments in which it is measured. `setProtPoolSize` sets the size of the pool from them.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -232,14 +232,14 @@ set_prot_pool_size(ec_model, p_tot=0.5, f=f)
 
 ## Constrain with experimentally measured exchange fluxes
 
-Because the integrated enzyme concentrations come from one particular experiment, any exchange reaction for which that experiment has measured data, such as glucose uptake, ethanol production or CO2 exchange rate, is constrained too. `data/fluxData.tsv` can hold multiple experiments and as many reaction fluxes as needed; a flux of zero blocks the corresponding exchange reaction, and a flux of -1000 or 1000 leaves uptake or excretion unconstrained. Load it:
+Because the integrated enzyme concentrations come from one particular experiment, any exchange reaction for which that experiment has measured data, such as glucose uptake, ethanol production or CO2 exchange rate, is constrained too. `data/fluxData.tsv` can hold multiple experiments and as many reaction fluxes as needed; a flux of zero blocks the corresponding exchange reaction, and a flux of -1000 or 1000 leaves uptake or excretion unconstrained. [Experimental data](experimental-data.md) describes the columns of the file. Load it:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
 ```matlab
-fluxData = loadFluxData();
+fluxData = loadFluxData(fullfile(params.path, 'data', 'fluxData.tsv'));
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -295,7 +295,6 @@ With `max` and loose constraints, FBA reaches a solution unless too many exchang
 | Problem | Possible reason | Solution |
 |---|---|---|
 | `loadProtData:replicateMismatch` (Python: `ValueError` from `load_prot_data`) | the sum of `replPerCond` differs from the number of replicate columns of the file | Correct `replPerCond` (Python: `repl_per_cond`) |
-| `updateProtPool` raises an error | a usage reaction with an upper bound other than 1000 draws from the protein pool, as in every ecModel with concentration-bounded usage reactions | Calculate the f-factor and call `setProtPoolSize` |
 | The growth rate that is reached is below the intended one | the enzyme levels, the $k_{cat}$ values or the exchange flux data are overconstrained | Relax the enzyme concentrations (see [Relaxing overconstrained proteomics](relaxing-constraints.md)), or loosen the flux constraints |
 | `calculate_f_factor` returns 0 with a warning | none of the UniProt identifiers of the proteomics data matches an enzyme of the model | Use the same identifier namespace in `proteomics.tsv` and `ec.enzymes` |
 | A complex is still limited by one subunit | the subunit is shared between complexes or catalyses a reaction on its own, and stays as measured | Check the `shared` field of the result of `levelComplexConcs` |

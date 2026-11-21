@@ -34,12 +34,13 @@ A GECKO 3 script keeps running after each change in this box and returns a diffe
 | `loadEcModel` checks the ecModel format | `gecko_format` in the file is higher than 4 | Update GECKO |
 | Adapter keys | `model_adapter.toml` has a key that is not in `adapterParameters.tsv` | Remove or rename the key, or place a key that GECKO uses and geckopy does not use under `[matlab.params]` |
 | Options of `assignKcats` and `upgradeGECKOproject` | an option name that the function does not have | Correct the option name |
+| `loadFluxData` takes a file path | the call has no file path (`loadFluxData()` read `data/fluxData.tsv` of the model adapter) or has a `modelAdapter` argument | Pass the path: `loadFluxData(fullfile(params.path, 'data', 'fluxData.tsv'))`, or read the whole folder with `loadEvotuneData` |
 
 ### Changes of the project
 
 A GECKO 3 project is configured by an adapter class and keeps its kcats in `data/DLKcat.tsv`, `data/customKcats.tsv` and in the variables of the script. A GECKO 4 project is configured by `model_adapter.toml`, keeps each kcat source in its own file in `data/kcats`, and records the ecModel format in the saved model. [Project format 4](gecko4-project-format.md) describes the files, and [Upgrade a GECKO 3 project](gecko3-upgrade-project.md) the steps that convert a project.
 
-Adapter classes keep working. Functions with name-value arguments also take them positionally, in the GECKO 3 order: `loadEcModel(filename, modelAdapter)` and `loadEcModel('filename', filename)` are equivalent. A call uses one of the two forms for all its optional arguments.
+Adapter classes keep working. Functions with name-value arguments also take the first arguments positionally, in the GECKO 3 order, followed by name-value pairs: `loadEcModel(filename, modelAdapter)` and `loadEcModel('filename', filename)` are equivalent.
 
 ## New functions
 
@@ -66,6 +67,7 @@ kcat prediction goes through the hosted OpenKineticsPredictor service, in additi
 | Removed | Replacement |
 | --- | --- |
 | BRENDA files in `databases/` | `fetchBrendaAsset` downloads the files of the toolbox-assets release `brenda-2026.1-1` into `databases/brenda-2026.1-1` on first use. A project keeps its own files in `data/brenda` |
+| `addCarbonNum`, `getcarbonnum` | both raise `GECKO:removedFunction`. RAVEN's `computeCarbonWeights` returns the carbon weight of each exchange reaction, as a map keyed by reaction ID, without a field in the model |
 
 ## Renamed functions
 
@@ -77,7 +79,6 @@ The old name of each function in the table calls the new function and prints a d
 | `copyECtoGEM` | `applyECcodes` | |
 | `enzymeUsage` | `getEnzymeUsage` | |
 | `pfbaEnzymes` | `getPfbaEnzymes` | |
-| `addCarbonNum` | `fillCarbonNum` | |
 | `updateGECKOdoc` | `buildGECKOdoc` | |
 | `selectKcatValue` | `assignKcatValues` | the function writes `ecModel.ec.kcat` |
 | `mergeDLKcatAndFuzzyKcats` | `mergeKcats` | merges kcat lists of any number of sources |
