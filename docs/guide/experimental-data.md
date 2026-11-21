@@ -62,7 +62,7 @@ The kcat tuning simulates every row of `fluxData.tsv` and `maxGrowth.tsv` whose 
 
 Two steps depend on the organism and are passed as functions: an anaerobic switch, which runs for a row whose `oxygen` column is exactly `0`, and a change of the protein content, which runs for a row with a `Ptot` value. Without the function, the row is simulated without that step.
 
-The model objective must be the maximisation of the growth. The tuning does not set the objective: each condition is solved with the objective that the model has, and the growth rate is the flux of the biomass reaction `bioRxn` in that solution. With another objective, a maximum-growth condition compares a flux that is not the maximal growth rate with the measurement.
+Each condition is solved by maximising the growth. The scoring of the tuning sets the biomass reaction `bioRxn` of the model adapter as the objective for the simulations, whatever objective the model has, and leaves the objective of the model as it was. The growth rate is the flux of `bioRxn` in that solution. When the experiment functions of RAVEN or raven-toolbox are called directly, the objective of the model is used as it is: a warning (`simulateConditions:objectiveNotGrowth` in MATLAB, a `UserWarning` in Python) is issued once per call when it is not the maximisation of the biomass reaction alone, and a maximum-growth condition then compares a flux that is not the maximal growth rate with the measurement.
 
 ## Examples
 
