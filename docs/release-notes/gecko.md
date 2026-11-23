@@ -1,6 +1,6 @@
 # GECKO release notes
 
-## 4.0.0b3 — 2026-11-23
+## 4.0.0b3 (2026-11-23)
 
 Changes since 4.0.0b2. GECKO 4.0.0b3 requires RAVEN 3.0.0b3, which has the `experiments` functions that GECKO calls, and `GECKOInstaller` checks for them.
 
@@ -8,7 +8,7 @@ A `model_adapter.toml` written for 4.0.0b2 needs manual changes. Remove the keys
 
 ### Changes that alter results or raise errors
 
-Changes for GECKO 3 users, each also on the [GECKO 3 → GECKO 4](https://gecko-docs.readthedocs.io/en/latest/gecko3-to-gecko4.html) page ([#33](https://github.com/CompMetEng/GECKO/pull/33)):
+Changes for GECKO 3 users, each also on the [GECKO 3 → GECKO 4](../gecko3-to-gecko4.md) page ([#33](https://github.com/CompMetEng/GECKO/pull/33)):
 
 - `updateProtPool`, `mergeDLKcatAndFuzzyKcats`, `applyCustomKcats` and the adapter template `adapterTemplate.m` moved to `src/deprecated` and warn. `truncateValues` is removed.
 - `bayesianSensitivityTuning`, its helpers `abc_max`, `getrSample` and `updateprior`, `getcarbonnum` and `findMaxValue` raise `GECKO:removedFunction` and name the replacement. `runDLKcat` and `writeDLKcatInput` warn and then raise an error that names `kcatsFromDLKcat`.

@@ -2,5 +2,5 @@
 
 ```{include} ../../geckopy/CHANGELOG.md
 :start-line: 2
-:end-line: 287
+:end-before: "## 0.3.0"
 ```
