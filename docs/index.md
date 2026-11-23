@@ -80,13 +80,6 @@ Constrains the usage of individual enzymes with absolute proteomics measurements
 Lists the enzymes that a solution uses and the enzymes that limit the objective.
 :::
 
-:::{grid-item-card} Engineering targets
-:link: guide/engineering-targets
-:link-type: doc
-
-Finds the reactions and genes to change for the production of a compound.
-:::
-
 :::{grid-item-card} Context-specific ecModels
 :link: guide/context-ecmodel
 :link-type: doc
