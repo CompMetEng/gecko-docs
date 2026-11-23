@@ -112,7 +112,9 @@ html_theme_options = {
     "announcement": (
         "This site documents GECKO <strong>4.0.0b3</strong> "
         "(MATLAB and Python), a pre-release version. The API may still "
-        "change before the stable 4.0.0 release."
+        "change before the stable 4.0.0 release. Changes: "
+        '<a href="https://github.com/CompMetEng/GECKO/releases/tag/4.0.0b3">GECKO</a>, '
+        '<a href="https://github.com/CompMetEng/geckopy/blob/main/CHANGELOG.md">geckopy</a>.'
     ),
 }
 
