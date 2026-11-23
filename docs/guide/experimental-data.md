@@ -16,7 +16,7 @@ Measured growth rates and exchange fluxes of growth conditions constrain an ecMo
 | `computeCarbonWeights` | `compute_carbon_weights` | weight of each exchange reaction in the score |
 | `datasetRmse`, `experimentDistance` | `dataset_rmse`, `experiment_distance` | distance between the simulation and the measurements, for one kind of condition and for both kinds combined |
 
-`constrainFluxData` and `apply_flux_data_constraints` take the biomass reaction and the preferred carbon source from the model adapter and pass them on to RAVEN's `applyFluxDataConstraints` and raven-toolbox's `apply_flux_data_constraints`. The tuning functions of [Tuning against experimental data](tuning-against-experimental-data.md) call the loaders and the scoring functions.
+`constrainFluxData` and `apply_flux_data_constraints` take the biomass reaction and the preferred carbon source from the model adapter and pass them on to RAVEN's `applyFluxDataConstraints` and raven-toolbox's `apply_flux_data_constraints`. The tuning functions of [Tune kcats with evotune](evotune.md) call the loaders and the scoring functions.
 
 ## Files
 
@@ -24,7 +24,7 @@ The files are read from `<project>/data/`. Each file is optional, and a missing 
 
 | File | Content | Used by |
 | --- | --- | --- |
-| `fluxData.tsv` | Flux conditions: growth rate, protein content and measured exchange fluxes of each condition, one row per condition. | the constraints of [Proteomics integration](proteomics-integration.md), and the kcat tuning |
+| `fluxData.tsv` | Flux conditions: growth rate, protein content and measured exchange fluxes of each condition, one row per condition. | the constraints of [Constrain enzymes with proteomics](proteomics.md), and the kcat tuning |
 | `maxGrowth.tsv` | Maximum-growth conditions: the maximum growth rate with each carbon source, one carbon source per row, at `-1000` (unconstrained). | the kcat tuning |
 | `zeroFlux.tsv` | Reaction IDs that carry no flux in any condition. The header is `Rxns` and each following line holds one reaction ID. | the kcat tuning |
 
@@ -49,7 +49,7 @@ A row with the weight `0` can hold a condition that the tuning does not use but 
 
 ## Constraining a model with one condition
 
-`constrainFluxData` (Python `apply_flux_data_constraints`) sets the growth rate and the exchange fluxes of one condition, chosen by its index or its name, as bounds. The loose setting keeps one bound at zero, and a percentage sets both bounds around the measured value. [Proteomics integration](proteomics-integration.md#constrain-with-experimentally-measured-exchange-fluxes) shows the call and the choice of settings. The preferred carbon source of the model adapter is blocked before the data are applied, so that the data alone determine the carbon source.
+`constrainFluxData` (Python `apply_flux_data_constraints`) sets the growth rate and the exchange fluxes of one condition, chosen by its index or its name, as bounds. The loose setting keeps one bound at zero, and a percentage sets both bounds around the measured value. [Constrain enzymes with proteomics](proteomics.md#constrain-the-exchange-fluxes-and-the-growth-rate) shows the call and the choice of settings. The preferred carbon source of the model adapter is blocked before the data are applied, so that the data alone determine the carbon source.
 
 ## Scoring a model against all conditions
 
@@ -124,7 +124,7 @@ Output in the `full_ecModel` tutorial:
 
 ## See also
 
-- [Tuning against experimental data](tuning-against-experimental-data.md), the kcat tuning that scores a model against these files.
-- [Proteomics integration](proteomics-integration.md), where `fluxData.tsv` constrains the ecModel.
+- [Tune kcats with evotune](evotune.md), the kcat tuning that scores a model against these files.
+- [Constrain enzymes with proteomics](proteomics.md), where `fluxData.tsv` constrains the ecModel.
 - [Files in the data folder](data-folder-files.md), every file of the `data` folder.
 - [API reference](../api/index.md), every function in both toolboxes.

@@ -16,13 +16,21 @@
 #   not_ported -- deliberately absent from Python, with the reason
 
 aliases:
+  applyECcodes: copy_ec_to_gem
   assignKcatValues: apply_kcat_list
   constrainFluxData: apply_flux_data_constraints
+  evotuneScore: evotune_distance
+  fillKcatsFromIsozymes: fill_kcats_from_isozymes
+  getComplexFamilies: complex_families
+  getEcRxnKeys: ec_rxn_keys
   getECfromDatabase: fill_eccodes_from_database
   getECfromGEM: fill_eccodes_from_gem
+  getEnzymeUsage: enzyme_usage
+  getPfbaEnzymes: pfba_enzymes
   getStandardKcat: assign_standard_kcat
-  ModelAdapterManager: resolve_adapter
+  reviewKcatAssignment: review_assignment
   sigmaFitter: fit_sigma
+  upgradeGECKOproject: upgrade_project
 
 # GECKO's own MATLAB functions all have a geckopy counterpart, curated or
 # auto-matched; none of them hand off to cobrapy directly (RAVEN functions
@@ -34,3 +42,19 @@ not_ported:
   plotEcFVA: >-
     Plots an ecFVA flux range directly from the result; geckopy returns the
     ec_fva DataFrame and leaves plotting to matplotlib or seaborn directly.
+  convertAdapterToToml: >-
+    geckopy reads the adapter from model_adapter.toml, so there is no adapter
+    class to convert.
+  createGECKOproject: >-
+    The command geckopy init makes the project folder.
+  findGECKOroot: >-
+    geckopy finds its own files through the installed package and needs no
+    toolbox folder.
+  getECstring: >-
+    find_ec_in_db reads the EC numbers of a UniProt or KEGG entry itself.
+  loadDatabases: >-
+    load_uniprot_tsv and load_kegg_tsv read data/uniprot.tsv and
+    data/kegg.tsv; make_ec_model downloads a missing file.
+  ModelAdapterManager: >-
+    geckopy has no default adapter. A function takes the argument adapter or
+    reads model.adapter.
