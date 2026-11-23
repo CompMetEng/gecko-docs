@@ -1,5 +1,9 @@
 # Citations
 
+## Citing the software
+
+Publications that use GECKO or geckopy cite the paper of the GECKO 3 protocol below, which describes GECKO 3; the changes in GECKO 4 are in [GECKO 3 to GECKO 4](gecko3-to-gecko4.md). A publication also names the version that it used: the version of GECKO is in the file `version.txt` of the toolbox, and the versions of the Python packages geckopy and raven-toolbox are printed by `pip show geckopy raven-toolbox`.
+
 ## GECKO 3 protocol
 
 > Chen, Y., Gustafsson, J., Tafur Rangel, A., Anton, M., Domenzain, I.,

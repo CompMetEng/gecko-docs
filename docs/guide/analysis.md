@@ -135,7 +135,7 @@ flux_data = load_flux_data(params.path / "data" / "fluxData.tsv")
 
 [Enzyme usage and bottlenecks](enzyme-usage.md) describes the analyses of single enzymes: which enzymes a solution uses, and which enzymes limit the objective.
 
-For flux ranges, use `ecFVA`. A [convergence study of the samplers of raven-toolbox](https://raven-docs.readthedocs.io/en/latest/parameter-tuning/studies/sampling-convergence-calibration.html) found no setting that gave converged samples on yeast-GEM, a conventional GEM of about 4,100 reactions. The study did not test an ecModel.
+For flux ranges, use `ecFVA`. A [convergence study of the samplers of raven-toolbox](inv:raven:std:doc#parameter-tuning/studies/sampling-convergence-calibration) found no setting that gave converged samples on yeast-GEM, a conventional GEM of about 4,100 reactions. The study did not test an ecModel.
 
 ## Set the objective
 
@@ -281,7 +281,7 @@ mapped_samples = map_rxns_to_conv(ec_model, model, samples).mapped_flux
 :::
 ::::
 
-Run several chains with different seeds and compare them, for example with the R-hat statistic, before the samples are used. The [convergence study](https://raven-docs.readthedocs.io/en/latest/parameter-tuning/studies/sampling-convergence-calibration.html) describes the check and the settings it tested.
+Run several chains with different seeds and compare them, for example with the R-hat statistic, before the samples are used. The [convergence study](inv:raven:std:doc#parameter-tuning/studies/sampling-convergence-calibration) describes the check and the settings it tested.
 
 ## Map fluxes to the conventional GEM
 

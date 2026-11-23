@@ -545,7 +545,7 @@ The tuned ecModel holds the tuned kcats, but the next `assignKcats` replaces the
 | Error that a carbon source cannot be matched by name with an exchange reaction | The `Condition` of a row differs from every metabolite name in the exchange column headers | Use the metabolite name of the column header as the condition |
 | Error `No tunable kcats` | No kcat is above 0, or the mask excludes every kcat | Assign kcats first, or widen the mask |
 | Error `Only 1 free parameter(s) after masking and tying` | The mask and the isozyme tying leave fewer than two free kcats | Raise `targetImpactShare`, or give a wider `tunableMask` |
-| Error `<file>: evotune.source_groups.<group> needs both sources and sigma0_log` | A group lacks `sources` or `sigma0_log` | Give each group both keys |
+| Error `GECKO:loadAdapterParams`: `<file>: evotune.source_groups.<group> needs both sources and sigma0_log` | A group lacks `sources` or `sigma0_log` | Give each group both keys |
 | Warning `<n> of <m> tunable kcats match no evotune source group and get sigma0_log_default` | The `sources` of the groups do not match the origins of `ec.source` in the model | List the origins that the warning names in the `sources` of a group, or use a pattern such as `okp_*` |
 | The large changes differ in direction between seeds | Several kcat vectors fit the data equally well | Increase `prior_penalty_weight`, and compare values with `tunePriorPenaltyWeight` |
 

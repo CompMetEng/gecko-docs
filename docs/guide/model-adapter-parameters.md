@@ -298,13 +298,13 @@ A GECKO 3 adapter class sets the same parameters in MATLAB code; [GECKO 3 to GEC
 
 | Problem | Possible reason | Solution |
 |---|---|---|
-| `<file>: unknown key <dotted.key> in model_adapter.toml` | the key is missing from the tables above, is misspelled, or belongs to no key list of its group, stage or kcat source table | Correct the key, or place a parameter that GECKO alone uses under `[matlab.params]` |
-| `<file>: matlab.params.kcatAggregation is not allowed; set it in [kcat_sources.brenda] aggregation` (or `matlab.params.evotune`, `set it in [evotune]`) | `[matlab.params]` sets a parameter that has a key of its own | Move the setting to `[kcat_sources.brenda]` or `[evotune]` |
-| `<file>: evotune.source_groups.<group> needs both sources and sigma0_log`, or `must be a table with sources and sigma0_log` | a group lacks one of the two keys, or is a single value in place of a table | Write the group as a table with `sources` and `sigma0_log` |
-| `<file>: evotune.source_groups.<group>.sources must be a non-empty list of strings`, or `.sigma0_log must be a positive number` | `sources` is empty or not a list of strings; `sigma0_log` is zero, negative, not finite or not a number | Correct the value |
-| `Unknown OKP method <name> in [kcat_sources.okp] method; supported: ...` | the method name is misspelled, or is CatPred or TurNup | Use the names of [OpenKineticsPredictor](#openkineticspredictor) |
-| `gr_exp is not set in model_adapter.toml` | a function that needs a target growth rate got none, and the file does not set `gr_exp` | Set `gr_exp`, or give the growth rate in the call |
-| Error about a preset and stages | `[kcat_assignment]` has both `preset` and `[[kcat_assignment.stage]]` | Keep one of the two |
+| `GECKO:loadAdapterParams`: `<file>: unknown key <dotted.key> in model_adapter.toml` | the key is missing from the tables above, is misspelled, or belongs to no key list of its group, stage or kcat source table | Correct the key, or place a parameter that GECKO alone uses under `[matlab.params]` |
+| `GECKO:loadAdapterParams`: `<file>: matlab.params.kcatAggregation is not allowed; set it in [kcat_sources.brenda] aggregation` (or `matlab.params.evotune`, `set it in [evotune]`) | `[matlab.params]` sets a parameter that has a key of its own | Move the setting to `[kcat_sources.brenda]` or `[evotune]` |
+| `GECKO:loadAdapterParams`: `<file>: evotune.source_groups.<group> needs both sources and sigma0_log`, or `must be a table with sources and sigma0_log` | a group lacks one of the two keys, or is a single value in place of a table | Write the group as a table with `sources` and `sigma0_log` |
+| `GECKO:loadAdapterParams`: `<file>: evotune.source_groups.<group>.sources must be a non-empty list of strings`, or `.sigma0_log must be a positive number` | `sources` is empty or not a list of strings; `sigma0_log` is zero, negative, not finite or not a number | Correct the value |
+| `kcatAssignment:config`: `Unknown OKP method <name> in [kcat_sources.okp] method; supported: ...` | the method name is misspelled, or is CatPred or TurNup | Use the names of [OpenKineticsPredictor](#openkineticspredictor) |
+| `GECKO:grExpNotSet`: `gr_exp is not set in model_adapter.toml` | a function that needs a target growth rate got none, and the file does not set `gr_exp` | Set `gr_exp`, or give the growth rate in the call |
+| Error `kcatAssignment:config` about a preset and stages | `[kcat_assignment]` has both `preset` and `[[kcat_assignment.stage]]` | Keep one of the two |
 | `No model_adapter.toml found in <folder>` | the folder given holds no `model_adapter.toml` | Give the folder that holds the file |
 
 ## See also

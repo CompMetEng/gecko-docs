@@ -184,9 +184,10 @@ The last GECKO 2 release is [2.0.3](https://github.com/SysBioChalmers/GECKO/rele
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
 | Deprecation warning | the script calls a GECKO 3 name | Use the GECKO 4 name from Renamed functions |
+| Error `GECKO:removedFunction`, or `GECKO:deprecatedFunction` from `runDLKcat` and `writeDLKcatInput` | the script calls a function that GECKO 4 removed or replaced | Use the function that the message names |
 | Warning when `loadEcModel` loads a model | the ecModel was saved by GECKO 3 and its protein reactions run in reverse | `loadEcModel` upgrades the loaded model. Run `saveEcModel` to store the upgraded model |
 | An enzyme usage flux is negative | the model was not upgraded | Run `upgradeEcModel` |
-| Error that names a key of `model_adapter.toml` | the key is not in `adapterParameters.tsv` | Place a key that GECKO uses and geckopy does not use under `[matlab.params]` |
+| Error `GECKO:loadAdapterParams` that names a key of `model_adapter.toml` | the key is not in `adapterParameters.tsv` | Place a key that GECKO uses and geckopy does not use under `[matlab.params]` |
 | A rebuilt ecModel has other kcats than the GECKO 3 model | the default preset and the substrate of BRENDA kcats changed | Use `preset = "gecko_classic"` and compare the output of `collectKcats` |
 
 ## See also

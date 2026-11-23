@@ -117,9 +117,9 @@ Output in the `full_ecModel` tutorial:
 | --- | --- | --- |
 | Error that a carbon source in the provided flux data or max-growth data cannot be matched by name with an exchange reaction | The `Condition` of a row with a `weight` other than `0` is not the metabolite name of an exchange column | Rename the condition to the metabolite name of the column of its carbon source, or set its `weight` to `0` if the row is not for the tuning |
 | Error that the header has fewer than three columns, or that a row has a different number of cells than the header | The file is not tab-separated, or a line is incomplete | Correct the line that the message names |
-| Error from `loadEvotuneData` or the tuning functions that names the column `weight` | `fluxData.tsv` or `maxGrowth.tsv` has the column `evotuneRMSEweight` | Rename the column to `weight` |
+| Error `loadEvotuneData:legacyWeightColumn` from `loadEvotuneData` or the tuning functions, which names the column `weight` | `fluxData.tsv` or `maxGrowth.tsv` has the column `evotuneRMSEweight` | Rename the column to `weight` |
 | Error that there are no exchange-flux columns | No column after `grRate` is headed `<metabolite> (<reaction ID>)` | Head each exchange column in that form |
-| Error that the experimental data have neither flux data nor max-growth data | `fluxData.tsv` and `maxGrowth.tsv` are missing from `<project>/data/` | Add one of the files, or pass the loaded data |
+| Error `evotune:noData` that the experimental data have neither flux data nor max-growth data | `fluxData.tsv` and `maxGrowth.tsv` are missing from `<project>/data/` | Add one of the files, or pass the loaded data |
 | A condition scores `99` | The model is infeasible in that condition | Check the carbon source, the oxygen flux and the bounds of the measured fluxes |
 
 ## See also

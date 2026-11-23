@@ -2,13 +2,11 @@
 
 GECKO is available as a MATLAB toolbox and as the Python package geckopy. Both implement the same procedure and reconstruct, simulate and analyse the same ecModels (see [GECKO and geckopy](../gecko-to-geckopy.md)). GECKO 4 and geckopy 4 are pre-releases.
 
-## Equipment
+## Requirements
 
 A computer running macOS, Windows or Linux, with an internet connection to reach [KEGG](https://www.genome.jp/kegg/), [UniProt](https://www.uniprot.org/), [PubChem](https://pubchem.ncbi.nlm.nih.gov/) and [GitHub](https://github.com/CompMetEng/GECKO/). Data from these sources can also be downloaded or reconstructed manually elsewhere; GECKO functions download them directly.
 
 The starting point is a conventional constraint-based metabolic model, at genome scale or smaller, in SBML format L3V1 FBCv2. The procedure works on any valid model, whether or not it belongs to a model organism.
-
-## Software
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -26,31 +24,27 @@ The starting point is a conventional constraint-based metabolic model, at genome
 :::
 ::::
 
-Both toolboxes also need a linear-programming solver (see [Choosing a solver](#choosing-a-solver) below). Predicted kcats come from the hosted [OpenKineticsPredictor](#openkineticspredictor) service.
+Both toolboxes also need a linear-programming solver (see [Solver](#solver)). Predicted kcats come from the hosted [OpenKineticsPredictor](#openkineticspredictor) service.
 
-## RAVEN toolbox / raven-toolbox
+## Install
+
+### RAVEN toolbox
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
-Installation instructions are in the [RAVEN documentation](https://raven-docs.readthedocs.io/en/latest/installation/raven.html): the repository is downloaded with `git clone` or as a ZIP archive from GitHub. The MATLAB Add-On installs RAVEN 2, which GECKO 4 does not support. Instructions for installing the solver Gurobi are in the same page, under [Choosing and configuring a solver](https://raven-docs.readthedocs.io/en/latest/installation/raven.html#choosing-and-configuring-a-solver).
-
-After finishing installation, run the checks in MATLAB:
-
-```matlab
-checkRaven;
-```
+Installation instructions are in the [RAVEN documentation](inv:raven:std:doc#installation/raven): the repository is downloaded with `git clone` or as a ZIP archive from GitHub. The MATLAB Add-On installs RAVEN 2, which GECKO 4 does not support. Instructions for installing the solver Gurobi are in the same page, under the section "Solver".
 :::
 :::{tab-item} 🐍 Python
 :sync: python
 
-raven-toolbox is a dependency of geckopy and is installed with it (see [GECKO Toolbox / geckopy](#gecko-toolbox-geckopy)); it has no separate installation step.
+raven-toolbox is a dependency of geckopy and is installed with it (see [GECKO and geckopy](#install-gecko-geckopy)); it has no separate installation step.
 :::
 ::::
 
-(gecko-toolbox-geckopy)=
-## GECKO Toolbox / geckopy
+(install-gecko-geckopy)=
+### GECKO and geckopy
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -62,7 +56,7 @@ GECKO 4 is a pre-release. It is installed with `git` or from a ZIP archive of a 
 git clone --depth=1 https://github.com/CompMetEng/GECKO
 ```
 
-The clone is the `develop` branch; adding `--branch <tag>` selects a release tag. The tags and their ZIP archives are on the [tags page](https://github.com/CompMetEng/GECKO/tags) of the repository; it is extracted to a location with read and write access.
+The clone is the development version, the `develop` branch; adding `--branch <tag>` selects a release tag. The tags and their ZIP archives are on the [tags page](https://github.com/CompMetEng/GECKO/tags) of the repository; a ZIP archive is extracted to a location with read and write access.
 
 The [MATLAB Add-On](https://mathworks.com/help/matlab/matlab_env/get-add-ons.html) (Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox") installs a GitHub release; the latest, v3.2.5, is GECKO 3 (see [GECKO 3 to GECKO 4](../gecko3-to-gecko4.md#staying-on-gecko-3)).
 
@@ -72,14 +66,6 @@ After cloning or extracting, navigate to the GECKO folder in MATLAB and install 
 cd('path/to/GECKO')
 GECKOInstaller.install
 ```
-
-To remove:
-
-```matlab
-GECKOInstaller.uninstall
-```
-
-Upgrading with any install method: run `GECKOInstaller.uninstall` first, regardless of how GECKO was installed: it clears the old GECKO folder from the MATLAB path so a later session does not warn about paths that no longer exist. Then update (the Add-On manager's Check for Updates, a fresh ZIP extract, or `git pull`) and run `GECKOInstaller.install` again.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -96,18 +82,12 @@ The dependency of geckopy on raven-toolbox names a pre-release, so `--pre` also 
 pip install --pre geckopy==<version>
 ```
 
-For the development branch, ahead of the latest PyPI release, install from GitHub instead:
+For the development version, ahead of the latest PyPI release, install the `develop` branch from GitHub instead. The tags pages of [raven-toolbox](https://github.com/CompMetEng/raven-toolbox/tags) and [geckopy](https://github.com/CompMetEng/geckopy/tags) list the releases, and `@<tag>` in place of `@develop` selects one:
 
 ```bash
 pip install \
     git+https://github.com/CompMetEng/raven-toolbox.git@develop \
     git+https://github.com/CompMetEng/geckopy.git@develop
-```
-
-Verify the install:
-
-```bash
-python -c "from importlib.metadata import version; print(version('geckopy'))"
 ```
 
 The extra `geckopy[tutorial]` adds matplotlib for the plots of the tutorial.
@@ -116,17 +96,70 @@ The extra `geckopy[tutorial]` adds matplotlib for the plots of the tutorial.
 pip install --pre "geckopy[tutorial]"
 ```
 
-To remove:
-
-```bash
-pip uninstall geckopy raven-toolbox
-```
-
 geckopy installs the command-line tool `geckopy` with the subcommands `init` (new ecModel project), `upgrade` (GECKO 3 project to the GECKO 4 layout), `brenda-refresh`, `uniprot-download`, `kegg-download` and `adapter` (`adapter show` prints the parameters of a project).
 :::
 ::::
 
-## Choosing a solver
+## Verify
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+`GECKOInstaller.install` prints the installed GECKO version, and says when a newer one is available. After the installation of RAVEN, run the checks of RAVEN in MATLAB:
+
+```matlab
+checkRaven;
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```bash
+python -c "from importlib.metadata import version; print(version('geckopy'))"
+```
+:::
+::::
+
+## Upgrade
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+Upgrading with any install method: run `GECKOInstaller.uninstall` first, regardless of how GECKO was installed: it clears the old GECKO folder from the MATLAB path so a later session does not warn about paths that no longer exist. Then update (the Add-On manager's Check for Updates, a fresh ZIP extract, or `git pull`) and run `GECKOInstaller.install` again.
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```bash
+pip install --upgrade --pre geckopy
+```
+:::
+::::
+
+A GECKO 3 project is converted to GECKO 4 with the steps of [Upgrade a GECKO 3 project](../gecko3-upgrade-project.md).
+
+## Remove
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+GECKOInstaller.uninstall
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```bash
+pip uninstall geckopy raven-toolbox
+```
+:::
+::::
+
+## Solver
 
 | Solver | License | Good for |
 |---|---|---|

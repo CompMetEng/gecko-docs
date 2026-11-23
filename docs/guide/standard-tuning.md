@@ -183,7 +183,7 @@ if ec_model.slim_optimize() > params.gr_exp:
 | Python `sensitivity_tuning` stops at `max_iterations` | Raising kcats alone does not reach the target growth rate | Check the target growth rate and the bounds |
 | `ValueError` that `prot_to_ignore` has no usage reaction for a protein (Python, full ecModel) | The model has no usage reaction for this UniProt ID | Correct the ID |
 | Error `sigmaFitter:growthRate` (Python: `ValueError`) | The target growth rate is not above 0 | Set `gR_exp` (Python `gr_exp`) in the model adapter, or give the growth rate |
-| Error `gr_exp is not set in model_adapter.toml` | No growth rate is given, and `model_adapter.toml` does not set `gr_exp` | Set `gr_exp`, or give the growth rate |
+| Error `GECKO:grExpNotSet`: `gr_exp is not set in model_adapter.toml` | No growth rate is given, and `model_adapter.toml` does not set `gr_exp` | Set `gr_exp`, or give the growth rate |
 
 ## See also
 
