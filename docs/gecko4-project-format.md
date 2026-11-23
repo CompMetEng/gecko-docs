@@ -38,7 +38,7 @@ The file holds the parameters that an adapter class sets in GECKO 3. Paths are r
 
 ## *K*{sub}`cat` source files
 
-A *k*{sub}`cat` source file stores the *k*{sub}`cat`s of one source. Each row is keyed by the conventional reaction and the enzyme set, which do not depend on the index in `model.ec.rxns`. A file stays valid when the ecModel is rebuilt and applies to full and light ecModels. GECKO and geckopy read and write the same files.
+A *k*{sub}`cat` source file stores the *k*{sub}`cat` values of one source. Each row is keyed by the conventional reaction and the enzyme set, which do not depend on the index in `model.ec.rxns`. A file stays valid when the ecModel is rebuilt and applies to full and light ecModels. GECKO and geckopy read and write the same files.
 
 `loadKcatSource` maps a file to a model and reports the rows with an invalid *k*{sub}`cat`, the rows that fit no reaction, and the rows that match part of an enzyme set. `saveKcatSource` writes a *k*{sub}`cat` list as a source file. `getEcRxnKeys` returns the conventional reaction and the enzyme set of every reaction in `model.ec`.
 

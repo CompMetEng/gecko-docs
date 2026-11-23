@@ -24,7 +24,7 @@ The starting point is a conventional constraint-based metabolic model, at genome
 :::
 ::::
 
-Both toolboxes also need a linear-programming solver (see [Solver](#solver)). Predicted *k*{sub}`cat`s come from the hosted [OpenKineticsPredictor](#openkineticspredictor) service.
+Both toolboxes also need a linear-programming solver (see [Solver](#solver)). Predicted *k*{sub}`cat` values come from the hosted [OpenKineticsPredictor](#openkineticspredictor) service.
 
 ## Install
 

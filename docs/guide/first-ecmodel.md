@@ -1,6 +1,6 @@
 # Build an ecModel
 
-These steps build an enzyme-constrained model (ecModel) from a conventional genome-scale metabolic model (GEM) with the default settings of GECKO and geckopy. At the end, the project folder holds an ecModel with *k*{sub}`cat`s and a protein pool, which reaches the growth rate of the organism, saved as a YAML file. Each step links to the page that describes the other options of that step.
+These steps build an enzyme-constrained model (ecModel) from a conventional genome-scale metabolic model (GEM) with the default settings of GECKO and geckopy. At the end, the project folder holds an ecModel with *k*{sub}`cat` values and a protein pool, which reaches the growth rate of the organism, saved as a YAML file. Each step links to the page that describes the other options of that step.
 
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
@@ -103,7 +103,7 @@ flowchart TB
 | `setProtPoolSize` | `set_prot_pool_size` | set the upper bound of the protein pool |
 | `setParam` | `reaction.lower_bound`, `model.objective` | set a bound or the objective |
 | `solveLP` | `model.slim_optimize` | solve the model |
-| `sensitivityTuning` | `sensitivity_tuning` | raise the *k*{sub}`cat`s that limit growth (standard *k*{sub}`cat` tuning) |
+| `sensitivityTuning` | `sensitivity_tuning` | raise the *k*{sub}`cat` values that limit growth (standard *k*{sub}`cat` tuning) |
 | `sigmaFitter` | `fit_sigma` | fit the saturation factor $\sigma$ to the growth rate |
 | `saveEcModel` | `save_ec_model` | save the ecModel as YAML in `models` |
 
@@ -134,7 +134,7 @@ geckopy init ecMyModel
 :::
 ::::
 
-Copy the GEM into `models`, then set the parameters of the organism in `model_adapter.toml`. `conv_gem`, `org_name`, `gr_exp`, `c_source` and `bio_rxn` have no default value; the functions that tune *k*{sub}`cat`s or fit $\sigma$ need `gr_exp`. `[uniprot] id` has no default either, and an empty `[kegg] id` means that KEGG is not used; set both for the organism. The example holds the values for [yeast-GEM](https://github.com/SysBioChalmers/yeast-GEM), in which `r_1714` is the glucose exchange and `r_4041` the biomass reaction:
+Copy the GEM into `models`, then set the parameters of the organism in `model_adapter.toml`. `conv_gem`, `org_name`, `gr_exp`, `c_source` and `bio_rxn` have no default value; the functions that tune *k*{sub}`cat` values or fit $\sigma$ need `gr_exp`. `[uniprot] id` has no default either, and an empty `[kegg] id` means that KEGG is not used; set both for the organism. The example holds the values for [yeast-GEM](https://github.com/SysBioChalmers/yeast-GEM), in which `r_1714` is the glucose exchange and `r_4041` the biomass reaction:
 
 ```toml
 conv_gem = "models/yeast-GEM.yml"
@@ -193,11 +193,11 @@ ec_model = make_ec_model(model, adapter)
 
 `makeEcModel` downloads the UniProt and KEGG data of the organism into `data/uniprot.tsv` and `data/kegg.tsv` when these files do not exist, with the settings of `[uniprot]` and `[kegg]`. With an empty `kegg.id`, it prints a warning and uses no KEGG data. `uniprot.id` has no default; without it and without `data/uniprot.tsv`, the build raises an error.
 
-The ecModel is a full ecModel: it has one pseudometabolite and one usage reaction per enzyme, and no *k*{sub}`cat`s yet. [Choose the ecModel structure](ecmodel-structure.md) describes the light ecModel, the matching of genes to UniProt and KEGG, and the data of enzyme complexes.
+The ecModel is a full ecModel: it has one pseudometabolite and one usage reaction per enzyme, and no *k*{sub}`cat` values yet. [Choose the ecModel structure](ecmodel-structure.md) describes the light ecModel, the matching of genes to UniProt and KEGG, and the data of enzyme complexes.
 
 The model adapter holds the values that `model_adapter.toml` had when it was read (MATLAB: `ModelAdapterManager.setDefault`, Python: `ModelAdapter.from_folder`). After a change to the file, read it again with the same call.
 
-## 3. Assign *k*{sub}`cat`s
+## 3. Assign *k*{sub}`cat` values
 
 The *k*{sub}`cat` sources of the default preset (`brenda_ec_tree`) read the EC numbers of the reactions and the SMILES of the substrates, so these are filled first.
 
@@ -238,11 +238,11 @@ decisions, report = assign_kcats(ec_model)
 :::
 ::::
 
-The EC numbers come from the annotation of the GEM, and from UniProt and KEGG for the reactions that the GEM does not annotate. `updateKcatSources` makes the *k*{sub}`cat` source files in `data/kcats` that the preset needs and prints a table with the status of each source. The BRENDA files are downloaded the first time they are used. `assignKcats` selects one *k*{sub}`cat` per reaction from the source files, applies the *k*{sub}`cat`s to the model, and writes the decision for each reaction to `output/<model id>_kcatDecisions.tsv`.
+The EC numbers come from the annotation of the GEM, and from UniProt and KEGG for the reactions that the GEM does not annotate. `updateKcatSources` makes the *k*{sub}`cat` source files in `data/kcats` that the preset needs and prints a table with the status of each source. The BRENDA files are downloaded the first time they are used. `assignKcats` selects one *k*{sub}`cat` per reaction from the source files, applies the *k*{sub}`cat` values to the model, and writes the decision for each reaction to `output/<model id>_kcatDecisions.tsv`.
 
-The default preset takes *k*{sub}`cat`s from BRENDA measurements of the organism and from the measurements of the same EC number in other organisms. For the reactions that these leave without a *k*{sub}`cat`, it takes the predictions of the OpenKineticsPredictor (OKP) method KinForm-H. OKP is a web service that needs an API key, set as the environment variable `OKP_API_KEY` or in the file `data/okpApiKey.txt` (a key is generated at [predictor.openkinetics.org](https://predictor.openkinetics.org/)). The first call of `updateKcatSources` submits the OKP job and reports the source `okp_kinform_h` as `pending`; a later call fetches the result. Call `updateKcatSources` again until no source is `pending`, then run `assignKcats`. A source file that does not exist is skipped by `assignKcats`, and a reaction without a *k*{sub}`cat` from any source gets a *k*{sub}`cat` from an isozyme or the standard *k*{sub}`cat` (`getStandardKcat`, Python: `assign_standard_kcat`).
+The default preset takes *k*{sub}`cat` values from BRENDA measurements of the organism and from the measurements of the same EC number in other organisms. For the reactions that these leave without a *k*{sub}`cat`, it takes the predictions of the OpenKineticsPredictor (OKP) method KinForm-H. OKP is a web service that needs an API key, set as the environment variable `OKP_API_KEY` or in the file `data/okpApiKey.txt` (a key is generated at [predictor.openkinetics.org](https://predictor.openkinetics.org/)). The first call of `updateKcatSources` submits the OKP job and reports the source `okp_kinform_h` as `pending`; a later call fetches the result. Call `updateKcatSources` again until no source is `pending`, then run `assignKcats`. A source file that does not exist is skipped by `assignKcats`, and a reaction without a *k*{sub}`cat` from any source gets a *k*{sub}`cat` from an isozyme or the standard *k*{sub}`cat` (`getStandardKcat`, Python: `assign_standard_kcat`).
 
-[Choose the *k*{sub}`cat` sources](kcat-sources.md) describes the presets and the treatment of reactions without a *k*{sub}`cat`, and [Set custom *k*{sub}`cat`s](custom-kcats.md) describes curated *k*{sub}`cat`s.
+[Choose the *k*{sub}`cat` sources](kcat-sources.md) describes the presets and the treatment of reactions without a *k*{sub}`cat`, and [Set custom *k*{sub}`cat` values](custom-kcats.md) describes curated *k*{sub}`cat` values.
 
 ## 4. Set the protein pool
 
@@ -296,9 +296,9 @@ print(growth)
 
 [Basic model operations](basic-model-operations.md) describes bounds, objectives and the inspection of a solution.
 
-## 6. Tune *k*{sub}`cat`s and fit sigma
+## 6. Tune *k*{sub}`cat` values and fit sigma
 
-This step uses `sensitivityTuning`, which needs one growth rate, `gr_exp`. With measured growth rates of several conditions or measured exchange fluxes, use evotune in place of this step ([Tune *k*{sub}`cat`s with evotune](evotune.md)), without `sigmaFitter`. When the growth rate is lower than `gr_exp`, `sensitivityTuning` raises the *k*{sub}`cat`s that limit growth; when the model already reaches `gr_exp`, it changes no *k*{sub}`cat`. Each step multiplies a *k*{sub}`cat` by 10, so the growth rate after tuning is often above `gr_exp`. A *k*{sub}`cat` tuning only raises *k*{sub}`cat`s, so when the growth rate is above `gr_exp`, `sigmaFitter` lowers the saturation factor $\sigma$ until the growth rate matches `gr_exp`, and sets the protein pool with that value.
+This step uses `sensitivityTuning`, which needs one growth rate, `gr_exp`. With measured growth rates of several conditions or measured exchange fluxes, use evotune in place of this step ([Tune *k*{sub}`cat` values with evotune](evotune.md)), without `sigmaFitter`. When the growth rate is lower than `gr_exp`, `sensitivityTuning` raises the *k*{sub}`cat` values that limit growth; when the model already reaches `gr_exp`, it changes no *k*{sub}`cat`. Each step multiplies a *k*{sub}`cat` by 10, so the growth rate after tuning is often above `gr_exp`. A *k*{sub}`cat` tuning only raises *k*{sub}`cat` values, so when the growth rate is above `gr_exp`, `sigmaFitter` lowers the saturation factor $\sigma$ until the growth rate matches `gr_exp`, and sets the protein pool with that value.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -329,7 +329,7 @@ if ec_model.slim_optimize() > params.gr_exp:
 :::
 ::::
 
-`sensitivityTuning` selects the enzyme with the highest usage, multiplies the *k*{sub}`cat` of the reaction that uses the most of this enzyme by 10, and repeats this until the model reaches `gr_exp`. `tunedKcats` lists each changed reaction with its *k*{sub}`cat` before and after tuning, and `ec.source` of the reaction keeps the origin of the *k*{sub}`cat`, with the *k*{sub}`cat` before tuning as `prior`. [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) compares the two tunings and describes how to check a tuned *k*{sub}`cat`, [Tune *k*{sub}`cat`s with sensitivityTuning](standard-tuning.md) describes the options of this step, and [Set the protein pool](protein-pool.md#sigma-and-kcat-tuning) describes when to change $\sigma$ and when the *k*{sub}`cat`s.
+`sensitivityTuning` selects the enzyme with the highest usage, multiplies the *k*{sub}`cat` of the reaction that uses the most of this enzyme by 10, and repeats this until the model reaches `gr_exp`. `tunedKcats` lists each changed reaction with its *k*{sub}`cat` before and after tuning, and `ec.source` of the reaction keeps the origin of the *k*{sub}`cat`, with the *k*{sub}`cat` before tuning as `prior`. [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) compares the two tunings and describes how to check a tuned *k*{sub}`cat`, [Tune *k*{sub}`cat` values with sensitivityTuning](standard-tuning.md) describes the options of this step, and [Set the protein pool](protein-pool.md#sigma-and-kcat-tuning) describes when to change $\sigma$ and when the *k*{sub}`cat` values.
 
 ## 7. Save the ecModel
 
@@ -358,11 +358,11 @@ The file is written to the `models` folder of the project. [ecModel YAML format]
 
 - [Choose the ecModel structure](ecmodel-structure.md): build a light ecModel, match the genes of the GEM to UniProt and KEGG, and add the subunit composition of enzyme complexes.
 - [Choose the *k*{sub}`cat` sources](kcat-sources.md): select another preset and compare presets before they are applied.
-- [Set custom *k*{sub}`cat`s](custom-kcats.md): give reactions curated *k*{sub}`cat`s from the literature or from measurements.
+- [Set custom *k*{sub}`cat` values](custom-kcats.md): give reactions curated *k*{sub}`cat` values from the literature or from measurements.
 - [Set the protein pool](protein-pool.md): calculate $f$ from proteomics data and set the protein pool of a condition.
-- [Choose a *k*{sub}`cat` tuning](kcat-tuning.md): choose between `sensitivityTuning` and evotune, and check the tuned *k*{sub}`cat`s.
-- [Tune *k*{sub}`cat`s with sensitivityTuning](standard-tuning.md): the options of the tuning of step 6.
-- [Tune *k*{sub}`cat`s with evotune](evotune.md): fit *k*{sub}`cat`s to growth rates and exchange fluxes of one or more conditions.
+- [Choose a *k*{sub}`cat` tuning](kcat-tuning.md): choose between `sensitivityTuning` and evotune, and check the tuned *k*{sub}`cat` values.
+- [Tune *k*{sub}`cat` values with sensitivityTuning](standard-tuning.md): the options of the tuning of step 6.
+- [Tune *k*{sub}`cat` values with evotune](evotune.md): fit *k*{sub}`cat` values to growth rates and exchange fluxes of one or more conditions.
 - [Constrain enzymes with proteomics](proteomics.md): limit each measured enzyme to its measured concentration.
 - [Relax proteomics constraints](relaxing-proteomics.md): loosen the proteomics constraints that prevent the measured growth rate.
 - [Analyse an ecModel](analysis.md): simulate with other objectives, calculate flux ranges and sample solutions.

@@ -1,6 +1,6 @@
-# Set custom *k*{sub}`cat`s
+# Set custom *k*{sub}`cat` values
 
-`data/kcats/custom.tsv` holds the curated *k*{sub}`cat`s of a project, for example a value from the literature or a value kept after [*k*{sub}`cat` tuning](kcat-tuning.md). The result is a `custom.tsv` that `assignKcats` reads before all other sources, and an ecModel with the custom *k*{sub}`cat`s applied.
+`data/kcats/custom.tsv` holds the curated *k*{sub}`cat` values of a project, for example a value from the literature or a value kept after [*k*{sub}`cat` tuning](kcat-tuning.md). The result is a `custom.tsv` that `assignKcats` reads before all other sources, and an ecModel with the custom *k*{sub}`cat` values applied.
 
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
@@ -77,7 +77,7 @@ flowchart TB
 
 | MATLAB | Python | Note |
 | --- | --- | --- |
-| `assignKcats` | `assign_kcats` | determine the *k*{sub}`cat`s, with the custom *k*{sub}`cat`s first, and apply them; the report lists the rows that were not applied |
+| `assignKcats` | `assign_kcats` | determine the *k*{sub}`cat` values, with the custom *k*{sub}`cat` values first, and apply them; the report lists the rows that were not applied |
 | `convertCustomKcats` | `convert_custom_kcats` | convert `data/customKcats.tsv` of a GECKO 3 project into `data/kcats/custom.tsv` |
 | `setKcatForReactions` | `set_kcat_for_reactions` | change `ec.kcat` of named reactions in the model |
 | `applyKcatConstraints` | `apply_kcat_constraints` | apply `ec.kcat` to the stoichiometry |
@@ -108,7 +108,7 @@ R2_REV		35	custom	value for all isozymes
 
 `R1`, `R2` and `P12345` stand for reactions of the GEM and a UniProt accession of the organism. The rows are keyed by the conventional reaction and the enzyme set, which do not depend on how the ecModel is built. The file therefore stays valid when the ecModel is rebuilt, and it applies to full and light ecModels. [Project format 4](../gecko4-project-format.md#kcat-source-files) describes the format of all *k*{sub}`cat` source files.
 
-## Apply the custom *k*{sub}`cat`s
+## Apply the custom *k*{sub}`cat` values
 
 `assignKcats` reads `custom.tsv` with the other source files. A row whose *k*{sub}`cat` is empty, is text other than a number, or is 0 or below is not applied. A row that matches no reaction of the ecModel, or that matches part of an enzyme set, is not applied either. The report lists these rows per source file:
 
@@ -138,11 +138,11 @@ print(custom["invalid"], custom["unmatched"], custom["partial"])
 
 A row in `partial` shares at least half of its enzymes with a reaction of the ecModel. The table names that reaction and its enzymes, so the row can be corrected to the enzyme set of the model.
 
-## Convert the custom *k*{sub}`cat`s of a GECKO 3 project
+## Convert the custom *k*{sub}`cat` values of a GECKO 3 project
 
-`convertCustomKcats` (Python: `convert_custom_kcats`) writes the custom *k*{sub}`cat`s of `data/customKcats.tsv` as `data/kcats/custom.tsv`; it needs the full ecModel and does not overwrite an existing `custom.tsv`. [Upgrade a GECKO 3 project](../gecko3-upgrade-project.md) describes this conversion with the other steps of an upgrade.
+`convertCustomKcats` (Python: `convert_custom_kcats`) writes the custom *k*{sub}`cat` values of `data/customKcats.tsv` as `data/kcats/custom.tsv`; it needs the full ecModel and does not overwrite an existing `custom.tsv`. [Upgrade a GECKO 3 project](../gecko3-upgrade-project.md) describes this conversion with the other steps of an upgrade.
 
-## Change *k*{sub}`cat`s by hand
+## Change *k*{sub}`cat` values by hand
 
 `setKcatForReactions` changes `ec.kcat` of the named reactions, and `applyKcatConstraints` applies the change to the stoichiometry. In a full ecModel, a reaction name without `_EXP_<n>` changes all isozymes of the reaction. In a light ecModel, the names in `ec.rxns` have a number prefix (`001_R1`), and the name is given with this prefix. A name that matches no entry of `ec.rxns` is ignored without a message. `ec.source` of a changed reaction reads `manual`.
 
@@ -168,7 +168,7 @@ apply_kcat_constraints(ec_model)
 ::::
 
 :::{warning}
-`assignKcats` replaces all *k*{sub}`cat`s of the model with the values from the source files. A *k*{sub}`cat` set with `setKcatForReactions` is lost when `assignKcats` runs again. Write a *k*{sub}`cat` that must stay in the model to `data/kcats/custom.tsv`.
+`assignKcats` replaces all *k*{sub}`cat` values of the model with the values from the source files. A *k*{sub}`cat` set with `setKcatForReactions` is lost when `assignKcats` runs again. Write a *k*{sub}`cat` that must stay in the model to `data/kcats/custom.tsv`.
 :::
 
 ## Troubleshooting
@@ -179,12 +179,12 @@ apply_kcat_constraints(ec_model)
 | A custom row is listed as invalid | the *k*{sub}`cat` is empty, 0, or not a plain number (for example `5,5` with a decimal comma) | Write the *k*{sub}`cat` as a number with a decimal point |
 | Error `loadKcatSource:columns` (Python: `ValueError` with `needs the columns kcat and source`) | the file lacks `kcat`, `source`, or both `rxn` and `enzymes` | Add the columns to the header line |
 | Error `collectKcats:legacyCustomKcats` (Python: `ValueError`) | the project has the GECKO 3 file `data/customKcats.tsv` and no `data/kcats/custom.tsv` | Run `convertCustomKcats` |
-| *K*{sub}`cat`s set by hand are gone | `assignKcats` replaced them | Write them to `data/kcats/custom.tsv` |
+| *K*{sub}`cat` values set by hand are gone | `assignKcats` replaced them | Write them to `data/kcats/custom.tsv` |
 | Error `convertCustomKcats:exists` (Python: `FileExistsError`) | the function does not overwrite the file | Remove the file, or give another `outFile` (Python: `out_file`) |
 | Error `convertCustomKcats:light` (Python: `ValueError`) | the conversion needs the full ecModel | Convert with the full ecModel; the `custom.tsv` written also applies to the light ecModel |
 
 ## See also
 
 - [Choose the *k*{sub}`cat` sources](kcat-sources.md): the presets and the order of the sources.
-- [Choose a *k*{sub}`cat` tuning](kcat-tuning.md): tuned *k*{sub}`cat`s to check and keep in `custom.tsv`.
+- [Choose a *k*{sub}`cat` tuning](kcat-tuning.md): tuned *k*{sub}`cat` values to check and keep in `custom.tsv`.
 - [Project format 4](../gecko4-project-format.md): the layout of `data/kcats` and of the *k*{sub}`cat` source files.

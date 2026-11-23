@@ -200,11 +200,11 @@ aggregation = "max"
 
 ## *K*{sub}`cat` tuning
 
-The `[evotune]` section holds the hyperparameters of the CMA-ES *k*{sub}`cat` tuning described in [Tune *k*{sub}`cat`s with evotune](evotune.md).
+The `[evotune]` section holds the hyperparameters of the CMA-ES *k*{sub}`cat` tuning described in [Tune *k*{sub}`cat` values with evotune](evotune.md).
 
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
-| `evotune.sigma0_log_default` | `evotune.sigma0logDefault` | `0.5` | Prior standard deviation of the natural log of the *k*{sub}`cat`, for the *k*{sub}`cat`s that match no source group |
+| `evotune.sigma0_log_default` | `evotune.sigma0logDefault` | `0.5` | Prior standard deviation of the natural log of the *k*{sub}`cat`, for the *k*{sub}`cat` values that match no source group |
 | `evotune.source_groups` | `evotune.kcatSources` | four groups (see [Source groups](#source-groups)) | Trust tiers: one table `[evotune.source_groups.<group>]` per group, with `sources` and `sigma0_log` |
 | `evotune.rmse_threshold` | `evotune.rmseThreshold` | `0.2` | The search stops when the best distance to the measurements reaches this value |
 | `evotune.max_generations` | `evotune.maxGenerations` | `150` | Maximum number of CMA-ES generations |
@@ -214,7 +214,7 @@ The `[evotune]` section holds the hyperparameters of the CMA-ES *k*{sub}`cat` tu
 
 ### Source groups
 
-A source group gives the *k*{sub}`cat`s of some sources one prior width. Each group is a table with two required keys:
+A source group gives the *k*{sub}`cat` values of some sources one prior width. Each group is a table with two required keys:
 
 ```toml
 [evotune.source_groups.brenda]
@@ -238,7 +238,7 @@ A *k*{sub}`cat` is in the group of the first entry that matches it, in this orde
 1. The entries without `*`, of all groups in the order of the file. An entry matches when it equals the origin of `ec.source` or the whole `ec.source`, without regard to case.
 2. The patterns, the longest prefix first, and patterns of equal length in the order of the file. A pattern matches when the origin starts with its prefix, without regard to case.
 
-A *k*{sub}`cat` is labelled with the name of its group, in `sourceGroup` of the screen and `groups` of the tuning result (Python `source_group` and `groups`). A *k*{sub}`cat` that matches no group gets `sigma0_log_default`. When more than 20 % of the tunable *k*{sub}`cat`s match no group, the tuning warns:
+A *k*{sub}`cat` is labelled with the name of its group, in `sourceGroup` of the screen and `groups` of the tuning result (Python `source_group` and `groups`). A *k*{sub}`cat` that matches no group gets `sigma0_log_default`. When more than 20 % of the tunable *k*{sub}`cat` values match no group, the tuning warns:
 
 ```text
 <n> of <m> tunable kcats match no evotune source group and get sigma0_log_default (<value>); origins: <origins>

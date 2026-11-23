@@ -164,7 +164,7 @@ A `demandRatio` above 1 means that the solution uses more of the measured enzyme
 
 An enzyme that catalyses several reactions with flux has one row with the combined usage, marked `===` in the text columns, followed by one row per reaction. In `topAbsUsage`, enzymes whose reactions carry no flux are left out after the top N are selected, so the table can have fewer than N enzymes. In `highCapUsage`, MATLAB lists such an enzyme as a `===` row without reaction rows, and Python leaves it out.
 
-The `source` column shows where the *k*{sub}`cat` of the reaction came from. An enzyme near the top of `topAbsUsage` with the source `standard` has the standard *k*{sub}`cat`, a value that GECKO gives to reactions without a *k*{sub}`cat` from any source ([Choose the *k*{sub}`cat` sources](kcat-sources.md)). The usage of that enzyme depends on a value that is not specific to it; check the reaction for a measured *k*{sub}`cat` and put it in `data/kcats/custom.tsv` ([Set custom *k*{sub}`cat`s](custom-kcats.md)).
+The `source` column shows where the *k*{sub}`cat` of the reaction came from. An enzyme near the top of `topAbsUsage` with the source `standard` has the standard *k*{sub}`cat`, a value that GECKO gives to reactions without a *k*{sub}`cat` from any source ([Choose the *k*{sub}`cat` sources](kcat-sources.md)). The usage of that enzyme depends on a value that is not specific to it; check the reaction for a measured *k*{sub}`cat` and put it in `data/kcats/custom.tsv` ([Set custom *k*{sub}`cat` values](custom-kcats.md)).
 
 ## Rank the enzymes that limit the objective
 

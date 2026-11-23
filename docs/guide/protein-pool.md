@@ -1,6 +1,6 @@
 # Set the protein pool
 
-The protein pool limits the total mass of enzymes that an enzyme-constrained model (ecModel) can use. The result is an ecModel whose `prot_pool_exchange` has an upper bound calculated from $P_{tot}$, $f$ and $\sigma$, with $\sigma$ fitted to the measured maximum growth rate after the *k*{sub}`cat`s are tuned.
+The protein pool limits the total mass of enzymes that an enzyme-constrained model (ecModel) can use. The result is an ecModel whose `prot_pool_exchange` has an upper bound calculated from $P_{tot}$, $f$ and $\sigma$, with $\sigma$ fitted to the measured maximum growth rate after the *k*{sub}`cat` values are tuned.
 
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
@@ -106,7 +106,7 @@ flowchart TB
 
 ## Setup
 
-The ecModel has *k*{sub}`cat`s applied (see [Choose the *k*{sub}`cat` sources](kcat-sources.md)). The adapter keys `sigma`, `p_tot`, `f` and `gr_exp` are described in [Model adapter parameters](model-adapter-parameters.md#model-and-protein-pool).
+The ecModel has *k*{sub}`cat` values applied (see [Choose the *k*{sub}`cat` sources](kcat-sources.md)). The adapter keys `sigma`, `p_tot`, `f` and `gr_exp` are described in [Model adapter parameters](model-adapter-parameters.md#model-and-protein-pool).
 
 ## The three parameters
 
@@ -279,26 +279,26 @@ print(fit.sigma)
 :::
 ::::
 
-A $\sigma$ of 1, or a plateau that ends below the target growth rate, means that a larger protein pool does not let the ecModel reach the target. The *k*{sub}`cat`s or the nutrient constraints limit growth.
+A $\sigma$ of 1, or a plateau that ends below the target growth rate, means that a larger protein pool does not let the ecModel reach the target. The *k*{sub}`cat` values or the nutrient constraints limit growth.
 
 ## Sigma and *k*{sub}`cat` tuning
 
-$\sigma$ changes the protein pool of all enzymes by the same factor, and a *k*{sub}`cat` tuning changes the *k*{sub}`cat`s of the enzymes that limit growth (see [Choose a *k*{sub}`cat` tuning](kcat-tuning.md)). The two correct different errors, so the direction of the error decides which one to change:
+$\sigma$ changes the protein pool of all enzymes by the same factor, and a *k*{sub}`cat` tuning changes the *k*{sub}`cat` values of the enzymes that limit growth (see [Choose a *k*{sub}`cat` tuning](kcat-tuning.md)). The two correct different errors, so the direction of the error decides which one to change:
 
-- **Growth rate below the target.** Check first that the conventional genome-scale metabolic model (GEM) reaches the target, and that $P_{tot}$, $f$ and $\sigma$ are realistic for the organism. When they are, *k*{sub}`cat`s that are too low limit growth: tune the *k*{sub}`cat`s. Raising $\sigma$ or the pool to reach the target makes the pool compensate for the *k*{sub}`cat`s that are too low; a $\sigma$ fitted to such an ecModel is close to 1, or is the start of a plateau below the target.
-- **Growth rate above the target**, with the adapter values or after a *k*{sub}`cat` tuning: lower $\sigma$ with `sigmaFitter`. A *k*{sub}`cat` tuning only raises *k*{sub}`cat`s and cannot lower the growth rate.
+- **Growth rate below the target.** Check first that the conventional genome-scale metabolic model (GEM) reaches the target, and that $P_{tot}$, $f$ and $\sigma$ are realistic for the organism. When they are, *k*{sub}`cat` values that are too low limit growth: tune the *k*{sub}`cat` values. Raising $\sigma$ or the pool to reach the target makes the pool compensate for the *k*{sub}`cat` values that are too low; a $\sigma$ fitted to such an ecModel is close to 1, or is the start of a plateau below the target.
+- **Growth rate above the target**, with the adapter values or after a *k*{sub}`cat` tuning: lower $\sigma$ with `sigmaFitter`. A *k*{sub}`cat` tuning only raises *k*{sub}`cat` values and cannot lower the growth rate.
 
 With `sensitivityTuning`, the order is:
 
 1. Set the pool with the adapter values of $P_{tot}$, $f$ and $\sigma$.
-2. Tune the *k*{sub}`cat`s. `sensitivityTuning` solves the model first and stops without a change when the growth rate is at or above the target. Otherwise it multiplies a *k*{sub}`cat` by `foldChange` (default 10) in each step until the growth rate reaches the target, so the growth rate after tuning is often above the target.
+2. Tune the *k*{sub}`cat` values. `sensitivityTuning` solves the model first and stops without a change when the growth rate is at or above the target. Otherwise it multiplies a *k*{sub}`cat` by `foldChange` (default 10) in each step until the growth rate reaches the target, so the growth rate after tuning is often above the target.
 3. When the growth rate is above the target, fit $\sigma$. `sigmaFitter` selects a $\sigma$ lower than the adapter value at which the growth rate matches the target (see [Lower sigma after the tuning](standard-tuning.md#lower-sigma-after-the-tuning)).
 
-With evotune, $\sigma$ is not fitted: the pool is set with the adapter values, and evotune fits the *k*{sub}`cat`s to the measured growth rates with that pool (see [The protein pool and sigma](evotune.md#the-protein-pool-and-sigma)).
+With evotune, $\sigma$ is not fitted: the pool is set with the adapter values, and evotune fits the *k*{sub}`cat` values to the measured growth rates with that pool (see [The protein pool and sigma](evotune.md#the-protein-pool-and-sigma)).
 
-Whether the pool limits growth shows when its bound is removed: the growth rate then rises. The minimal protein pool usage at the target growth rate (see [Minimise protein pool usage at fixed growth](analysis.md#minimise-protein-pool-usage-at-fixed-growth)) shows how much enzyme mass the current *k*{sub}`cat`s need. A pool of that size would let the ecModel reach the target, but it does not follow from $P_{tot}$, $f$ and $\sigma$ and it hides the *k*{sub}`cat`s that are too low, so it is a diagnostic and not a way to set the pool.
+Whether the pool limits growth shows when its bound is removed: the growth rate then rises. The minimal protein pool usage at the target growth rate (see [Minimise protein pool usage at fixed growth](analysis.md#minimise-protein-pool-usage-at-fixed-growth)) shows how much enzyme mass the current *k*{sub}`cat` values need. A pool of that size would let the ecModel reach the target, but it does not follow from $P_{tot}$, $f$ and $\sigma$ and it hides the *k*{sub}`cat` values that are too low, so it is a diagnostic and not a way to set the pool.
 
-A fitted $\sigma$ close to 1 means that the enzymes work at their maximum rate on average; check the *k*{sub}`cat`s that limit growth in that case.
+A fitted $\sigma$ close to 1 means that the enzymes work at their maximum rate on average; check the *k*{sub}`cat` values that limit growth in that case.
 
 ## Troubleshooting
 
@@ -310,7 +310,7 @@ A fitted $\sigma$ close to 1 means that the enzymes work at their maximum rate o
 | Error `sigmaFitter:growthRate` (Python: `ValueError`) | the target growth rate, given or read from `gr_exp`, is not above 0 | set `gr_exp`, or give the growth rate |
 | Error `GECKO:grExpNotSet`: `gr_exp is not set in model_adapter.toml` | no growth rate is given, and `model_adapter.toml` does not set `gr_exp` | set `gr_exp`, or give the growth rate |
 | `fit_sigma` raises a `ValueError` that `model.adapter` is None | the ecModel has no adapter attached, and `growth_rate`, `p_tot` or `f` is not given | attach the adapter, or give `growth_rate`, `p_tot` and `f` |
-| The fitted $\sigma$ is 1, or the error is large at every $\sigma$ | the *k*{sub}`cat`s, the nutrient constraints or the network limit growth | see [Sigma and *k*{sub}`cat` tuning](#sigma-and-kcat-tuning) |
+| The fitted $\sigma$ is 1, or the error is large at every $\sigma$ | the *k*{sub}`cat` values, the nutrient constraints or the network limit growth | see [Sigma and *k*{sub}`cat` tuning](#sigma-and-kcat-tuning) |
 | The growth rate is free after `sigmaFitter` or `fit_sigma`, although its bounds were fixed before | both set the bounds of the objective reaction to 0 and 1000, and the returned ecModel keeps them | set the bounds of the growth reaction again |
 | `sigmaFitter` and `fit_sigma` give different $\sigma$ values for the same ecModel | on a growth plateau, `fit_sigma` with `method="grid"` has no tolerance for rounding errors of the solver | use `method="bisect"`, or compare the growth rates in `fit.growth_grid` |
 

@@ -16,7 +16,7 @@ Measured growth rates and exchange fluxes of growth conditions constrain an ecMo
 | `computeCarbonWeights` | `compute_carbon_weights` | weight of each exchange reaction in the score |
 | `datasetRmse`, `experimentDistance` | `dataset_rmse`, `experiment_distance` | distance between the simulation and the measurements, for one kind of condition and for both kinds combined |
 
-`constrainFluxData` and `apply_flux_data_constraints` take the biomass reaction and the preferred carbon source from the model adapter and pass them on to RAVEN's `applyFluxDataConstraints` and raven-toolbox's `apply_flux_data_constraints`. The tuning functions of [Tune *k*{sub}`cat`s with evotune](evotune.md) call the loaders and the scoring functions.
+`constrainFluxData` and `apply_flux_data_constraints` take the biomass reaction and the preferred carbon source from the model adapter and pass them on to RAVEN's `applyFluxDataConstraints` and raven-toolbox's `apply_flux_data_constraints`. The tuning functions of [Tune *k*{sub}`cat` values with evotune](evotune.md) call the loaders and the scoring functions.
 
 ## Files
 
@@ -124,7 +124,7 @@ Output in the `full_ecModel` tutorial:
 
 ## See also
 
-- [Tune *k*{sub}`cat`s with evotune](evotune.md), the *k*{sub}`cat` tuning that scores a model against these files.
+- [Tune *k*{sub}`cat` values with evotune](evotune.md), the *k*{sub}`cat` tuning that scores a model against these files.
 - [Constrain enzymes with proteomics](proteomics.md), where `fluxData.tsv` constrains the ecModel.
 - [Files in the data folder](data-folder-files.md), every file of the `data` folder.
 - [API reference](../api/index.md), every function in both toolboxes.

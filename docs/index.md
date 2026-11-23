@@ -61,7 +61,7 @@ Converts a conventional GEM into a full or a light ecModel by bounding reaction 
 :link: guide/kcat-sources
 :link-type: doc
 
-Assigns a *k*{sub}`cat` to each reaction from source files in a set order, and tunes the *k*{sub}`cat`s that limit growth to measured data.
+Assigns a *k*{sub}`cat` to each reaction from source files in a set order, and tunes the *k*{sub}`cat` values that limit growth to measured data.
 :::
 
 :::{grid-item-card} Proteomics integration

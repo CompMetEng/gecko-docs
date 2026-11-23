@@ -1,6 +1,6 @@
 # Compare *k*{sub}`cat` sources
 
-`kcatEvidence` (Python `kcat_evidence`) shows, for selected reactions, the *k*{sub}`cat` that every *k*{sub}`cat` source file of the project gives, next to the *k*{sub}`cat` of the ecModel and, for a tuned *k*{sub}`cat`, the *k*{sub}`cat` before tuning. `kcatsForReactions` (Python `kcats_for_reactions`) does this for a few reactions, and also computes the EC-tree estimate and predicts the *k*{sub}`cat`s with one or several OpenKineticsPredictor (OKP) methods, without changing the source files of the project. The result is a table that shows how far a tuned *k*{sub}`cat` is from each source, and which source a curator can compare it with.
+`kcatEvidence` (Python `kcat_evidence`) shows, for selected reactions, the *k*{sub}`cat` that every *k*{sub}`cat` source file of the project gives, next to the *k*{sub}`cat` of the ecModel and, for a tuned *k*{sub}`cat`, the *k*{sub}`cat` before tuning. `kcatsForReactions` (Python `kcats_for_reactions`) does this for a few reactions, and also computes the EC-tree estimate and predicts the *k*{sub}`cat` values with one or several OpenKineticsPredictor (OKP) methods, without changing the source files of the project. The result is a table that shows how far a tuned *k*{sub}`cat` is from each source, and which source a curator can compare it with.
 
 ## Functions
 
@@ -13,7 +13,7 @@
 
 ## Setup
 
-The printed output comes from the ecModel of the `full_ecModel` tutorial project of GECKO (yeast-GEM), built once in MATLAB and once in Python. MATLAB and Python print the tables in different formats. The examples need an ecModel with assigned *k*{sub}`cat`s and source files in `data/kcats` (see [Choose the *k*{sub}`cat` sources](kcat-sources.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python). The sources are read as they are: a source file that is outdated is not gathered again. The OKP predictions need an API key (see [Choose the *k*{sub}`cat` sources](kcat-sources.md#prepare-the-inputs)) and use the daily prediction quota of the key.
+The printed output comes from the ecModel of the `full_ecModel` tutorial project of GECKO (yeast-GEM), built once in MATLAB and once in Python. MATLAB and Python print the tables in different formats. The examples need an ecModel with assigned *k*{sub}`cat` values and source files in `data/kcats` (see [Choose the *k*{sub}`cat` sources](kcat-sources.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python). The sources are read as they are: a source file that is outdated is not gathered again. The OKP predictions need an API key (see [Choose the *k*{sub}`cat` sources](kcat-sources.md#prepare-the-inputs)) and use the daily prediction quota of the key.
 
 ## Select the reactions
 
@@ -22,12 +22,12 @@ A reaction is selected by one of three arguments, and a reaction that any of the
 | MATLAB | Python | Selects |
 | --- | --- | --- |
 | `rxns` | `rxns` | names of `ec.rxns`, conventional reaction names (a reverse direction ends with `_REV`), indices, or a logical vector over `ec.rxns` |
-| `enzymes` | `enzymes` | every reaction that one of the UniProt accessions catalyses, for example the enzymes that a proteomics relaxation changed (see [Relax proteomics constraints](relaxing-proteomics.md#check-the-kcats-of-the-relaxed-enzymes)) |
+| `enzymes` | `enzymes` | every reaction that one of the UniProt accessions catalyses, for example the enzymes that a proteomics relaxation changed (see [Relax proteomics constraints](relaxing-proteomics.md#check-the-kcat-values-of-the-relaxed-enzymes)) |
 | `tunedKcats` | `tuned` | the reactions that `sensitivityTuning` tuned (the output `tunedKcats`, Python `TunedKcatsResult`) |
 
 A conventional reaction name selects every `ec.rxns` row of the reaction, that is, all isozymes of the reaction in that direction. In a light ecModel, `tunedKcats` names the reactions by their conventional name, so it selects all rows of a tuned reaction.
 
-## Show the *k*{sub}`cat`s after a tuning
+## Show the *k*{sub}`cat` values after a tuning
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -39,7 +39,7 @@ A conventional reaction name selects every `ec.rxns` row of the reaction, that i
 summary(1:6, [1:6 9:end])
 ```
 
-The tutorial ecModel of yeast tuned 26 *k*{sub}`cat`s. `summary` has one row per tuned reaction (here without the columns `enzymes` and `eccodes`):
+The tutorial ecModel of yeast tuned 26 *k*{sub}`cat` values. `summary` has one row per tuned reaction (here without the columns `enzymes` and `eccodes`):
 
 ```text
          ecRxn           kcat      tuned    fold     prior        origin       src_brenda    src_custom    src_ec_tree    src_okp_kinform_h
@@ -88,7 +88,7 @@ result = kcat_evidence(ec_model, tuned=tuned)
 result.summary.drop(columns=["enzymes", "eccodes"]).head(6)
 ```
 
-The tutorial ecModel of yeast tuned 26 *k*{sub}`cat`s. `summary` has one row per tuned reaction (here without the columns `enzymes` and `eccodes`):
+The tutorial ecModel of yeast tuned 26 *k*{sub}`cat` values. `summary` has one row per tuned reaction (here without the columns `enzymes` and `eccodes`):
 
 ```text
          ec_rxn       kcat  tuned       fold     prior   origin  src_brenda  src_custom  src_ec_tree  src_okp_kinform_h
@@ -133,13 +133,13 @@ The columns of `summary`:
 | `tuned`, `fold`, `prior` | whether the *k*{sub}`cat` has a tuning status in `ec.source`, `kcat / prior` (`NaN` without a positive prior), and the *k*{sub}`cat` before the first tuning (`NaN` without one) |
 | `origin` | the origin of the *k*{sub}`cat` in `ec.source` |
 | `enzymes`, `eccodes` | the enzymes and the EC numbers of the row, joined by `;` |
-| `src_<source>` | the median of the *k*{sub}`cat`s that the source file `<source>` gives for the row; `NaN` when it gives none |
+| `src_<source>` | the median of the *k*{sub}`cat` values that the source file `<source>` gives for the row; `NaN` when it gives none |
 
 `evidence` has one row per *k*{sub}`cat` of a source, with the columns `ecRxn` (`ec_rxn`), `kcat`, `source`, `substrate`, `detail` and `assigned`. `assigned` is true when the *k*{sub}`cat` equals the *k*{sub}`cat` that was assigned to the reaction, that is, the *k*{sub}`cat` before tuning for a tuned reaction and the *k*{sub}`cat` of the ecModel for any other. The comparison allows a relative difference of $10^{-5}$, because `ec.source` stores the prior with six significant digits. Two sources with the same *k*{sub}`cat` are both marked. The column `detail` has the detail of the source file, for example the number of measurements and the EC level of an EC-tree value.
 
 The tuned *k*{sub}`cat` and the sources are on one scale, so `fold` and the `src_` columns show which source the tuned *k*{sub}`cat` moves toward. A tuned *k*{sub}`cat` that is within the range of one source supports that source. A tuned *k*{sub}`cat` above all sources is a prompt to check the measurement or the enzyme, and is not evidence for the value itself.
 
-## Get the *k*{sub}`cat`s for one reaction
+## Get the *k*{sub}`cat` values for one reaction
 
 `kcatsForReactions` selects reactions as `kcatEvidence` does, reads every source file, and computes the EC-tree estimate for the reactions from the BRENDA measurements, also when the project has an `ec_tree.tsv`: the computed estimate replaces the file in the table, so it is not outdated. The estimate depends on the EC number only, because BRENDA measurements have no direction. A reaction and its reverse direction (`_REV`) therefore get the same EC-tree value, and `detail` of the reverse direction ends with `direction=reverse`.
 
@@ -221,7 +221,7 @@ result = kcats_for_reactions(ec_model, ["r_0152", "r_0152_REV"])
 
 The tuned *k*{sub}`cat` of `r_0005_EXP_3` is 10 times the EC-tree estimate, which is the *k*{sub}`cat` before tuning, and is above the BRENDA *k*{sub}`cat` and the four predictions of KinForm-H.
 
-## Predict the *k*{sub}`cat`s of a few reactions with OKP
+## Predict the *k*{sub}`cat` values of a few reactions with OKP
 
 The option `okp` submits the enzyme-substrate pairs of the selected reactions to OKP: `true` for the first method of `[kcat_sources.okp] methods`, a method name or a list of names, or `'all'` for every method that `kcatsFromOKP` accepts. `false` or an empty value submits nothing. CatPred and TurNup are not among the methods, because they read whole reactions. The function waits for each job to finish, and submits a new job on every call. A method that fails is reported and the other methods continue; the methods without predictions are listed at the end.
 
@@ -250,14 +250,14 @@ The option `jobTag` of `kcatsFromOKP` (Python `job_tag`) gives the same separati
 
 ## Save the table
 
-`saveAs` of `kcatEvidence` (Python `save_as`) writes `summary` to a tab-separated file, for example to hand the *k*{sub}`cat`s of the tuned reactions to a curator.
+`saveAs` of `kcatEvidence` (Python `save_as`) writes `summary` to a tab-separated file, for example to hand the *k*{sub}`cat` values of the tuned reactions to a curator.
 
 ## Troubleshooting
 
 | Problem | Reason | Solution |
 | --- | --- | --- |
 | `Not reactions of model.ec` | a name in `rxns` or `tunedKcats` is neither a row of `ec.rxns` nor a conventional reaction | use the names of `ec.rxns` or the conventional name, including `_REV` for a reverse direction |
-| `Not in model.ec.enzymes` | an accession in `enzymes` is not an enzyme of the ecModel | remove it; remove `prot_pool` from `flexEnz.uniprotIDs` (see [Relax proteomics constraints](relaxing-proteomics.md#check-the-kcats-of-the-relaxed-enzymes)) |
+| `Not in model.ec.enzymes` | an accession in `enzymes` is not an enzyme of the ecModel | remove it; remove `prot_pool` from `flexEnz.uniprotIDs` (see [Relax proteomics constraints](relaxing-proteomics.md#check-the-kcat-values-of-the-relaxed-enzymes)) |
 | a `src_` column is `NaN` for a reaction | the source file has no row for the reaction and its enzymes | gather the file again with `updateKcatSources`, or accept that the source has no value |
 | rows of a source file are reported as not matching any reaction | the file was made from another ecModel | the message of `loadKcatSource` lists them; gather the file again |
 | `kcatsForReactions` has no OKP column | the job failed, for example without an API key, or the reaction has no SMILES | the failure is reported for each method; fix the cause and call again |
@@ -267,6 +267,6 @@ The option `jobTag` of `kcatsFromOKP` (Python `job_tag`) gives the same separati
 
 - [Choose the *k*{sub}`cat` sources](kcat-sources.md), the source files and how `updateKcatSources` gathers them.
 - [Choose a *k*{sub}`cat` tuning](kcat-tuning.md), the check of a tuned *k*{sub}`cat` against its source.
-- [Tune *k*{sub}`cat`s with sensitivityTuning](standard-tuning.md), the tuning that returns `tunedKcats`.
+- [Tune *k*{sub}`cat` values with sensitivityTuning](standard-tuning.md), the tuning that returns `tunedKcats`.
 - [Relax proteomics constraints](relaxing-proteomics.md), the methods that return the relaxed enzymes.
 - [API reference](../api/index.md), every function in both toolboxes.

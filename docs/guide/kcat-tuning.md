@@ -1,6 +1,6 @@
 # Choose a *k*{sub}`cat` tuning
 
-After the *k*{sub}`cat`s are assigned and the protein pool is set, an ecModel can grow more slowly than the organism. A *k*{sub}`cat` tuning changes the *k*{sub}`cat`s that limit growth so that the ecModel fits measured data. GECKO has two tunings: `sensitivityTuning` (Python `sensitivity_tuning`) reaches one maximum growth rate, and evotune (`cmaesKcatTuning`, Python `cmaes_kcat_tuning`) fits measured growth rates and exchange fluxes of one or more conditions. This page compares the two, and describes the checks that apply to the result of both: a tuned *k*{sub}`cat` against its source, and a curated value kept in `custom.tsv`. Each tuning has its own page: [Tune *k*{sub}`cat`s with sensitivityTuning](standard-tuning.md) and [Tune *k*{sub}`cat`s with evotune](evotune.md).
+After the *k*{sub}`cat` values are assigned and the protein pool is set, an ecModel can grow more slowly than the organism. A *k*{sub}`cat` tuning changes the *k*{sub}`cat` values that limit growth so that the ecModel fits measured data. GECKO has two tunings: `sensitivityTuning` (Python `sensitivity_tuning`) reaches one maximum growth rate, and evotune (`cmaesKcatTuning`, Python `cmaes_kcat_tuning`) fits measured growth rates and exchange fluxes of one or more conditions. This page compares the two, and describes the checks that apply to the result of both: a tuned *k*{sub}`cat` against its source, and a curated value kept in `custom.tsv`. Each tuning has its own page: [Tune *k*{sub}`cat` values with sensitivityTuning](standard-tuning.md) and [Tune *k*{sub}`cat` values with evotune](evotune.md).
 
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
@@ -79,47 +79,47 @@ flowchart TB
 
 | MATLAB | Python | Note |
 | --- | --- | --- |
-| `sensitivityTuning` | `sensitivity_tuning` | raises the *k*{sub}`cat` that limits growth most, one at a time, until the model reaches a growth rate; see [Tune *k*{sub}`cat`s with sensitivityTuning](standard-tuning.md) |
-| `cmaesKcatTuning` | `cmaes_kcat_tuning` | evotune: fits many *k*{sub}`cat`s at once to measured growth rates and exchange fluxes; see [Tune *k*{sub}`cat`s with evotune](evotune.md) |
+| `sensitivityTuning` | `sensitivity_tuning` | raises the *k*{sub}`cat` that limits growth most, one at a time, until the model reaches a growth rate; see [Tune *k*{sub}`cat` values with sensitivityTuning](standard-tuning.md) |
+| `cmaesKcatTuning` | `cmaes_kcat_tuning` | evotune: fits many *k*{sub}`cat` values at once to measured growth rates and exchange fluxes; see [Tune *k*{sub}`cat` values with evotune](evotune.md) |
 | `loadKcatSource` | `load_kcat_source` | reads the rows of a *k*{sub}`cat` source file in `data/kcats` for the reactions of an ecModel |
 | `setKcatForReactions` | `set_kcat_for_reactions` | sets `ec.kcat` of reactions by hand |
 | `applyKcatConstraints` | `apply_kcat_constraints` | writes `ec.kcat` into the enzyme constraints of the reactions |
 
 ## Setup
 
-The examples need an ecModel with assigned *k*{sub}`cat`s (`assignKcats`, see [Choose the *k*{sub}`cat` sources](kcat-sources.md)) and a set protein pool (`setProtPoolSize`, see [Set the protein pool](protein-pool.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python), tuned with one of the two tunings.
+The examples need an ecModel with assigned *k*{sub}`cat` values (`assignKcats`, see [Choose the *k*{sub}`cat` sources](kcat-sources.md)) and a set protein pool (`setProtPoolSize`, see [Set the protein pool](protein-pool.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python), tuned with one of the two tunings.
 
 ## Signs that the model needs a *k*{sub}`cat` tuning
 
-Maximise growth with flux balance analysis (FBA), with the uptake of the carbon source unconstrained (see [Basic model operations](basic-model-operations.md)). If the growth rate is far below the maximum growth rate of the organism (`gR_exp` in the model adapter, Python `gr_exp`), the enzyme constraints are too tight. Before *k*{sub}`cat`s are changed, check the two other causes of a low growth rate:
+Maximise growth with flux balance analysis (FBA), with the uptake of the carbon source unconstrained (see [Basic model operations](basic-model-operations.md)). If the growth rate is far below the maximum growth rate of the organism (`gR_exp` in the model adapter, Python `gr_exp`), the enzyme constraints are too tight. Before *k*{sub}`cat` values are changed, check the two other causes of a low growth rate:
 
 - The conventional GEM, with the same exchange bounds, reaches the maximum growth rate. If it does not, the stoichiometry or the bounds of the GEM limit growth, and the GEM is corrected first.
 - Ptot, f and sigma of the protein pool are realistic for the organism (see [Set the protein pool](protein-pool.md)).
 
-If both hold, some *k*{sub}`cat`s are too low for the enzymes that carry most of the flux, and a *k*{sub}`cat` tuning raises them.
+If both hold, some *k*{sub}`cat` values are too low for the enzymes that carry most of the flux, and a *k*{sub}`cat` tuning raises them.
 
 ## sensitivityTuning or evotune
 
 | Property | `sensitivityTuning` | evotune: `cmaesKcatTuning` |
 | --- | --- | --- |
 | Data it needs | one maximum growth rate (`gR_exp` in the model adapter, or the option `desiredGrowthRate`) | maximum growth rates (`maxGrowth.tsv`), exchange fluxes (`fluxData.tsv`), or both, measured in one or more conditions |
-| What it changes | `ec.kcat` of the reactions it selects, and their enzyme constraints | `ec.kcat` of the *k*{sub}`cat`s with the largest effect on the fit to the data, and their enzyme constraints |
-| Which *k*{sub}`cat`s | one reaction per iteration: the reaction with the largest use of the most used enzyme | the top *k*{sub}`cat`s of a screen, up to 90 % of the weighted effect on the fit (option `targetImpactShare`) |
+| What it changes | `ec.kcat` of the reactions it selects, and their enzyme constraints | `ec.kcat` of the *k*{sub}`cat` values with the largest effect on the fit to the data, and their enzyme constraints |
+| Which *k*{sub}`cat` values | one reaction per iteration: the reaction with the largest use of the most used enzyme | the top *k*{sub}`cat` values of a screen, up to 90 % of the weighted effect on the fit (option `targetImpactShare`) |
 | How much | the *k*{sub}`cat` is multiplied by `foldChange` (default 10) per iteration; a *k*{sub}`cat` that is selected again is multiplied again | any value between `min(0.01, k0/100)` and `max(10000, 100*k0)` per s, where `k0` is the *k*{sub}`cat` before tuning |
 | When it stops | the growth rate reaches the target, or growth stops rising | the best root-mean-square error (RMSE) reaches `rmse_threshold` (default 0.2), or after `max_generations` (default 150) generations |
 | Cost in time | one FBA per iteration | one FBA per data row for each *k*{sub}`cat` vector that is scored: two per *k*{sub}`cat` in the screen, plus `popsize` per generation in the search; runs in parallel with `nProc` |
 | Settings | the options of the function | the `[evotune]` table of `model_adapter.toml`, plus `targetImpactShare`, `popsize`, `seed` and `nProc` |
-| Protein pool afterwards | `sigmaFitter` lowers $\sigma$ when the growth rate ends above the target | $\sigma$ stays as set before the tuning; the measured growth rates are fitted by the *k*{sub}`cat`s |
+| Protein pool afterwards | `sigmaFitter` lowers $\sigma$ when the growth rate ends above the target | $\sigma$ stays as set before the tuning; the measured growth rates are fitted by the *k*{sub}`cat` values |
 
 In a full ecModel, each iteration of `sensitivityTuning` selects the enzyme whose usage reaction carries the most flux and raises the *k*{sub}`cat` of the reaction that uses most of that enzyme; in a light ecModel, it raises the *k*{sub}`cat` of the reaction that draws most from the protein pool. `sensitivityTuning` also stops when an iteration raises growth by 1e-9 per h or less, when the model becomes infeasible, or when no enzyme usage carries flux; Python also stops after `max_iterations` (default 1000).
 
 Evotune weights the effect of each *k*{sub}`cat` on the fit by the `sigma0_log` of its source, so a *k*{sub}`cat` from a less trusted source has a larger weight. Python also stops on a convergence criterion of the `cma` package. The `[evotune]` settings set the trust in each *k*{sub}`cat` source, the weight of growth against flux data, the penalty for moving a *k*{sub}`cat`, isozyme tying and the stopping rules.
 
-The two tunings are alternatives. When the maximum growth rate of the organism is the sole measured value, use `sensitivityTuning` ([Tune *k*{sub}`cat`s with sensitivityTuning](standard-tuning.md)). With measured growth rates on several carbon sources or measured exchange fluxes, evotune uses those data, and the trust in each *k*{sub}`cat` source limits how far each *k*{sub}`cat` moves ([Tune *k*{sub}`cat`s with evotune](evotune.md)).
+The two tunings are alternatives. When the maximum growth rate of the organism is the sole measured value, use `sensitivityTuning` ([Tune *k*{sub}`cat` values with sensitivityTuning](standard-tuning.md)). With measured growth rates on several carbon sources or measured exchange fluxes, evotune uses those data, and the trust in each *k*{sub}`cat` source limits how far each *k*{sub}`cat` moves ([Tune *k*{sub}`cat` values with evotune](evotune.md)).
 
 ## Check a tuned *k*{sub}`cat` against its source
 
-A tuning changes the *k*{sub}`cat`s that limit the fit of the model. It does not check whether the value before tuning was wrong. For each tuned *k*{sub}`cat`, look up where the value before tuning came from, and search the literature for a measured value.
+A tuning changes the *k*{sub}`cat` values that limit the fit of the model. It does not check whether the value before tuning was wrong. For each tuned *k*{sub}`cat`, look up where the value before tuning came from, and search the literature for a measured value.
 
 `ec.source` of a tuned reaction gives the origin of the *k*{sub}`cat` and the *k*{sub}`cat` before tuning (`prior`). When the source is a file in `data/kcats` (for example `brenda` or `ec_tree`), `loadKcatSource` returns the rows of that file for the reaction; the `detail` column of a BRENDA row holds the EC wildcard level and the origin of the match (see [BRENDA origin and wildcard levels](kcat-sources.md#brenda-origin-and-wildcard-levels)). `output/<model id>_kcatDecisions.tsv` lists the stage of the assignment that set each *k*{sub}`cat` (see [Choose the *k*{sub}`cat` sources](kcat-sources.md)).
 
@@ -190,7 +190,7 @@ When a measured value supports the *k*{sub}`cat` before tuning and contradicts t
 
 ## Keep a curated *k*{sub}`cat`
 
-`assignKcats` replaces every *k*{sub}`cat` of the model with the values selected from the files in `data/kcats`. A value set with `setKcatForReactions` is therefore lost at the next `assignKcats`. To keep it, add it to `data/kcats/custom.tsv`, which every preset reads first (see [Set custom *k*{sub}`cat`s](custom-kcats.md)). A row for `r_0079`, with the columns `rxn`, `enzymes`, `kcat`, `source` and `note`:
+`assignKcats` replaces every *k*{sub}`cat` of the model with the values selected from the files in `data/kcats`. A value set with `setKcatForReactions` is therefore lost at the next `assignKcats`. To keep it, add it to `data/kcats/custom.tsv`, which every preset reads first (see [Set custom *k*{sub}`cat` values](custom-kcats.md)). A row for `r_0079`, with the columns `rxn`, `enzymes`, `kcat`, `source` and `note`:
 
 ```text
 rxn	enzymes	kcat	source	note
@@ -207,8 +207,8 @@ r_0079	P38972	5.3357625	custom	specific activity 2.15 umol/min/mg, MW 148905 g/m
 
 ## See also
 
-- [Tune *k*{sub}`cat`s with sensitivityTuning](standard-tuning.md) and [Tune *k*{sub}`cat`s with evotune](evotune.md), the two tunings.
+- [Tune *k*{sub}`cat` values with sensitivityTuning](standard-tuning.md) and [Tune *k*{sub}`cat` values with evotune](evotune.md), the two tunings.
 - [Set the protein pool](protein-pool.md), Ptot, f, sigma and `sigmaFitter`.
-- [Choose the *k*{sub}`cat` sources](kcat-sources.md) and [Set custom *k*{sub}`cat`s](custom-kcats.md), where the *k*{sub}`cat`s before tuning come from.
+- [Choose the *k*{sub}`cat` sources](kcat-sources.md) and [Set custom *k*{sub}`cat` values](custom-kcats.md), where the *k*{sub}`cat` values before tuning come from.
 - [Basic model operations](basic-model-operations.md), bounds, objectives and FBA.
 - [API reference](../api/index.md), every function in both toolboxes.

@@ -72,9 +72,9 @@ A full ecModel has one pseudometabolite and one usage reaction per enzyme, so it
 
 ## *K*{sub}`cat` values
 
-The *k*{sub}`cat` values determine how much protein each reaction costs, so they determine the predictions of an ecModel. Measured *k*{sub}`cat`s come from databases such as [BRENDA](https://www.brenda-enzymes.org/), which covers few enzymes of most organisms. GECKO fills the reactions without a measured *k*{sub}`cat` with values estimated from other measurements of the same EC number, or predicted from the enzyme sequence and the substrate structure by the OpenKineticsPredictor service. [Choose the *k*{sub}`cat` sources](kcat-sources.md) describes the sources and the presets that combine them.
+The *k*{sub}`cat` values determine how much protein each reaction costs, so they determine the predictions of an ecModel. Measured *k*{sub}`cat` values come from databases such as [BRENDA](https://www.brenda-enzymes.org/), which covers few enzymes of most organisms. GECKO fills the reactions without a measured *k*{sub}`cat` with values estimated from other measurements of the same EC number, or predicted from the enzyme sequence and the substrate structure by the OpenKineticsPredictor service. [Choose the *k*{sub}`cat` sources](kcat-sources.md) describes the sources and the presets that combine them.
 
-Most measured *k*{sub}`cat`s are in vitro values, and predicted *k*{sub}`cat`s are estimates. A new ecModel can therefore grow more slowly than the organism. [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) describes how to find and correct the *k*{sub}`cat`s that limit growth.
+Most measured *k*{sub}`cat` values are in vitro values, and predicted *k*{sub}`cat` values are estimates. A new ecModel can therefore grow more slowly than the organism. [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) describes how to find and correct the *k*{sub}`cat` values that limit growth.
 
 ## Limitations
 

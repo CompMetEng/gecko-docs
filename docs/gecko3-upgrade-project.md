@@ -16,13 +16,13 @@ An existing GECKO 3 project is converted to [project format 4](gecko4-project-fo
 `upgradeGECKOproject` performs these steps for a project made with GECKO 3 or with an earlier GECKO 4:
 
 1. Adapter: in MATLAB, an adapter class without `model_adapter.toml` gets one (`convertAdapterToToml`), and the methods that the class overrides are listed, because they need to be converted by hand. The fields `kcatAggregation`, `evotune.kcatSources` and `evotune.sigma0logSource` are listed as not carried over; their settings are `[kcat_sources.brenda] aggregation` and `[evotune.source_groups]` (see [Adapter classes](gecko3-to-gecko4.md#adapter-classes)). The class stays. `geckopy upgrade` lists the adapter as a step to do by hand and skips steps 2 and 3 for such a project.
-2. Custom *k*{sub}`cat`s: `data/customKcats.tsv` becomes `data/kcats/custom.tsv` (`convertCustomKcats`). The *k*{sub}`cat`s are those that `applyCustomKcats` gives the ecModel, including which of two entries for the same reaction applies. The column `stoicho` is not copied, because the complex stoichiometry comes from `applyComplexData`.
+2. Custom *k*{sub}`cat` values: `data/customKcats.tsv` becomes `data/kcats/custom.tsv` (`convertCustomKcats`). The *k*{sub}`cat` values are those that `applyCustomKcats` gives the ecModel, including which of two entries for the same reaction applies. The column `stoicho` is not copied, because the complex stoichiometry comes from `applyComplexData`.
 3. Stored predictions: `data/DLKcat.tsv` and stored OpenKineticsPredictor results become *k*{sub}`cat` source files (`kcatsFromDLKcat`, and `kcatsFromOKP` with `'useStored'`). No prediction is run.
 4. Saved ecModels: The ecModels in `models/*.yml` made with GECKO 3 get their protein usage and pool reactions turned forward (`upgradeEcModel`).
 5. Project format: `project_format = 4` is written to `model_adapter.toml`.
 6. Scripts: the lines of the `.m` files of the project (in Python, the `.py` files) that call renamed or replaced functions are listed and not changed.
 
-Steps 2 and 3 need the full ecModel that the custom *k*{sub}`cat`s and the predictions are for. Without it they are listed and skipped.
+Steps 2 and 3 need the full ecModel that the custom *k*{sub}`cat` values and the predictions are for. Without it they are listed and skipped.
 
 A file that is replaced or converted is first moved to `legacy/<yyyy-mm-dd>/`, at its place in the folder tree. A step that is done is left out, so the function can run again.
 
@@ -61,7 +61,7 @@ geckopy upgrade myproject --apply --ec-model models/ecModel.yml
 
 | Problem | Possible reason | Solution |
 | --- | --- | --- |
-| Steps 2 and 3 are `skipped` | no `ecModel` was given, or in Python the project has an adapter class and no `model_adapter.toml` | Give the full ecModel the custom *k*{sub}`cat`s and predictions are for, and in Python convert the adapter by hand |
+| Steps 2 and 3 are `skipped` | no `ecModel` was given, or in Python the project has an adapter class and no `model_adapter.toml` | Give the full ecModel the custom *k*{sub}`cat` values and predictions are for, and in Python convert the adapter by hand |
 | Step 1 lists methods | the adapter class overrides methods that the TOML file cannot hold | Keep the adapter class, or move the code to a subclass of `TomlAdapter`. The `[matlab]` section holds only `make_model_anaerobic` and `change_protein_biomass` |
 | Script lines are listed | the script calls renamed functions | Change the lines by hand, with [Renamed functions](gecko3-to-gecko4.md#renamed-functions) |
 | A *k*{sub}`cat` differs from the GECKO 3 model | the default *k*{sub}`cat` preset changed | Set `preset = "gecko_classic"` (see [*K*{sub}`cat` assignment](gecko4-kcat-assignment.md)) |

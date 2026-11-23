@@ -12,7 +12,7 @@ The guide shows how to build an enzyme-constrained model (ecModel) from a conven
 
 | Page | Content |
 | --- | --- |
-| [Build an ecModel](first-ecmodel.md) | create a project, make the ecModel, assign *k*{sub}`cat`s, set the protein pool, check the growth rate and save the model, with the default settings |
+| [Build an ecModel](first-ecmodel.md) | create a project, make the ecModel, assign *k*{sub}`cat` values, set the protein pool, check the growth rate and save the model, with the default settings |
 
 ## Workflow
 
@@ -28,11 +28,11 @@ The decision pages are in the order of the work.
 | --- | --- |
 | [Choose the ecModel structure](ecmodel-structure.md) | full or light ecModel, matching of genes to UniProt and KEGG, enzyme complexes |
 | [Choose the *k*{sub}`cat` sources](kcat-sources.md) | the *k*{sub}`cat` assignment preset, and the treatment of isozymes and of reactions without a *k*{sub}`cat` |
-| [Set custom *k*{sub}`cat`s](custom-kcats.md) | curated *k*{sub}`cat`s that take precedence over the *k*{sub}`cat` sources |
+| [Set custom *k*{sub}`cat` values](custom-kcats.md) | curated *k*{sub}`cat` values that take precedence over the *k*{sub}`cat` sources |
 | [Set the protein pool](protein-pool.md) | the values of the total protein content, the enzyme fraction $f$ and the saturation factor $\sigma$ |
 | [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) | `sensitivityTuning` or evotune, when the ecModel grows too slowly, and the check of a tuned *k*{sub}`cat` |
-| [Tune *k*{sub}`cat`s with sensitivityTuning](standard-tuning.md) | the tuning to one maximum growth rate, and the fit of $\sigma$ after it |
-| [Tune *k*{sub}`cat`s with evotune](evotune.md) | the data and the settings of the tuning against measured growth rates and fluxes |
+| [Tune *k*{sub}`cat` values with sensitivityTuning](standard-tuning.md) | the tuning to one maximum growth rate, and the fit of $\sigma$ after it |
+| [Tune *k*{sub}`cat` values with evotune](evotune.md) | the data and the settings of the tuning against measured growth rates and fluxes |
 | [Compare *k*{sub}`cat` sources](kcat-evidence.md) | the *k*{sub}`cat` of every source file next to the *k*{sub}`cat` of the ecModel and its tuned value, and a *k*{sub}`cat` prediction for a few reactions |
 | [Constrain enzymes with proteomics](proteomics.md) | the integration of measured enzyme concentrations |
 | [Relax proteomics constraints](relaxing-proteomics.md) | the method that loosens proteomics constraints that prevent growth |

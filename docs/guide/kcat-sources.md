@@ -1,6 +1,6 @@
 # Choose the *k*{sub}`cat` sources
 
-GECKO selects one *k*{sub}`cat` per enzymatic reaction from the *k*{sub}`cat` source files in `data/kcats`, in the order that `[kcat_assignment]` of `model_adapter.toml` defines. The result is a project with a preset (or its own stages) and the source files that the preset reads, and an ecModel with the assigned *k*{sub}`cat`s applied as enzyme constraints.
+GECKO selects one *k*{sub}`cat` per enzymatic reaction from the *k*{sub}`cat` source files in `data/kcats`, in the order that `[kcat_assignment]` of `model_adapter.toml` defines. The result is a project with a preset (or its own stages) and the source files that the preset reads, and an ecModel with the assigned *k*{sub}`cat` values applied as enzyme constraints.
 
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
@@ -88,8 +88,8 @@ flowchart TB
 | `getECfromGEM` / `getECfromDatabase` | `fill_eccodes_from_gem` / `fill_eccodes_from_database` | fill the EC numbers of `ec.eccodes` |
 | `findMetSmiles` | `find_met_smiles` | find the SMILES of the metabolites, for the prediction methods |
 | `updateKcatSources` | `update_kcat_sources` | gather the source files that the preset reads and that are missing or outdated |
-| `collectKcats` | `collect_kcats` | determine the *k*{sub}`cat`s without changing the model |
-| `assignKcats` | `assign_kcats` | determine the *k*{sub}`cat`s and apply them as enzyme constraints |
+| `collectKcats` | `collect_kcats` | determine the *k*{sub}`cat` values without changing the model |
+| `assignKcats` | `assign_kcats` | determine the *k*{sub}`cat` values and apply them as enzyme constraints |
 
 ## Setup
 
@@ -97,7 +97,7 @@ The examples start from an ecModel made with `makeEcModel` (Python: `make_ec_mod
 
 ## Presets
 
-`[kcat_assignment] preset` selects one of six presets. Each preset is a list of stages, and a stage gives a *k*{sub}`cat` to the reactions that the earlier stages left without one. Every preset starts with the custom *k*{sub}`cat`s of the project. In the table, "the OKP predictions" are those of the OKP method of `[kcat_sources.okp] method`; the default is KinForm-H, and a stage uses its prediction with the bias correction of that method.
+`[kcat_assignment] preset` selects one of six presets. Each preset is a list of stages, and a stage gives a *k*{sub}`cat` to the reactions that the earlier stages left without one. Every preset starts with the custom *k*{sub}`cat` values of the project. In the table, "the OKP predictions" are those of the OKP method of `[kcat_sources.okp] method`; the default is KinForm-H, and a stage uses its prediction with the bias correction of that method.
 
 | Preset | *K*{sub}`cat` of a reaction, in this order | Needs |
 | --- | --- | --- |
@@ -114,11 +114,11 @@ A project can list its own stages in `[[kcat_assignment.stage]]` tables in place
 
 ### Preset to start with
 
-Against measured *k*{sub}`cat`s hidden from the search, the EC tree was as close as or closer than the BRENDA median at origins 1 to 4 and with EC wildcards, and the EC tree combined with OKP predictions was slightly closer than the EC tree; in ecModels, however, values combined with predictions set high-turnover enzymes such as ATP synthase too low ([*K*{sub}`cat` assignment](../gecko4-kcat-assignment.md#presets)). No other comparison of the presets has been measured, and KinForm-H, the default OKP method, was not compared separately. `brenda_ec_tree`, the default, uses predictions for the reactions without a value from measurements, and is the preset to start with.
+Against measured *k*{sub}`cat` values hidden from the search, the EC tree was as close as or closer than the BRENDA median at origins 1 to 4 and with EC wildcards, and the EC tree combined with OKP predictions was slightly closer than the EC tree; in ecModels, however, values combined with predictions set high-turnover enzymes such as ATP synthase too low ([*K*{sub}`cat` assignment](../gecko4-kcat-assignment.md#presets)). No other comparison of the presets has been measured, and KinForm-H, the default OKP method, was not compared separately. `brenda_ec_tree`, the default, uses predictions for the reactions without a value from measurements, and is the preset to start with.
 
 ### BRENDA median and maximum
 
-`kcat.tsv` of the BRENDA release has one entry per EC number, substrate and organism, with the maximum and the median of the measured *k*{sub}`cat`s of that entry. When several entries match a reaction, for example with an EC wildcard or on any substrate, `fuzzyKcatMatching` (Python: `fuzzy_kcat_matching`) takes the maximum or the median of the matched values as well, with the same setting. The presets `brenda_ec_tree`, `ec_tree_homologs`, `ec_tree_okp` and `gecko_median` use the median, because the maximum is often far above a typical measurement; `gecko_classic` uses the maximum. In `kcat.tsv` of the release `brenda-2026.1-1`, with trypsin (EC 3.4.21.4) left out of the analysis:
+`kcat.tsv` of the BRENDA release has one entry per EC number, substrate and organism, with the maximum and the median of the measured *k*{sub}`cat` values of that entry. When several entries match a reaction, for example with an EC wildcard or on any substrate, `fuzzyKcatMatching` (Python: `fuzzy_kcat_matching`) takes the maximum or the median of the matched values as well, with the same setting. The presets `brenda_ec_tree`, `ec_tree_homologs`, `ec_tree_okp` and `gecko_median` use the median, because the maximum is often far above a typical measurement; `gecko_classic` uses the maximum. In `kcat.tsv` of the release `brenda-2026.1-1`, with trypsin (EC 3.4.21.4) left out of the analysis:
 
 - 9,549 of the 39,053 entries (24 %) hold more than one measurement. In these entries, the median of log10(maximum/median) was 0.16 and the mean 0.26 (a factor of 1.4 and 1.8). The maximum was at least 10 times the median in 4.8 % of these entries, and at least 100 times in 1.2 %.
 - For the 1,722 EC numbers with at least five entries, the maximum over all entries of the EC number was at least 10 times the median of the entry medians for 59.5 % of the EC numbers, at least 100 times for 24.2 % and at least 1,000 times for 8.6 %. The mean log10 ratio was 1.45. Of this, 1.38 came from taking the maximum over the entries and 0.06 from taking the maximum within an entry.
@@ -252,7 +252,7 @@ DLKcat can also run on the local computer, in the Docker image `ghcr.io/sysbioch
 
 ## Compare presets before applying
 
-`collectKcats` determines the *k*{sub}`cat`s as `assignKcats` does and does not change the model. It writes the result to `output/<model id>_kcatDecisions.tsv` unless `writeReport` (Python: `write_report`) is false. The file has one row per reaction of `ec.rxns` with these columns; the table that MATLAB returns has the names in parentheses:
+`collectKcats` determines the *k*{sub}`cat` values as `assignKcats` does and does not change the model. It writes the result to `output/<model id>_kcatDecisions.tsv` unless `writeReport` (Python: `write_report`) is false. The file has one row per reaction of `ec.rxns` with these columns; the table that MATLAB returns has the names in parentheses:
 
 | Column | Content |
 | --- | --- |
@@ -304,9 +304,9 @@ The MATLAB adapter is a value object, so `other` is a copy and the default adapt
 
 Presets with other source settings share the source files: `gecko_classic` gathers `brenda.tsv` with the BRENDA maximum and the other presets with the median. Gathering the sources of one preset then makes the file outdated for the other. Compare such presets in a copy of the project folder, or run `updateKcatSources` with the preset of the project again before `assignKcats`.
 
-## Assign the *k*{sub}`cat`s
+## Assign the *k*{sub}`cat` values
 
-`assignKcats` determines the *k*{sub}`cat`s, writes `ec.kcat` and `ec.source` (see [Provenance of a *k*{sub}`cat`](../gecko4-kcat-assignment.md#provenance-of-a-kcat)), applies the enzyme constraints and writes the decisions file. The *k*{sub}`cat`s that the model had before are replaced.
+`assignKcats` determines the *k*{sub}`cat` values, writes `ec.kcat` and `ec.source` (see [Provenance of a *k*{sub}`cat`](../gecko4-kcat-assignment.md#provenance-of-a-kcat)), applies the enzyme constraints and writes the decisions file. The *k*{sub}`cat` values that the model had before are replaced.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -327,16 +327,16 @@ decisions, report = assign_kcats(ec_model)  # changes ec_model in place
 :::
 ::::
 
-`report` lists the source files that a stage names and that do not exist (`missing`), and per source file the rows that were not applied. A missing source file is left out with a message, and the other stages still give *k*{sub}`cat`s.
+`report` lists the source files that a stage names and that do not exist (`missing`), and per source file the rows that were not applied. A missing source file is left out with a message, and the other stages still give *k*{sub}`cat` values.
 
 After the stages, two settings of `[kcat_assignment]` fill the reactions that are still without a *k*{sub}`cat`:
 
 - `isozymes` (default true): in a full ecModel, a reaction without a *k*{sub}`cat` gets the mean *k*{sub}`cat` of its isozymes. An isozyme reaction with a *k*{sub}`cat` of 0 has no enzyme cost after `applyKcatConstraints`, so an optimisation uses it in place of the isozymes that have a *k*{sub}`cat`. A light ecModel uses the most efficient isozyme and skips this step.
-- `standard` (default true): the remaining reactions get the standard *k*{sub}`cat`, which is the median *k*{sub}`cat` of the subsystem of the reaction when the subsystem has at least 10 reactions with a *k*{sub}`cat`, and the median of all *k*{sub}`cat`s otherwise. Reactions without a gene association get the pseudo-enzyme `prot_standard`, with the median molecular weight of the proteins in `data/uniprot.tsv`. Exchange, transport, spontaneous and pseudo-reactions get no standard *k*{sub}`cat`; list other reactions to leave out in `data/pseudoRxns.tsv` ([Files in the data folder](data-folder-files.md)).
+- `standard` (default true): the remaining reactions get the standard *k*{sub}`cat`, which is the median *k*{sub}`cat` of the subsystem of the reaction when the subsystem has at least 10 reactions with a *k*{sub}`cat`, and the median of all *k*{sub}`cat` values otherwise. Reactions without a gene association get the pseudo-enzyme `prot_standard`, with the median molecular weight of the proteins in `data/uniprot.tsv`. Exchange, transport, spontaneous and pseudo-reactions get no standard *k*{sub}`cat`; list other reactions to leave out in `data/pseudoRxns.tsv` ([Files in the data folder](data-folder-files.md)).
 
-## Add custom *k*{sub}`cat`s
+## Add custom *k*{sub}`cat` values
 
-`data/kcats/custom.tsv` holds the curated *k*{sub}`cat`s of the project. Every preset reads it in its first stage, so a custom *k*{sub}`cat` is used before all other sources. [Set custom *k*{sub}`cat`s](custom-kcats.md) describes the file, the conversion of `data/customKcats.tsv` of a GECKO 3 project, and how to change a *k*{sub}`cat` by hand.
+`data/kcats/custom.tsv` holds the curated *k*{sub}`cat` values of the project. Every preset reads it in its first stage, so a custom *k*{sub}`cat` is used before all other sources. [Set custom *k*{sub}`cat` values](custom-kcats.md) describes the file, the conversion of `data/customKcats.tsv` of a GECKO 3 project, and how to change a *k*{sub}`cat` by hand.
 
 ## Troubleshooting
 
@@ -345,16 +345,16 @@ After the stages, two settings of `[kcat_assignment]` fill the reactions that ar
 | OKP sources stay `pending` | the OpenKineticsPredictor job is still running | Call `updateKcatSources` again later |
 | OKP sources are `failed` with `No OpenKineticsPredictor API key found` | no key in `OKP_API_KEY` or in `data/okpApiKey.txt` | Generate a key and store it in one of the two places |
 | `No kcat source file <file>; it is left out` | a stage names a source that has no file in `data/kcats` | Run `updateKcatSources`, or remove the source from the stages |
-| BRENDA and the EC tree give *k*{sub}`cat`s for few reactions | many reactions have no EC number | Fill `ec.eccodes` (section [Prepare the inputs](#prepare-the-inputs)) |
+| BRENDA and the EC tree give *k*{sub}`cat` values for few reactions | many reactions have no EC number | Fill `ec.eccodes` (section [Prepare the inputs](#prepare-the-inputs)) |
 | Few reactions get a predicted *k*{sub}`cat` | many metabolites have no SMILES | Read `noSMILES` of `findMetSmiles` (Python: the log of `find_met_smiles`, with the number at INFO level and the names at DEBUG level) and correct the metabolite names or `data/smilesDB.tsv` |
 | Error `kcatAssignment:config` (Python: a validation error of the adapter) | an unknown preset, a preset and stages together, a stage with a wrong value, or an unknown OKP method in `[kcat_sources.okp] method` | Correct `[kcat_assignment]` or `[kcat_sources.okp]` |
-| *K*{sub}`cat`s set by hand are gone | `assignKcats` replaced them | Write them to `data/kcats/custom.tsv` ([Set custom *k*{sub}`cat`s](custom-kcats.md)) |
+| *K*{sub}`cat` values set by hand are gone | `assignKcats` replaced them | Write them to `data/kcats/custom.tsv` ([Set custom *k*{sub}`cat` values](custom-kcats.md)) |
 
 ## See also
 
 - [*K*{sub}`cat` assignment](../gecko4-kcat-assignment.md): the sources, the stages and the presets in detail.
 - [Project format 4](../gecko4-project-format.md): the layout of `data/kcats` and of the *k*{sub}`cat` source files.
 - [Model adapter parameters](model-adapter-parameters.md): `[kcat_assignment]` and `[kcat_sources]`.
-- [Set custom *k*{sub}`cat`s](custom-kcats.md): the curated *k*{sub}`cat`s of the project.
-- [Set the protein pool](protein-pool.md): the next step after the *k*{sub}`cat`s.
-- [Choose a *k*{sub}`cat` tuning](kcat-tuning.md): when the model grows too slowly with the assigned *k*{sub}`cat`s.
+- [Set custom *k*{sub}`cat` values](custom-kcats.md): the curated *k*{sub}`cat` values of the project.
+- [Set the protein pool](protein-pool.md): the next step after the *k*{sub}`cat` values.
+- [Choose a *k*{sub}`cat` tuning](kcat-tuning.md): when the model grows too slowly with the assigned *k*{sub}`cat` values.

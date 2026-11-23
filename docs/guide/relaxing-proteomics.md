@@ -1,6 +1,6 @@
 # Relax proteomics constraints
 
-Raise the usage bounds of the enzymes that keep an ecModel constrained with proteomics below the measured growth rate, until it reaches that growth rate. The result is an ecModel that reaches the growth rate, a list of the enzymes whose bounds were raised and by how much, and an indication of whether the shortfall comes from the proteomics data, the *k*{sub}`cat`s, the protein pool or the metabolic network.
+Raise the usage bounds of the enzymes that keep an ecModel constrained with proteomics below the measured growth rate, until it reaches that growth rate. The result is an ecModel that reaches the growth rate, a list of the enzymes whose bounds were raised and by how much, and an indication of whether the shortfall comes from the proteomics data, the *k*{sub}`cat` values, the protein pool or the metabolic network.
 
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
@@ -280,7 +280,7 @@ print(f"Growth rate of the GEM: {model.slim_optimize():g} /h")
 :::
 ::::
 
-## Check the *k*{sub}`cat`s of the relaxed enzymes
+## Check the *k*{sub}`cat` values of the relaxed enzymes
 
 A *k*{sub}`cat` that is too low makes an enzyme limit growth, and the relaxation then raises the bound of that enzyme. `kcatEvidence` (Python `kcat_evidence`) lists, for the reactions of the relaxed enzymes, the *k*{sub}`cat` of the ecModel next to the *k*{sub}`cat` of every source file (see [Compare *k*{sub}`cat` sources](kcat-evidence.md)):
 
@@ -294,7 +294,7 @@ A *k*{sub}`cat` that is too low makes an enzyme limit growth, and the relaxation
 summary(1:6, :)
 ```
 
-In the tutorial, `flexibilizeEnzConcs` relaxed 48 enzymes. `summary` has one row per reaction of these enzymes. `tuned` is false, because these *k*{sub}`cat`s were not tuned:
+In the tutorial, `flexibilizeEnzConcs` relaxed 48 enzymes. `summary` has one row per reaction of these enzymes. `tuned` is false, because these *k*{sub}`cat` values were not tuned:
 
 ```text
          ecRxn           kcat     tuned    fold    prior      origin            enzymes                eccodes           src_brenda    src_custom    src_ec_tree    src_okp_kinform_h
@@ -319,7 +319,7 @@ result = kcat_evidence(ec_model, enzymes=list(flex_result.uniprot_ids))
 result.summary.drop(columns=["eccodes"]).head(6)
 ```
 
-In the tutorial, `flexibilize_enz_concs` relaxed 48 enzymes. `summary` has one row per reaction of these enzymes. `tuned` is false, because these *k*{sub}`cat`s were not tuned:
+In the tutorial, `flexibilize_enz_concs` relaxed 48 enzymes. `summary` has one row per reaction of these enzymes. `tuned` is false, because these *k*{sub}`cat` values were not tuned:
 
 ```text
          ec_rxn        kcat  tuned  fold  prior   origin        enzymes  src_brenda  src_custom  src_ec_tree  src_okp_kinform_h
@@ -334,7 +334,7 @@ In the tutorial, `flexibilize_enz_concs` relaxed 48 enzymes. `summary` has one r
 :::
 ::::
 
-A *k*{sub}`cat` that is lower than the values of the other sources can be replaced by one of them in `custom.tsv` (see [Set custom *k*{sub}`cat`s](custom-kcats.md)), which removes the cause of the relaxation. A *k*{sub}`cat` within the range of the sources does not explain the relaxation, and the protein pool, the exchange fluxes and the measured concentrations remain to be checked. `flexEnz.uniprotIDs` also lists `prot_pool` after `relaxEnzConcs` when the protein pool exchange was raised; remove it before the call, because `prot_pool` is a pseudo-enzyme that `ec.enzymes` does not list.
+A *k*{sub}`cat` that is lower than the values of the other sources can be replaced by one of them in `custom.tsv` (see [Set custom *k*{sub}`cat` values](custom-kcats.md)), which removes the cause of the relaxation. A *k*{sub}`cat` within the range of the sources does not explain the relaxation, and the protein pool, the exchange fluxes and the measured concentrations remain to be checked. `flexEnz.uniprotIDs` also lists `prot_pool` after `relaxEnzConcs` when the protein pool exchange was raised; remove it before the call, because `prot_pool` is a pseudo-enzyme that `ec.enzymes` does not list.
 
 ## Troubleshooting
 
@@ -352,4 +352,4 @@ A *k*{sub}`cat` that is lower than the values of the other sources can be replac
 - [Constrain enzymes with proteomics](proteomics.md), where the bounds come from.
 - [Enzyme usage and bottlenecks](enzyme-usage.md), to find the enzymes that limit growth without changing the bounds.
 - [Choose a *k*{sub}`cat` tuning](kcat-tuning.md), for an enzyme whose *k*{sub}`cat` is too low.
-- [Compare *k*{sub}`cat` sources](kcat-evidence.md), the *k*{sub}`cat`s of every source for the reactions of the relaxed enzymes.
+- [Compare *k*{sub}`cat` sources](kcat-evidence.md), the *k*{sub}`cat` values of every source for the reactions of the relaxed enzymes.

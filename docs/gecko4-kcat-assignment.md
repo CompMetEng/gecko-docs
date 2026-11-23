@@ -2,14 +2,14 @@
 
 <!-- docs-site: concept-page -->
 
-GECKO 4 assigns the *k*{sub}`cat` of each reaction from *k*{sub}`cat` source files, in an order that `model_adapter.toml` sets. `collectKcats` determines the *k*{sub}`cat`s and does not change the model. `assignKcats` applies the decisions and the *k*{sub}`cat` constraints. [Choose the *k*{sub}`cat` sources](guide/kcat-sources.md) describes how the sources are gathered and assigned, and [Set the protein pool](guide/protein-pool.md) the step after the assignment.
+GECKO 4 assigns the *k*{sub}`cat` of each reaction from *k*{sub}`cat` source files, in an order that `model_adapter.toml` sets. `collectKcats` determines the *k*{sub}`cat` values and does not change the model. `assignKcats` applies the decisions and the *k*{sub}`cat` constraints. [Choose the *k*{sub}`cat` sources](guide/kcat-sources.md) describes how the sources are gathered and assigned, and [Set the protein pool](guide/protein-pool.md) the step after the assignment.
 
 ## Functions
 
 | MATLAB | Python | Note |
 | --- | --- | --- |
 | `collectKcats` | `collect_kcats` | determines one *k*{sub}`cat` per reaction and writes `output/<model id>_kcatDecisions.tsv` |
-| `assignKcats` | `assign_kcats` | applies the decisions and the *k*{sub}`cat` constraints. *K*{sub}`cat`s that the model had are replaced |
+| `assignKcats` | `assign_kcats` | applies the decisions and the *k*{sub}`cat` constraints. *K*{sub}`cat` values that the model had are replaced |
 | `updateKcatSources` | `update_kcat_sources` | gathers the source files that the configuration needs and that are missing or outdated |
 | `kcatAssignmentConfig` | `kcat_assignment_config` | returns the settings with the preset expanded into stages |
 | `parseKcatSource` | `parse_kcat_source` | splits an entry of `ec.source` into its origin, detail, tuning methods and prior |
@@ -21,8 +21,8 @@ A source is the name of a file in `data/kcats` (`custom`, `ec_tree`, `homologs`,
 
 | Source | Content |
 | --- | --- |
-| `custom` | curated *k*{sub}`cat`s of the project |
-| `brenda.tsv` | BRENDA *k*{sub}`cat`s matched by EC number and substrate, with the origin of the match (1 to 6). A stage reads it through the tiers `database_exact`, `database_top` and `database_bottom` |
+| `custom` | curated *k*{sub}`cat` values of the project |
+| `brenda.tsv` | BRENDA *k*{sub}`cat` values matched by EC number and substrate, with the origin of the match (1 to 6). A stage reads it through the tiers `database_exact`, `database_top` and `database_bottom` |
 | `ec_tree` | the median of all wild-type BRENDA measurements of the EC number, shrunk towards the median of its 3-digit EC class, its 2-digit EC class and the global median (weight `n/(n+k)` for `n` measurements, `k = 5`) |
 | `homologs` | the *k*{sub}`cat` of measured homologs that act on the same substrate, found with DIAMOND (at least 40 % identity and 80 % coverage of both sequences) |
 | `dlkcat` | DLKcat predictions |
@@ -40,11 +40,11 @@ When a stage lists `custom`, `data/kcats/custom.tsv` does not exist and the GECK
 
 | Preset | Stages |
 | --- | --- |
-| `brenda_ec_tree` | custom *k*{sub}`cat`s; the BRENDA median of the organism on the substrate of the reaction (origin 1, no EC wildcards); the EC tree; then the OKP predictions for the reactions still open |
-| `ec_tree_homologs` | custom *k*{sub}`cat`s; the BRENDA value of the organism; the EC tree and the homologs combined; then the OKP predictions |
-| `ec_tree_okp` | custom *k*{sub}`cat`s; the BRENDA value of the organism; the EC tree, the homologs and the OKP predictions combined; then the OKP predictions |
-| `okp` | custom *k*{sub}`cat`s; then the OKP predictions |
-| `gecko_median` | custom *k*{sub}`cat`s; BRENDA median without EC wildcards (origin 1 to 4); DLKcat; then the other BRENDA matches (EC wildcards, origin 3 to 6; specific activities, origin 5 and 6) |
+| `brenda_ec_tree` | custom *k*{sub}`cat` values; the BRENDA median of the organism on the substrate of the reaction (origin 1, no EC wildcards); the EC tree; then the OKP predictions for the reactions still open |
+| `ec_tree_homologs` | custom *k*{sub}`cat` values; the BRENDA value of the organism; the EC tree and the homologs combined; then the OKP predictions |
+| `ec_tree_okp` | custom *k*{sub}`cat` values; the BRENDA value of the organism; the EC tree, the homologs and the OKP predictions combined; then the OKP predictions |
+| `okp` | custom *k*{sub}`cat` values; then the OKP predictions |
+| `gecko_median` | custom *k*{sub}`cat` values; BRENDA median without EC wildcards (origin 1 to 4); DLKcat; then the other BRENDA matches (EC wildcards, origin 3 to 6; specific activities, origin 5 and 6) |
 | `gecko_classic` | as `gecko_median` with the BRENDA maximum and the specific-activity matches above DLKcat (origin up to 6), the order of the GECKO 3 tutorial |
 
 The tutorial `full_ecModel` uses `gecko_classic`. A project lists the stages in `[[kcat_assignment.stage]]` tables in place of a preset:
@@ -63,7 +63,7 @@ top_origin_limit = 1
 
 A stage has the options `action` (default `select`), `sources`, `criteria` (default `max`), `top_origin_limit` (default 4), `bottom_origin_limit` (default 6) and `wildcard_limit` (default 3).
 
-Against measured *k*{sub}`cat`s hidden from the search, the EC tree was closer than the BRENDA median at origin 2, at origin 4 and with EC wildcards, and as close at origin 1 and 3. The EC tree combined with OKP predictions was slightly closer than the EC tree. In ecModels, values combined with predictions set high-turnover enzymes such as ATP synthase too low. The default therefore uses predictions where measurements give no value. The default of `[kcat_sources.okp] method` is KinForm-H, which the comparison did not test separately.
+Against measured *k*{sub}`cat` values hidden from the search, the EC tree was closer than the BRENDA median at origin 2, at origin 4 and with EC wildcards, and as close at origin 1 and 3. The EC tree combined with OKP predictions was slightly closer than the EC tree. In ecModels, values combined with predictions set high-turnover enzymes such as ATP synthase too low. The default therefore uses predictions where measurements give no value. The default of `[kcat_sources.okp] method` is KinForm-H, which the comparison did not test separately.
 
 ## Provenance of a *k*{sub}`cat`
 
@@ -110,7 +110,7 @@ text = format_kcat_source("brenda", {"wc": 0, "origin": 2}, ["cmaes"], 6.55)
 :::
 ::::
 
-Functions that read `ec.source` use the origin. `getStandardKcat` and `removeStandardKcat` (Python `assign_standard_kcat` and `remove_standard_kcat`) treat a row as the standard *k*{sub}`cat` when its origin is `standard` and it has no tuning status, so a standard *k*{sub}`cat` that tuning changed is kept. The trust tiers of evotune group the *k*{sub}`cat`s by the origin.
+Functions that read `ec.source` use the origin. `getStandardKcat` and `removeStandardKcat` (Python `assign_standard_kcat` and `remove_standard_kcat`) treat a row as the standard *k*{sub}`cat` when its origin is `standard` and it has no tuning status, so a standard *k*{sub}`cat` that tuning changed is kept. The trust tiers of evotune group the *k*{sub}`cat` values by the origin.
 
 ## Run the assignment
 
@@ -144,7 +144,7 @@ decisions, report = assign_kcats(ec_model)   # changes ec_model in place
 | Error `kcatAssignment:config` | an empty preset, a criteria name in capitals, or a stage with a `sources` value of another type than list | Correct `[kcat_assignment]` |
 | OKP sources are pending | the OpenKineticsPredictor job is still running | Call `updateKcatSources` again later |
 | Error `collectKcats:legacyCustomKcats` | the project has the GECKO 3 file `data/customKcats.tsv` and no `data/kcats/custom.tsv` | Run `convertCustomKcats` |
-| *K*{sub}`cat`s differ from a GECKO 3 model | the default preset `brenda_ec_tree` reads other sources than the GECKO 3 tutorial | Set `preset = "gecko_classic"` |
+| *K*{sub}`cat` values differ from a GECKO 3 model | the default preset `brenda_ec_tree` reads other sources than the GECKO 3 tutorial | Set `preset = "gecko_classic"` |
 | Rows of a source file are not applied | the row fits no reaction, or part of an enzyme set | Read the report of `loadKcatSource` |
 
 ## See also

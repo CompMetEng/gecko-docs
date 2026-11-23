@@ -1,6 +1,6 @@
 # GECKO 3 to GECKO 4
 
-GECKO 4 keeps the ecModel structure of GECKO 3 (`ecModel.ec`, the `MW/kcat` coefficient) and changes the direction of the protein reactions, how a project is configured, and how *k*{sub}`cat`s are gathered and assigned. GECKO 3.0 is the version described in the published Nature Protocols pipeline (see [Citations](references.md)). The sections below follow the risk of a wrong result for a GECKO 3 script or project. geckopy implements the GECKO 4 behaviour described here.
+GECKO 4 keeps the ecModel structure of GECKO 3 (`ecModel.ec`, the `MW/kcat` coefficient) and changes the direction of the protein reactions, how a project is configured, and how *k*{sub}`cat` values are gathered and assigned. GECKO 3.0 is the version described in the published Nature Protocols pipeline (see [Citations](references.md)). The sections below follow the risk of a wrong result for a GECKO 3 script or project. geckopy implements the GECKO 4 behaviour described here.
 
 :::{admonition} Changes that pass without an error
 :class: important
@@ -53,7 +53,7 @@ The changes in this table, and calls of removed functions (see [Removed](#remove
 
 ### Changes of the project
 
-A GECKO 3 project is configured by an adapter class and keeps its *k*{sub}`cat`s in `data/DLKcat.tsv`, `data/customKcats.tsv` and in the variables of the script. A GECKO 4 project is configured by `model_adapter.toml`, keeps each *k*{sub}`cat` source in its own file in `data/kcats`, and records the ecModel format in the saved model. `assignKcats` writes its decisions to `output/<model id>_kcatDecisions.tsv`, with column names in `snake_case` (`ec_rxn`, `spread_log10`, `sd_log10`); the table that `collectKcats` returns keeps `camelCase` names. [Project format 4](gecko4-project-format.md) describes the files, and [Upgrade a GECKO 3 project](gecko3-upgrade-project.md) the steps that convert a project.
+A GECKO 3 project is configured by an adapter class and keeps its *k*{sub}`cat` values in `data/DLKcat.tsv`, `data/customKcats.tsv` and in the variables of the script. A GECKO 4 project is configured by `model_adapter.toml`, keeps each *k*{sub}`cat` source in its own file in `data/kcats`, and records the ecModel format in the saved model. `assignKcats` writes its decisions to `output/<model id>_kcatDecisions.tsv`, with column names in `snake_case` (`ec_rxn`, `spread_log10`, `sd_log10`); the table that `collectKcats` returns keeps `camelCase` names. [Project format 4](gecko4-project-format.md) describes the files, and [Upgrade a GECKO 3 project](gecko3-upgrade-project.md) the steps that convert a project.
 
 Functions with name-value arguments also take them positionally, in the GECKO 3 order: `loadEcModel(filename, modelAdapter)` and `loadEcModel('filename', filename)` are equivalent. A call uses one of the two forms for all its optional arguments.
 
@@ -108,7 +108,7 @@ The table lists a selection.
 | BRENDA files in `databases/` | `fetchBrendaAsset` downloads the files of the toolbox-assets release `brenda-2026.1-1` into `databases/brenda-2026.1-1` on first use. A project keeps its own files in `data/brenda` |
 | `truncateValues` | `round(x, 6, 'significant')` |
 | `findMaxValue` | `kcatsFromBrenda` or `kcatsFromECTree` |
-| `bayesianSensitivityTuning` and its helpers `abc_max`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels) | `cmaesKcatTuning`, the evotune *k*{sub}`cat` tuning, with the data files `data/fluxData.tsv`, `data/maxGrowth.tsv` and `data/zeroFlux.tsv` (see [Experimental data](guide/experimental-data.md) and [Tune *k*{sub}`cat`s with evotune](guide/evotune.md)) |
+| `bayesianSensitivityTuning` and its helpers `abc_max`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels) | `cmaesKcatTuning`, the evotune *k*{sub}`cat` tuning, with the data files `data/fluxData.tsv`, `data/maxGrowth.tsv` and `data/zeroFlux.tsv` (see [Experimental data](guide/experimental-data.md) and [Tune *k*{sub}`cat` values with evotune](guide/evotune.md)) |
 | `addCarbonNum`, `getcarbonnum` | both raise `GECKO:removedFunction`. RAVEN's `computeCarbonWeights` returns the carbon weight of each exchange reaction, as a map keyed by reaction ID, without a field in the model |
 | `anaerobicModel_GECKO`, `changeMedia` | copies in `tutorials/full_ecModel/code`, for *Saccharomyces cerevisiae* |
 
@@ -188,7 +188,7 @@ The last GECKO 2 release is [2.0.3](https://github.com/SysBioChalmers/GECKO/rele
 | Warning when `loadEcModel` loads a model | the ecModel was saved by GECKO 3 and its protein reactions run in reverse | `loadEcModel` upgrades the loaded model. Run `saveEcModel` to store the upgraded model |
 | An enzyme usage flux is negative | the model was not upgraded | Run `upgradeEcModel` |
 | Error `GECKO:loadAdapterParams` that names a key of `model_adapter.toml` | the key is not in `adapterParameters.tsv` | Place a key that GECKO uses and geckopy does not use under `[matlab.params]` |
-| A rebuilt ecModel has other *k*{sub}`cat`s than the GECKO 3 model | the default preset and the substrate of BRENDA *k*{sub}`cat`s changed | Use `preset = "gecko_classic"` and compare the output of `collectKcats` |
+| A rebuilt ecModel has other *k*{sub}`cat` values than the GECKO 3 model | the default preset and the substrate of BRENDA *k*{sub}`cat` values changed | Use `preset = "gecko_classic"` and compare the output of `collectKcats` |
 
 ## See also
 

@@ -1,6 +1,6 @@
 # Choose the ecModel structure
 
-`makeEcModel` turns a conventional genome-scale metabolic model (GEM) into an enzyme-constrained model (ecModel) without *k*{sub}`cat`s: reversible reactions are split by direction, the enzymes of each reaction are recorded in the `ec` structure, and the protein pool is added. The result is a full or a light ecModel without *k*{sub}`cat`s, a list of the genes that have no protein data, and, for an organism in the Complex Portal, the subunit stoichiometry of the enzyme complexes.
+`makeEcModel` turns a conventional genome-scale metabolic model (GEM) into an enzyme-constrained model (ecModel) without *k*{sub}`cat` values: reversible reactions are split by direction, the enzymes of each reaction are recorded in the `ec` structure, and the protein pool is added. The result is a full or a light ecModel without *k*{sub}`cat` values, a list of the genes that have no protein data, and, for an organism in the Complex Portal, the subunit stoichiometry of the enzyme complexes.
 
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
@@ -116,13 +116,13 @@ Build a full ecModel unless the size of the full model makes the simulations too
 |---|---|---|
 | Constrain enzymes with proteomics | `constrainEnzConcs` raises an error, so the functions that relax these constraints have nothing to act on; `relaxProteomicsGreedy` and `getIsozymeCoverage` raise an error themselves | `constrain_enz_concs` raises a `ValueError`; the flux, bound, shadow price and concentration setter of `Enzyme` raise a `NotImplementedError` |
 | Enzyme usage and bottlenecks | `getEnzymeUsage`, `getEnzymeBottlenecks` and `getPfbaEnzymes` raise an error | `enzyme_usage` and `pfba_enzymes` raise a `NotImplementedError`; `get_enzyme_bottlenecks` raises a `KeyError`, because the `prot_<UniProt>` constraints it reads do not exist |
-| Fill *k*{sub}`cat`s from other isozymes | `fillKcatsFromIsozymes` raises an error | `fill_kcats_from_isozymes` raises a `NotImplementedError` |
+| Fill *k*{sub}`cat` values from other isozymes | `fillKcatsFromIsozymes` raises an error | `fill_kcats_from_isozymes` raises a `NotImplementedError` |
 | Add reactions to an ecModel | `addNewRxnsToEC` raises an error | `add_new_rxns_to_ec` raises a `NotImplementedError` |
 | Convert `customKcats.tsv` to `custom.tsv` | `convertCustomKcats` raises an error | `convert_custom_kcats` raises a `ValueError` |
 
-On a light ecModel, `assignKcats` and `collectKcats` skip the step that fills *k*{sub}`cat`s from other isozymes. A `custom.tsv` written from a full ecModel applies to a light ecModel too. `applyKcatConstraints`, `getStandardKcat`, `applyComplexData`, `sensitivityTuning` and `getSubsetEcModel` work on both structures.
+On a light ecModel, `assignKcats` and `collectKcats` skip the step that fills *k*{sub}`cat` values from other isozymes. A `custom.tsv` written from a full ecModel applies to a light ecModel too. `applyKcatConstraints`, `getStandardKcat`, `applyComplexData`, `sensitivityTuning` and `getSubsetEcModel` work on both structures.
 
-The tutorial script `tutorials/full_ecModel/code/plotlightVSfull.m` of GECKO builds a light and a full ecModel of yeast-GEM with the same *k*{sub}`cat`s, maximises growth in both, and plots the two flux distributions mapped to the reactions of the GEM.
+The tutorial script `tutorials/full_ecModel/code/plotlightVSfull.m` of GECKO builds a light and a full ecModel of yeast-GEM with the same *k*{sub}`cat` values, maximises growth in both, and plots the two flux distributions mapped to the reactions of the GEM.
 
 ## Build the ecModel
 
@@ -163,7 +163,7 @@ ec_model = make_ec_model(model, adapter, gecko_light=True)
 :::
 ::::
 
-The ecModel has no *k*{sub}`cat`s yet: `ec.kcat` is 0 for every row, and no metabolic reaction consumes an enzyme (full ecModel) or `prot_pool` (light ecModel). [Choose the *k*{sub}`cat` sources](kcat-sources.md) fills the *k*{sub}`cat`s and applies them.
+The ecModel has no *k*{sub}`cat` values yet: `ec.kcat` is 0 for every row, and no metabolic reaction consumes an enzyme (full ecModel) or `prot_pool` (light ecModel). [Choose the *k*{sub}`cat` sources](kcat-sources.md) fills the *k*{sub}`cat` values and applies them.
 
 ## Steps of makeEcModel
 
@@ -290,7 +290,7 @@ apply_complex_data(ec_model, path=json_path)
 
 A complex is applied to a reaction when its proteins and the enzymes of the reaction are the same set. For a reaction with more than one enzyme and no exact match, a complex is proposed, not applied, in two cases: the complex contains all enzymes of the reaction and more subunits; or the complex contains at least 75 % (and less than 100 %) of the enzymes of the reaction and has no more subunits than the reaction has enzymes, so it can contain subunits that the reaction lacks (Python: the keyword `min_match_to_propose`, default 0.75). A reaction can have a proposal for each case, so two rows in `proposedComplex` (Python: two warnings). Read the proposed complexes: a missing subunit in the gene rule of the GEM can be the reason, and a curated gene rule then gives an exact match in the next build.
 
-The stoichiometry changes `ec.rxnEnzMat` (Python: `ec.rxn_enz_mat`). The enzyme cost in the reactions follows from it when the *k*{sub}`cat`s are applied, so add the complex data before the *k*{sub}`cat`s are assigned.
+The stoichiometry changes `ec.rxnEnzMat` (Python: `ec.rxn_enz_mat`). The enzyme cost in the reactions follows from it when the *k*{sub}`cat` values are applied, so add the complex data before the *k*{sub}`cat` values are assigned.
 
 ## Troubleshooting
 
