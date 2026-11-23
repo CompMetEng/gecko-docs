@@ -223,7 +223,23 @@ lp_result = relax_enz_concs(lp_model, exp_growth=float(flux_data.gr_rate[0]))
 :sync: matlab
 
 ```matlab
-disp(struct2table(flexEnz))
+disp(head(struct2table(flexEnz), 6))
+```
+
+The first six rows of `flexEnz` in the `full_ecModel` tutorial, with the bound of the enzyme as ratio to its measured concentration in `ratioIncr`:
+
+```text
+    uniprotIDs    oldConcs     flexConcs    frequence    ratioIncr
+    __________    _________    _________    _________    _________
+    {'P18239'}      0.95661      10.523         6           11
+    {'P08456'}    0.0083724    0.092096         5           11
+    {'P23641'}      0.43773      3.9396         4            9
+    {'P07256'}      0.22518      1.5763         0            7
+    {'P00128'}     0.065298     0.45708         0            7
+    {'P08067'}      0.10475     0.73325         0            7
+```
+
+```matlab
 disp(struct2table(result.trace))
 ```
 :::
@@ -239,7 +255,22 @@ print(pd.DataFrame({
     "new": flex_result.flex_concs,
     "ratio": flex_result.ratio_incr,
     "selected": flex_result.frequence,
-}))
+}).head(6))
+```
+
+The first six rows of the table in the `full_ecModel` tutorial, with the bound of the enzyme as ratio to its measured concentration in `ratio`:
+
+```text
+  uniprot       old        new  ratio  selected
+0  P18239  0.956605  10.522656   11.0         6
+1  P08456  0.008372   0.092096   11.0         5
+2  P23641  0.437735   3.939615    9.0         4
+3  P07256  0.225182   1.576273    7.0         0
+4  P08067  0.104750   0.733249    7.0         0
+5  P00127  0.077366   0.541565    7.0         0
+```
+
+```python
 print(pd.DataFrame([vars(step) for step in result.trace]))
 ```
 :::
@@ -264,6 +295,12 @@ model = constrainFluxData(model, 'fluxData', fluxData, 'condition', 1);
 sol = solveLP(model);
 fprintf('Growth rate of the GEM: %g /h\n', sol.f)
 ```
+
+In the `full_ecModel` tutorial, the conventional GEM does not reach the measured growth rate of the first condition either:
+
+```text
+Growth rate of the GEM: 0.0880369 /h
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -277,8 +314,16 @@ apply_flux_data_constraints(
 )
 print(f"Growth rate of the GEM: {model.slim_optimize():g} /h")
 ```
+
+In the `full_ecModel` tutorial, the conventional GEM does not reach the measured growth rate of the first condition either:
+
+```text
+Growth rate of the GEM: 0.0880369 /h
+```
 :::
 ::::
+
+The first condition of the `full_ecModel` tutorial is of this kind: the growth rate of the conventional GEM is below the measured one, so no relaxation of the enzyme bounds reaches it. `flexibilizeEnzConcs` stops with the message that an enzyme seems to be problematic, `relaxProteomicsGreedy` stops with the error that it did not converge in 100 iterations (Python: a `RuntimeError`), and `relaxEnzConcs` raises `relaxEnzConcs:infeasible` (Python: a `ValueError`). The examples of the three methods above therefore show the calls and not a relaxation that reaches the target.
 
 ## Check the *k*{sub}`cat` values of the relaxed enzymes
 
@@ -289,23 +334,23 @@ A *k*{sub}`cat` that is too low makes an enzyme limit growth, and the relaxation
 :sync: matlab
 
 ```matlab
-[ecModel, flexEnz] = flexibilizeEnzConcs(ecModel);
 [evidence, summary] = kcatEvidence(ecModel, 'enzymes', flexEnz.uniprotIDs);
-summary(1:6, :)
+summary(1:6, [1:6 9:end])
 ```
 
-In the tutorial, `flexibilizeEnzConcs` relaxed 48 enzymes. `summary` has one row per reaction of these enzymes. `tuned` is false, because these *k*{sub}`cat` values were not tuned:
+In the `full_ecModel` tutorial, `flexibilizeEnzConcs` with `perComplex` relaxed 40 enzymes. `summary` has one row per reaction of these enzymes, here without the columns `enzymes` and `eccodes`. `tuned` is true for the reaction that `sensitivityTuning` raised (`r_0279`) and false for the others:
 
 ```text
-         ecRxn           kcat     tuned    fold    prior      origin            enzymes                eccodes           src_brenda    src_custom    src_ec_tree    src_okp_kinform_h
-    ________________    ______    _____    ____    _____    ___________    _________________    _____________________    __________    __________    ___________    _________________
-
-    {'r_0001_EXP_2'}    3.9075    false    NaN      NaN     {'ec_tree'}    {'P32891;P00044'}    {'1.1.2.4'          }       4.185         NaN          3.9075             5.0797
-    {'r_0001_EXP_4'}    3.9075    false    NaN      NaN     {'ec_tree'}    {'P39976;P00044'}    {'1.1.2.4;1.1.99.40'}       4.185         NaN          3.9075             5.0797
-    {'r_0002_EXP_2'}    3.9075    false    NaN      NaN     {'ec_tree'}    {'P46681;P00044'}    {'1.1.2.4;1.1.99.40'}       4.185         NaN          3.9075             5.0797
-    {'r_0004_EXP_2'}    175.75    false    NaN      NaN     {'brenda' }    {'P00044;P00175'}    {'1.1.2.3'          }      175.75         NaN          95.722             5.3818
-    {'r_0091_EXP_2'}        10    false    NaN      NaN     {'custom' }    {'P38858'       }    {'3.1.1.31'         }        31.8          10          16.199             8.5428
-    {'r_0151'      }    1.3258    false    NaN      NaN     {'ec_tree'}    {'Q05911'       }    {'4.3.2.2'          }         2.9         NaN          1.3258             0.6294
+ans =
+  6x10 table
+         ecRxn           kcat      tuned    fold     prior        origin       src_brenda    src_custom    src_ec_tree    src_okp_kinform_h
+    ________________    _______    _____    ____    ________    ___________    __________    __________    ___________    _________________
+    {'r_0226'      }        120    false    NaN          NaN    {'custom' }         16.5        120           19.527            1.3436
+    {'r_0226_REV'  }        120    false    NaN          NaN    {'custom' }          217        120           19.527            1.3759
+    {'r_0236'      }    0.23506    false    NaN          NaN    {'ec_tree'}         0.73        NaN          0.23506            0.3139
+    {'r_0237'      }    0.23506    false    NaN          NaN    {'ec_tree'}         0.73        NaN          0.23506           0.37252
+    {'r_0279'      }    0.86522    true      10     0.086522    {'ec_tree'}         0.87        NaN         0.086522            3.0441
+    {'r_0362_EXP_1'}     4.7997    false    NaN          NaN    {'ec_tree'}     0.000874        NaN           4.7997            4.3592
 ```
 
 :::
@@ -316,19 +361,19 @@ In the tutorial, `flexibilizeEnzConcs` relaxed 48 enzymes. `summary` has one row
 from geckopy import kcat_evidence
 
 result = kcat_evidence(ec_model, enzymes=list(flex_result.uniprot_ids))
-result.summary.drop(columns=["eccodes"]).head(6)
+result.summary.drop(columns=["enzymes", "eccodes"]).head(6)
 ```
 
-In the tutorial, `flexibilize_enz_concs` relaxed 48 enzymes. `summary` has one row per reaction of these enzymes. `tuned` is false, because these *k*{sub}`cat` values were not tuned:
+In the `full_ecModel` tutorial, `flexibilize_enz_concs` with `per_complex` relaxed 40 enzymes. `summary` has one row per reaction of these enzymes, here without the columns `enzymes` and `eccodes`. `tuned` is true for the reaction that `sensitivity_tuning` raised (`r_0279`) and false for the others:
 
 ```text
-         ec_rxn        kcat  tuned  fold  prior   origin        enzymes  src_brenda  src_custom  src_ec_tree  src_okp_kinform_h
-0  r_0001_EXP_2    3.907492  False   NaN    NaN  ec_tree  P32891;P00044       4.185         NaN     3.907492           5.079698
-1  r_0001_EXP_4    3.907492  False   NaN    NaN  ec_tree  P39976;P00044       4.185         NaN     3.907492           5.079698
-2  r_0002_EXP_2    3.907492  False   NaN    NaN  ec_tree  P46681;P00044       4.185         NaN     3.907492           5.079698
-3  r_0004_EXP_2  175.750000  False   NaN    NaN   brenda  P00044;P00175     175.750         NaN    95.721999           5.381835
-4  r_0091_EXP_2   10.000000  False   NaN    NaN   custom         P38858      31.800        10.0    16.198521           8.542798
-5        r_0151    1.325842  False   NaN    NaN  ec_tree         Q05911       2.900         NaN     1.325842           0.629403
+         ec_rxn        kcat  tuned       fold     prior   origin  src_brenda  src_custom  src_ec_tree  src_okp_kinform_h
+0        r_0226  120.000000  False        NaN       NaN   custom   16.500000       120.0    19.526532           1.343644
+1    r_0226_REV  120.000000  False        NaN       NaN   custom  217.000000       120.0    19.526532           1.375854
+2        r_0236    0.235060  False        NaN       NaN  ec_tree    0.730000         NaN     0.235060           0.313903
+3        r_0237    0.235060  False        NaN       NaN  ec_tree    0.730000         NaN     0.235060           0.372521
+4        r_0279    0.865219   True  10.000003  0.086522  ec_tree    0.870000         NaN     0.086522           3.044074
+5  r_0362_EXP_1    4.799680  False        NaN       NaN  ec_tree    0.000874         NaN     4.799680           4.359228
 ```
 
 :::

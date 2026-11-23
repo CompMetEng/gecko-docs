@@ -144,7 +144,18 @@ $P_{tot}$ and $f$ are measured properties of the cell; set them from data when d
 
 ```matlab
 ecModel = setProtPoolSize(ecModel);
+ecModel.ub(strcmp(ecModel.rxns, 'prot_pool_exchange'))
 ecModel = setProtPoolSize(ecModel, 'Ptot', 0.45, 'f', 0.4);
+ecModel.ub(strcmp(ecModel.rxns, 'prot_pool_exchange'))
+```
+
+The upper bound of `prot_pool_exchange` (mg/gDCW) after each call, with the adapter values of the `full_ecModel` tutorial for the first and the given values for the second:
+
+```text
+ans =
+   125
+ans =
+   90.0000
 ```
 
 Each of `Ptot`, `f` and `sigma` that is not given is read from the model adapter (the default adapter, or the one given as `modelAdapter`). The arguments can also be given by position: `setProtPoolSize(ecModel, Ptot, f, sigma, modelAdapter)`.
@@ -155,8 +166,15 @@ Each of `Ptot`, `f` and `sigma` that is not given is read from the model adapter
 ```python
 from geckopy import set_prot_pool_size
 
-set_prot_pool_size(ec_model)
-set_prot_pool_size(ec_model, p_tot=0.45, f=0.4)
+print(set_prot_pool_size(ec_model))
+print(set_prot_pool_size(ec_model, p_tot=0.45, f=0.4))
+```
+
+The upper bound of `prot_pool_exchange` (mg/gDCW) that each call returns, with the adapter values of the `full_ecModel` tutorial for the first and the given values for the second:
+
+```text
+125.0
+90.00000000000001
 ```
 
 Each of `p_tot`, `f` and `sigma` that is not given is read from `ec_model.adapter.params`. The function changes `ec_model` in place and returns the bound it set. It raises a `ValueError` when the ecModel has no `prot_pool_exchange`, or when a value is missing and the ecModel has no adapter.
@@ -176,8 +194,15 @@ $f$ is the mass of the measured proteins that are enzymes of the ecModel (in `ec
 From `data/paxDB.tsv`:
 
 ```matlab
-f = calculateFfactor(ecModel);
+f = calculateFfactor(ecModel)
 ecModel = setProtPoolSize(ecModel, 'f', f);
+```
+
+The *f* from `data/paxDB.tsv` of the `full_ecModel` tutorial:
+
+```text
+f =
+    0.4478
 ```
 
 `calculateFfactor` maps the genes of `data/paxDB.tsv` to UniProt identifiers through `data/uniprot.tsv`. Without `data/paxDB.tsv`, it prints a warning and returns 0.5.
@@ -185,7 +210,14 @@ ecModel = setProtPoolSize(ecModel, 'f', f);
 From proteomics data loaded with `loadProtData` (see [Constrain enzymes with proteomics](proteomics.md)):
 
 ```matlab
-f = calculateFfactor(ecModel, 'protData', protData);
+f = calculateFfactor(ecModel, 'protData', protData)
+```
+
+The *f* from the proteomics data of the `full_ecModel` tutorial, loaded with `loadProtData(3)`:
+
+```text
+f =
+    0.5285
 ```
 
 With several samples in `protData`, the abundance of a protein is averaged over the samples in which it is measured. The option `enzymes` replaces `ec.enzymes` as the list of proteins counted as enzymes.
@@ -199,7 +231,15 @@ From `data/paxDB.tsv`:
 from geckopy import calculate_f_factor
 
 f = calculate_f_factor(ec_model)
+print(f)
 set_prot_pool_size(ec_model, f=f)
+```
+
+The *f* from `data/paxDB.tsv` of the `full_ecModel` tutorial, and the upper bound of `prot_pool_exchange` (mg/gDCW) that `set_prot_pool_size` returns with it:
+
+```text
+0.44779338837830057
+111.94834709457514
 ```
 
 Without `prot_data`, `calculate_f_factor` reads `data/paxDB.tsv` of the project of `ec_model.adapter` and maps its genes to UniProt identifiers through `data/uniprot.tsv`. Without `data/paxDB.tsv`, it logs a warning and returns 0.5.
@@ -208,6 +248,13 @@ From proteomics data loaded with `load_prot_data` (see [Constrain enzymes with p
 
 ```python
 f = calculate_f_factor(ec_model, prot_data)
+print(f)
+```
+
+The *f* from the proteomics data of the `full_ecModel` tutorial, loaded with `load_prot_data(..., [3])`:
+
+```text
+0.5285456869508166
 ```
 
 With several samples, the abundance of a protein is averaged over the samples in which it is measured. The keyword `enzymes` replaces `ec.enzymes` as the list of proteins counted as enzymes.
@@ -228,6 +275,14 @@ Both functions return 0 when no measured protein is an enzyme of the ecModel (Py
 params = ModelAdapterManager.getDefault().getParameters();
 fluxData = loadFluxData(fullfile(params.path, 'data', 'fluxData.tsv'));
 ecModel = setProtPoolSize(ecModel, 'Ptot', fluxData.Ptot(1));
+ecModel.ub(strcmp(ecModel.rxns, 'prot_pool_exchange'))
+```
+
+The upper bound of `prot_pool_exchange` (mg/gDCW) with the `Ptot` of the first condition of the tutorial:
+
+```text
+ans =
+  105.7000
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -237,7 +292,13 @@ ecModel = setProtPoolSize(ecModel, 'Ptot', fluxData.Ptot(1));
 from geckopy import load_flux_data
 
 flux_data = load_flux_data(ec_model.adapter.params.path / "data" / "fluxData.tsv")
-set_prot_pool_size(ec_model, p_tot=float(flux_data.p_tot[0]))
+print(set_prot_pool_size(ec_model, p_tot=float(flux_data.p_tot[0])))
+```
+
+The upper bound of `prot_pool_exchange` (mg/gDCW) with the `p_tot` of the first condition of the tutorial:
+
+```text
+105.7
 ```
 :::
 ::::
@@ -256,6 +317,14 @@ Before the scan, both functions set the bounds of the objective reaction to 0 an
 
 ```matlab
 [ecModel, sigma] = sigmaFitter(ecModel, 'makePlot', false);
+sigma
+```
+
+The fitted $\sigma$ of the `full_ecModel` tutorial after the *k*{sub}`cat` tuning:
+
+```text
+sigma =
+    0.4900
 ```
 
 `sigmaFitter` tests $\sigma$ = 0.01, 0.02, ..., 1 and calculates for each the error $100 \times |\mu_{target} - \mu| / \mu_{target}$ in percent. It selects the smallest $\sigma$ whose error is at most the smallest error plus $10^{-9} \times 100 \times \mu_{best} / \mu_{target}$, where $\mu_{best}$ is the growth rate at the $\sigma$ with the smallest error. This tolerance allows a difference in growth rate of a relative $10^{-9}$ of $\mu_{best}$, which keeps rounding differences of the solver from moving the result. When the target is above the growth rate at $\sigma$ = 1 and the growth rate is constant from some $\sigma$ on, the result is the first $\sigma$ of that plateau with every solver.
@@ -270,6 +339,12 @@ from geckopy import fit_sigma
 
 fit = fit_sigma(ec_model)
 print(fit.sigma)
+```
+
+The fitted $\sigma$ of the `full_ecModel` tutorial after the *k*{sub}`cat` tuning:
+
+```text
+0.49
 ```
 
 `fit_sigma` changes `ec_model` in place and returns a `SigmaFitterResult` with `sigma`, and the arrays `sigma_grid`, `growth_grid` and `error_grid` (the error in percent) for a plot. The keywords `growth_rate`, `p_tot` and `f` replace the adapter values; a `growth_rate` that is not above 0 raises a `ValueError`. The keyword `method` selects the search:

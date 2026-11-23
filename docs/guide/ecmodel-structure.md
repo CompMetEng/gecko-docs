@@ -136,9 +136,20 @@ model = loadConventionalGEM();
 
 % Full ecModel
 [ecModel, noUniprot] = makeEcModel(model);
+numel(ecModel.rxns)
 
 % Light ecModel
 [ecModel, noUniprot] = makeEcModel(model, 'geckoLight', true);
+numel(ecModel.rxns)
+```
+
+The number of reactions of the full and of the light ecModel of the `full_ecModel` tutorial:
+
+```text
+ans =
+        8000
+ans =
+        5643
 ```
 
 `makeEcModel` needs a model in RAVEN format. It raises an error for a model with the field `rules` or `modelID`, which a model loaded with the COBRA Toolbox has; convert such a model with `ravenCobraWrapper`.
@@ -154,9 +165,18 @@ model = load_conventional_gem(adapter)
 
 # Full ecModel
 ec_model = make_ec_model(model, adapter)
+print(len(ec_model.reactions))
 
 # Light ecModel
 ec_model = make_ec_model(model, adapter, gecko_light=True)
+print(len(ec_model.reactions))
+```
+
+The number of reactions of the full and of the light ecModel of the `full_ecModel` tutorial:
+
+```text
+8000
+5643
 ```
 
 `make_ec_model` returns a new `EcModel` and leaves `model` unchanged. It raises a `ValueError` when it is called on an ecModel whose `ec` is already filled.

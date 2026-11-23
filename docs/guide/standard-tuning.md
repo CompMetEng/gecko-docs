@@ -96,7 +96,45 @@ The examples need an ecModel with assigned *k*{sub}`cat` values (`assignKcats`, 
 
 ```matlab
 [ecModel, tunedKcats] = sensitivityTuning(ecModel);
-struct2table(tunedKcats)
+head(struct2table(tunedKcats), 5)
+```
+
+The output in the `full_ecModel` tutorial has one line for each iteration, then the first five tuned reactions:
+
+```text
+Iteration 1: Growth: 0.12264
+Iteration 2: Growth: 0.14288
+Iteration 3: Growth: 0.17898
+Iteration 4: Growth: 0.18977
+Iteration 5: Growth: 0.20102
+Iteration 6: Growth: 0.21066
+Iteration 7: Growth: 0.22559
+Iteration 8: Growth: 0.23202
+Iteration 9: Growth: 0.24004
+Iteration 10: Growth: 0.24851
+Iteration 11: Growth: 0.25702
+Iteration 12: Growth: 0.26489
+Iteration 13: Growth: 0.27324
+Iteration 14: Growth: 0.28187
+Iteration 15: Growth: 0.29095
+Iteration 16: Growth: 0.30322
+Iteration 17: Growth: 0.31673
+Iteration 18: Growth: 0.32726
+Iteration 19: Growth: 0.33858
+Iteration 20: Growth: 0.3494
+Iteration 21: Growth: 0.36002
+Iteration 22: Growth: 0.37092
+Iteration 23: Growth: 0.38319
+Iteration 24: Growth: 0.39368
+Iteration 25: Growth: 0.40475
+Iteration 26: Growth: 0.41643
+          rxns                        rxnNames                       enzymes         oldKcat    newKcat      source
+    ________________    ____________________________________    _________________    _______    _______    ___________
+    {'r_0005_EXP_3'}    {'1,3-beta-glucan synthase'        }    {'Q04952;P06780'}     3.3451    33.451     {'ec_tree'}
+    {'r_0109'      }    {'acetyl-CoA carboxylase, reaction'}    {'P48445;Q00955'}    0.55125    55.125     {'ec_tree'}
+    {'r_0157'      }    {'alanyl-tRNA synthetase'          }    {'P40825'       }    0.54102    5.4102     {'ec_tree'}
+    {'r_0209'      }    {'arginyl-tRNA synthetase'         }    {'Q05506'       }    0.39054    3.9054     {'ec_tree'}
+    {'r_0220'      }    {'Aspartyl-tRNA synthetase'        }    {'P04802'       }     0.2657     2.657     {'ec_tree'}
 ```
 
 The options are name-value pairs (`sensitivityTuning(ecModel, 'foldChange', 5)`) or positional in the order `desiredGrowthRate, modelAdapter, foldChange, protToIgnore, verbose`.
@@ -115,7 +153,44 @@ logging.basicConfig(level=logging.INFO)  # shows the growth rate of each iterati
 tuned = sensitivity_tuning(ec_model)
 pd.DataFrame({"rxn": tuned.rxns, "enzymes": tuned.enzymes,
               "old_kcat": tuned.old_kcat, "new_kcat": tuned.new_kcat,
-              "source": tuned.source})
+              "source": tuned.source}).head(5)
+```
+
+The output in the `full_ecModel` tutorial has one line for each iteration, then the first five tuned reactions:
+
+```text
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 1, growth = 0.122635
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 2, growth = 0.142882
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 3, growth = 0.178984
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 4, growth = 0.189773
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 5, growth = 0.201023
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 6, growth = 0.210656
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 7, growth = 0.225593
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 8, growth = 0.232018
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 9, growth = 0.240037
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 10, growth = 0.248511
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 11, growth = 0.257019
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 12, growth = 0.26489
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 13, growth = 0.273242
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 14, growth = 0.281868
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 15, growth = 0.290947
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 16, growth = 0.303218
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 17, growth = 0.316729
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 18, growth = 0.327261
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 19, growth = 0.338582
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 20, growth = 0.349404
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 21, growth = 0.360019
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 22, growth = 0.370918
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 23, growth = 0.383186
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 24, growth = 0.393678
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 25, growth = 0.404747
+INFO:geckopy.kcat_tuning.sensitivity_tuning:sensitivity_tuning: iteration 26, growth = 0.416428
+            rxn        enzymes  old_kcat   new_kcat   source
+0  r_0005_EXP_3  Q04952;P06780  3.345061  33.450611  ec_tree
+1        r_0109  P48445;Q00955  0.551250  55.124986  ec_tree
+2        r_0157         P40825  0.541024   5.410244  ec_tree
+3        r_0209         Q05506  0.390542   3.905418  ec_tree
+4        r_0220         P04802  0.265703   2.657027  ec_tree
 ```
 
 `sensitivity_tuning` changes `ec_model` in place and returns a `TunedKcatsResult`. It reads the target growth rate from `ec_model.adapter`. The options are keyword arguments.

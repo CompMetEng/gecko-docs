@@ -133,6 +133,19 @@ kcatList = loadKcatSource(ecModel, 'brenda');
 idx = strcmp(kcatList.rxns, 'r_0079');
 table(kcatList.kcats(idx), kcatList.eccodes(idx), kcatList.detail(idx))
 ```
+
+In the `full_ecModel` tutorial, the ecModel takes the *k*{sub}`cat` of `r_0079` from `custom.tsv`, so `ec.source` reads `custom`. `brenda.tsv` still has the BRENDA match for the reaction:
+
+```text
+ans =
+  1x1 cell array
+    {'custom'}
+ans =
+  1x3 table
+    Var1       Var2               Var3
+    ____    ___________    __________________
+    0.05    {'6.3.5.3'}    {'wc=0; origin=4'}
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -143,6 +156,14 @@ from geckopy import load_kcat_source
 print(ec_model.ec.source[ec_model.ec.rxns.index("r_0079")])
 kcat_list, _ = load_kcat_source(ec_model, "brenda")
 kcat_list[kcat_list["rxn_id"] == "r_0079"]
+```
+
+In the `full_ecModel` tutorial, the ecModel takes the *k*{sub}`cat` of `r_0079` from `custom.tsv`, so `ec.source` reads `custom`. `brenda.tsv` still has the BRENDA match for the reaction:
+
+```text
+custom
+    rxn_id  source   eccode                                         substrates genes  kcat  wildcard_level  origin  log10_sd          detail  line
+87  r_0079  brenda  6.3.5.3  [5'-phosphoribosyl-N-formylglycineamide, ATP, ...    []  0.05             0.0     4.0       NaN  wc=0; origin=4    95
 ```
 :::
 ::::
@@ -169,6 +190,13 @@ kcat = sa / 1000 / 60 * mw                   % 1/s
 ecModel = setKcatForReactions(ecModel, 'r_0079', kcat);
 ecModel = applyKcatConstraints(ecModel);
 ```
+
+The *k*{sub}`cat` (1/s) that the specific activity gives:
+
+```text
+kcat =
+    5.3358
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -179,7 +207,15 @@ from geckopy import set_kcat_for_reactions
 sa = 2.15                                    # umol/min/mg protein
 mw = ec_model.ec.mw[ec_model.ec.enzymes.index("P38972")]   # g/mol
 kcat = sa / 1000 / 60 * mw                   # 1/s
+print(kcat)
 set_kcat_for_reactions(ec_model, ["r_0079"], kcat, apply=True)
+```
+
+The *k*{sub}`cat` (1/s) that the specific activity gives, and the reaction that `set_kcat_for_reactions` changed:
+
+```text
+5.3357625
+['r_0079']
 ```
 :::
 ::::

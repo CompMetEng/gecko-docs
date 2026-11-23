@@ -122,6 +122,24 @@ report.sources.custom.invalid
 report.sources.custom.unmatched
 report.sources.custom.partial
 ```
+
+In the `full_ecModel` tutorial, every row of `custom.tsv` is applied, so the three tables are empty:
+
+```text
+Kcats decided for 4834 of 4834 reactions.
+ans =
+  0x4 empty table
+    line    rxn    enzymes    kcat
+    ____    ___    _______    ____
+ans =
+  0x4 empty table
+    line    rxn    enzymes    kcat
+    ____    ___    _______    ____
+ans =
+  0x5 empty table
+    line    rxn    enzymes    ecRxn    ecEnzymes
+    ____    ___    _______    _____    _________
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -131,7 +149,23 @@ from geckopy import assign_kcats
 
 decisions, report = assign_kcats(ec_model)
 custom = report["sources"]["custom"]
-print(custom["invalid"], custom["unmatched"], custom["partial"])
+print(custom["invalid"])
+print(custom["unmatched"])
+print(custom["partial"])
+```
+
+In the `full_ecModel` tutorial, every row of `custom.tsv` is applied, so the three tables are empty:
+
+```text
+Empty DataFrame
+Columns: [line, rxn, enzymes, kcat]
+Index: []
+Empty DataFrame
+Columns: [line, rxn, enzymes, kcat]
+Index: []
+Empty DataFrame
+Columns: [line, rxn, enzymes, ec_rxn, ec_enzymes]
+Index: []
 ```
 :::
 ::::

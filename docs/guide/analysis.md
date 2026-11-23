@@ -150,7 +150,14 @@ The biomass reaction of the model adapter is the objective. The protein pool exc
 ```matlab
 ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);
 sol = solveLP(ecModel);
-maxGrowth = sol.f;
+maxGrowth = sol.f
+```
+
+The maximum growth rate (1/h) of the ecModel of the `full_ecModel` tutorial:
+
+```text
+maxGrowth =
+    0.4081
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -160,6 +167,13 @@ maxGrowth = sol.f;
 ec_model.objective = params.bio_rxn
 sol = ec_model.optimize()
 max_growth = sol.objective_value
+print(max_growth)
+```
+
+The maximum growth rate (1/h) of the ecModel of the `full_ecModel` tutorial:
+
+```text
+0.4080842940317912
 ```
 :::
 ::::
@@ -180,7 +194,14 @@ To see the effect of the protein pool constraint, solve a copy of the ecModel wi
 ecModel = setParam(ecModel, 'lb', params.bioRxn, 0.99 * maxGrowth);
 ecModel = setParam(ecModel, 'obj', 'prot_pool_exchange', -1);
 sol = solveLP(ecModel);
-poolUsage = -sol.f;   % mg/gDCW
+poolUsage = -sol.f   % mg/gDCW
+```
+
+The minimal protein pool usage (mg/gDCW) at 99 % of this growth rate:
+
+```text
+poolUsage =
+  121.2773
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -192,6 +213,13 @@ ec_model.objective = "prot_pool_exchange"
 ec_model.objective_direction = "min"
 sol = ec_model.optimize()
 pool_usage = sol.objective_value   # mg/gDCW
+print(pool_usage)
+```
+
+The minimal protein pool usage (mg/gDCW) at 99 % of this growth rate:
+
+```text
+121.27734105011724
 ```
 :::
 ::::
@@ -217,6 +245,14 @@ ecModel = constrainFluxData(ecModel, fluxData, 1, 'max', 'loose');
 [minFlux(:,1), maxFlux(:,1)] = ecFVA(model, model);
 [minFlux(:,2), maxFlux(:,2)] = ecFVA(ecModel, model);
 plotEcFVA(minFlux, maxFlux);
+median(maxFlux - minFlux)
+```
+
+The median range of the fluxes (`maxFlux - minFlux`, in mmol per gDCW and hour) of the conventional GEM (first value) and of the ecModel (second value) for the first condition of the `full_ecModel` tutorial:
+
+```text
+ans =
+    0.7183    0.4907
 ```
 
 `ecFVA` runs in parallel when the Parallel Computing Toolbox is installed (option `runParallel`, default `true`). `plotEcFVA` takes one column per model, leaves out the reactions whose minimum and maximum are both 0, and plots the cumulative distribution of the ranges (`maxFlux - minFlux`) on a log scale, with the median of each model in the legend.
@@ -238,6 +274,14 @@ fva_ec = ec_fva(ec_model, model)
 ranges = (fva_ec["max_flux"] - fva_ec["min_flux"]).rename("ecModel").to_frame()
 ranges["GEM"] = fva_gem["max_flux"] - fva_gem["min_flux"]
 print(ranges.median())
+```
+
+The median range of the fluxes (in mmol per gDCW and hour) of the ecModel and of the conventional GEM for the first condition of the `full_ecModel` tutorial:
+
+```text
+ecModel    0.490656
+GEM        0.718276
+dtype: float64
 ```
 
 `ec_fva` returns a DataFrame indexed by the reaction identifiers of the conventional GEM, with the columns `min_flux` and `max_flux`. The option `n_proc` sets the number of worker processes (default `cobra.Configuration().processes`). With the default solver GLPK, `ec_fva` is slow on a genome-scale ecModel; a commercial solver (`ec_model.solver = "gurobi"`, with a licence) or more worker processes shorten the run. geckopy has no counterpart of `plotEcFVA`.

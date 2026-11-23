@@ -210,8 +210,23 @@ ecModel = getECfromGEM(ecModel);
 noEC = cellfun(@isempty, ecModel.ec.eccodes);
 ecModel = getECfromDatabase(ecModel, 'ecRxns', noEC);
 ecModel = findMetSmiles(ecModel);
+```
+
+```matlab
 updateKcatSources(ecModel);
 [ecModel, decisions] = assignKcats(ecModel);
+```
+
+`updateKcatSources` prints the status of each source file and `assignKcats` the number of reactions that received a *k*{sub}`cat`. In the `full_ecModel` tutorial, the source files in `data/kcats` are current, so `updateKcatSources` gathers nothing:
+
+```text
+         source            status              note
+    _________________    ___________    ___________________
+    {'custom'       }    {'skipped'}    {'curated by hand'}
+    {'brenda'       }    {'current'}    {0x0 char         }
+    {'ec_tree'      }    {'current'}    {0x0 char         }
+    {'okp_kinform_h'}    {'current'}    {0x0 char         }
+Kcats decided for 4834 of 4834 reactions.
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -229,12 +244,27 @@ kegg_db = load_kegg_tsv(params.path / "data" / "kegg.tsv", kegg_id=params.kegg.i
 fill_eccodes_from_gem(ec_model)
 no_ec = [rxn for rxn, ec in zip(ec_model.ec.rxns, ec_model.ec.eccodes) if not ec]
 fill_eccodes_from_database(ec_model, uniprot_db, kegg_db=kegg_db, ec_rxns=no_ec)
-find_met_smiles(ec_model)
+find_met_smiles(ec_model, cache_path=params.path / "data" / "smilesDB.tsv")
+```
+
+`load_uniprot_tsv` and `load_kegg_tsv` read the files that `make_ec_model` downloaded; `load_kegg_tsv` returns `None` when `kegg.id` is empty and `data/kegg.tsv` does not exist.
+
+```python
 print(update_kcat_sources(ec_model))
 decisions, report = assign_kcats(ec_model)
 ```
 
-`load_uniprot_tsv` and `load_kegg_tsv` read the files that `make_ec_model` downloaded; `load_kegg_tsv` returns `None` when `kegg.id` is empty and `data/kegg.tsv` does not exist. `assign_kcats` changes `ec_model` in place.
+`update_kcat_sources` returns the status of each source file, which the code prints. In the `full_ecModel` tutorial, the source files in `data/kcats` are current, so nothing is gathered:
+
+```text
+          source   status             note
+0         custom  skipped  curated by hand
+1         brenda  current
+2        ec_tree  current
+3  okp_kinform_h  current
+```
+
+`assign_kcats` changes `ec_model` in place.
 :::
 ::::
 
@@ -281,6 +311,13 @@ ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);
 sol = solveLP(ecModel);
 growth = sol.x(strcmp(ecModel.rxns, params.bioRxn))
 ```
+
+The growth rate (1/h) is below `gr_exp`, 0.41 1/h in the tutorial:
+
+```text
+growth =
+    0.1226
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -290,6 +327,12 @@ ec_model.reactions.get_by_id(params.c_source).lower_bound = -1000
 ec_model.objective = params.bio_rxn
 growth = ec_model.slim_optimize()
 print(growth)
+```
+
+The growth rate (1/h) is below `gr_exp`, 0.41 1/h in the tutorial:
+
+```text
+0.12263500085686539
 ```
 :::
 ::::

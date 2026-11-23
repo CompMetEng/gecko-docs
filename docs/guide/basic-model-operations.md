@@ -86,6 +86,14 @@ Perform FBA, optimising the objective:
 
 ```matlab
 sol = solveLP(ecModel);
+sol.f
+```
+
+The growth rate (1/h) of the ecModel of the `full_ecModel` tutorial, with the bounds set above:
+
+```text
+ans =
+    0.4081
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -93,6 +101,13 @@ sol = solveLP(ecModel);
 
 ```python
 sol = ec_model.optimize()
+sol.objective_value
+```
+
+The growth rate (1/h) of the ecModel of the `full_ecModel` tutorial, with the bounds set above:
+
+```text
+0.4080842940317912
 ```
 :::
 ::::
@@ -157,6 +172,35 @@ Through exchange reactions (reactions without substrates or without products, as
 printFluxes(ecModel, sol.x)
 ```
 
+The exchange fluxes of the solution of `getPfbaEnzymes` for the ecModel of the `full_ecModel` tutorial, in mmol per gDCW and hour, and the flux of `prot_pool_exchange` in mg per gDCW and hour:
+
+```text
+EXCHANGE FLUXES:
+r_1654	(ammonium exchange):	-2.6862
+r_1672	(carbon dioxide exchange):	42.5781
+r_1714	(D-glucose exchange):	-27.8831
+r_1761	(ethanol exchange):	43.4316
+r_1810	(L-glycine exchange):	0.033007
+r_1814	(glycolaldehyde exchange):	2.6362e-05
+r_1832	(H+ exchange):	11.2236
+r_1861	(iron(2+) exchange):	-1.2814e-05
+r_1992	(oxygen exchange):	-0.25758
+r_2005	(phosphate exchange):	-0.11391
+r_2020	(potassium exchange):	-0.0014813
+r_2049	(sodium exchange):	-0.0016201
+r_2056	(succinate exchange):	5.2536
+r_2060	(sulphate exchange):	-0.056825
+r_2100	(water exchange):	10.447
+r_2111	(growth):	0.40808
+r_4593	(chloride exchange):	-0.00052643
+r_4594	(Cu2(+) exchange):	-0.00026893
+r_4595	(Mn(2+) exchange):	-0.0011141
+r_4596	(Zn(2+) exchange):	-0.00030525
+r_4597	(Mg(2+) exchange):	-0.00050706
+r_4600	(Ca(2+) exchange):	-8.8554e-05
+prot_pool_exchange	(prot_pool_exchange):	122.4999
+```
+
 Through all reactions:
 
 ```matlab
@@ -177,6 +221,33 @@ Restricted to exchange reactions:
 ```python
 exchange_ids = [r.id for r in ec_model.exchanges]
 print(sol.fluxes[exchange_ids][sol.fluxes[exchange_ids] != 0])
+```
+
+The nonzero exchange fluxes of the solution of `pfba_enzymes` for the ecModel of the `full_ecModel` tutorial, in mmol per gDCW and hour:
+
+```text
+r_1654    -2.686192
+r_1672    42.578070
+r_1714   -27.883064
+r_1761    43.431601
+r_1810     0.033007
+r_1814     0.000026
+r_1832    11.223602
+r_1861    -0.000013
+r_1992    -0.257581
+r_2005    -0.113915
+r_2020    -0.001481
+r_2049    -0.001620
+r_2056     5.253614
+r_2060    -0.056825
+r_2100    10.446978
+r_4593    -0.000526
+r_4594    -0.000269
+r_4595    -0.001114
+r_4596    -0.000305
+r_4597    -0.000507
+r_4600    -0.000089
+Name: fluxes, dtype: float64
 ```
 :::
 ::::

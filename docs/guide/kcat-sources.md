@@ -192,7 +192,7 @@ no_ec = [rxn for rxn, ec in zip(ec_model.ec.rxns, ec_model.ec.eccodes) if not ec
 uniprot_db = load_uniprot_tsv(data / "uniprot.tsv")
 kegg_db = load_kegg_tsv(data / "kegg.tsv")
 fill_eccodes_from_database(ec_model, uniprot_db, kegg_db=kegg_db, ec_rxns=no_ec)
-find_met_smiles(ec_model)
+find_met_smiles(ec_model, cache_path=data / "smilesDB.tsv")
 ```
 :::
 ::::
@@ -213,6 +213,23 @@ When the EC numbers of the GEM are not reliable, skip `getECfromGEM` and fill al
 report = updateKcatSources(ecModel, 'dryRun', true);
 report = updateKcatSources(ecModel);
 ```
+
+The status of the source files before and after `updateKcatSources` in the `full_ecModel` tutorial, whose source files are current:
+
+```text
+         source            status              note
+    _________________    ___________    ___________________
+    {'custom'       }    {'skipped'}    {'curated by hand'}
+    {'brenda'       }    {'current'}    {0x0 char         }
+    {'ec_tree'      }    {'current'}    {0x0 char         }
+    {'okp_kinform_h'}    {'current'}    {0x0 char         }
+         source            status              note
+    _________________    ___________    ___________________
+    {'custom'       }    {'skipped'}    {'curated by hand'}
+    {'brenda'       }    {'current'}    {0x0 char         }
+    {'ec_tree'      }    {'current'}    {0x0 char         }
+    {'okp_kinform_h'}    {'current'}    {0x0 char         }
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -221,7 +238,24 @@ report = updateKcatSources(ecModel);
 from geckopy import update_kcat_sources
 
 report = update_kcat_sources(ec_model, dry_run=True)
+print(report)
 report = update_kcat_sources(ec_model)
+print(report)
+```
+
+The status of the source files before and after `update_kcat_sources` in the `full_ecModel` tutorial, whose source files are current:
+
+```text
+          source   status             note
+0         custom  skipped  curated by hand
+1         brenda  current
+2        ec_tree  current
+3  okp_kinform_h  current
+          source   status             note
+0         custom  skipped  curated by hand
+1         brenda  current
+2        ec_tree  current
+3  okp_kinform_h  current
 ```
 :::
 ::::
@@ -280,6 +314,37 @@ b = collectKcats(ecModel, 'modelAdapter', other, 'writeReport', false);
 groupcounts(a, 'stage')
 groupcounts(b, 'stage')
 ```
+
+The number of reactions per stage for the default preset (first table) and for `ec_tree_okp` (second table), after the messages of `updateKcatSources` and `collectKcats`:
+
+```text
+Homolog kcats for 352 reactions written to /tmp/ecMyModel/data/kcats/homologs.tsv
+         source             status              note
+    _________________    ____________    ___________________
+    {'custom'       }    {'skipped' }    {'curated by hand'}
+    {'brenda'       }    {'current' }    {0x0 char         }
+    {'ec_tree'      }    {'current' }    {0x0 char         }
+    {'homologs'     }    {'gathered'}    {0x0 char         }
+    {'okp_kinform_h'}    {'current' }    {0x0 char         }
+Kcats decided for 4834 of 4834 reactions.
+Kcats decided for 4834 of 4834 reactions.
+ans =
+  4x3 table
+       stage        GroupCount    Percent
+    ____________    __________    _______
+    {'1'       }       4003        82.809
+    {'2'       }        577        11.936
+    {'isozymes'}          3       0.06206
+    {'standard'}        251        5.1924
+ans =
+  4x3 table
+       stage        GroupCount    Percent
+    ____________    __________    _______
+    {'1'       }        431         8.916
+    {'2'       }       4149         85.83
+    {'isozymes'}          3       0.06206
+    {'standard'}        251        5.1924
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -296,6 +361,23 @@ b, _, _ = collect_kcats(ec_model, write_report=False)
 settings.preset = default_preset
 print(a["stage"].value_counts())
 print(b["stage"].value_counts())
+```
+
+The number of reactions per stage for the default preset (first count) and for `ec_tree_okp` (second count):
+
+```text
+stage
+1           4003
+2            577
+standard     251
+isozymes       3
+Name: count, dtype: int64
+stage
+2           4149
+1            431
+standard     251
+isozymes       3
+Name: count, dtype: int64
 ```
 :::
 ::::

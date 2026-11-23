@@ -113,7 +113,22 @@ ecModel = setParam(ecModel, 'obj', 'prot_pool_exchange', -1);
 sol = solveLP(ecModel);
 usageData   = getEnzymeUsage(ecModel, sol.x);
 usageReport = reportEnzymeUsage(ecModel, usageData);
-usageReport.topAbsUsage
+usageReport.topAbsUsage(1:6, 1:7)
+```
+
+The first six rows of `topAbsUsage` for the ecModel of the `full_ecModel` tutorial, without the reaction names. A row marked `===` gives the combined usage of an enzyme with several reactions, which the following rows list:
+
+```text
+ans =
+  6x7 table
+      protID        geneID       absUsage    percUsage      kcat        source            rxnID
+    __________    ___________    ________    _________    ________    ___________    ________________
+    {'P05375'}    {'YJR073C'}     3.8237      3.1214           NaN    {'==='    }    {'==='         }
+    {'P05375'}    {'YJR073C'}     1.9119      1.5607      0.046523    {'ec_tree'}    {'r_2500'      }
+    {'P05375'}    {'YJR073C'}     1.9119      1.5607      0.046523    {'ec_tree'}    {'r_2508'      }
+    {'P16120'}    {'YCR053W'}      3.607      2.9445       0.42053    {'ec_tree'}    {'r_1041'      }
+    {'P00549'}    {'YAL038W'}     3.3606      2.7434           232    {'custom' }    {'r_0962_EXP_1'}
+    {'P40009'}    {'YER005W'}     3.2601      2.6613        68.529    {'ec_tree'}    {'r_0227_EXP_3'}
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -128,7 +143,19 @@ ec_model.objective_direction = "min"
 sol = ec_model.optimize()
 usage = enzyme_usage(ec_model, sol.fluxes)
 report = report_enzyme_usage(ec_model, usage)
-report.top_abs_usage
+report.top_abs_usage.iloc[:6, :7]
+```
+
+The first six rows of `top_abs_usage` for the ecModel of the `full_ecModel` tutorial, without the reaction names and the gene rules. A row marked `===` gives the combined usage of an enzyme with several reactions, which the following rows list:
+
+```text
+  prot_id  gene_id  abs_usage  perc_usage        kcat   source        rxn_id
+0  P05375  YJR073C   3.823706    3.121392         NaN      ===           ===
+1  P05375  YJR073C   1.911853    1.560696    0.046523  ec_tree        r_2500
+2  P05375  YJR073C   1.911853    1.560696    0.046523  ec_tree        r_2508
+3  P16120  YCR053W   3.606978    2.944472    0.420531  ec_tree        r_1041
+4  P00549  YAL038W   3.360605    2.743351  232.000000   custom  r_0962_EXP_1
+5  P40009  YER005W   3.260084    2.661293   68.529456  ec_tree  r_0227_EXP_3
 ```
 :::
 ::::
@@ -176,7 +203,30 @@ The `source` column shows where the *k*{sub}`cat` of the reaction came from. An 
 
 ```matlab
 ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);
-bottlenecks = getEnzymeBottlenecks(ecModel, 'top', 10);
+bottlenecks = getEnzymeBottlenecks(ecModel, 'top', 10)
+```
+
+In the `full_ecModel` tutorial at the maximum growth rate, no enzyme is at its usage bound, so the function warns and every `objectiveGain` is 0:
+
+```text
+[Warning: getEnzymeBottlenecks: no enzyme is at its usage bound, so no single
+enzyme limits the objective; the protein pool exchange is at its bound. Every
+objectiveGain is 0 and the rows are in model order.]
+[> In getEnzymeBottlenecks (line 132)]
+bottlenecks =
+  10x8 table
+     uniprot         gene        objectiveGain    shadowPrice       flux        capUsage     upperBound    multipleActive
+    __________    ___________    _____________    ___________    __________    __________    __________    ______________
+    {'P00401'}    {'Q0045'  }          0          -0.0033377      0.0014396    1.4396e-06       1000           true
+    {'P00856'}    {'Q0080'  }          0          -0.0033377      0.0010686    1.0686e-06       1000           true
+    {'P00854'}    {'Q0085'  }          0          -0.0033377      0.0053408    5.3408e-06       1000           true
+    {'P00163'}    {'Q0105'  }          0          -0.0033377       0.048374    4.8374e-05       1000           true
+    {'P61829'}    {'Q0130'  }          0          -0.0033377      0.0014241    1.4241e-06       1000           true
+    {'P00410'}    {'Q0250'  }          0          -0.0033377     0.00069943    6.9943e-07       1000           true
+    {'P00420'}    {'Q0275'  }          0          -0.0033377     0.00074333    7.4333e-07       1000           true
+    {'P31373'}    {'YAL012W'}          0          -0.0033377        0.12056    0.00012056       1000           true
+    {'P31381'}    {'YAL022C'}          0                   0              0             0       1000           true
+    {'P31382'}    {'YAL023C'}          0          -0.0033377              0             0       1000           true
 ```
 
 The result is a table sorted by `objectiveGain`. `bottlenecks.Properties.UserData.nResolved` is the number of enzymes that were solved again, and `UserData.activeConstraints` the number of active capacity constraints.
@@ -190,6 +240,25 @@ from geckopy import get_enzyme_bottlenecks
 ec_model.objective = params.bio_rxn
 ec_model.objective_direction = "max"
 bottlenecks = get_enzyme_bottlenecks(ec_model, top=10)
+print(bottlenecks)
+```
+
+In the `full_ecModel` tutorial at the maximum growth rate, no enzyme is at its usage bound, so the function warns and every `objective_gain` is 0:
+
+```text
+get_enzyme_bottlenecks: no enzyme is at its usage bound, so no single enzyme limits the objective; the protein pool exchange is at its bound. Every objective_gain is 0 and the rows are in model order.
+            gene  objective_gain  shadow_price      flux     cap_usage  upper_bound  multiple_active
+uniprot
+P00401     Q0045             0.0     -0.003338  0.001440  1.439594e-06       1000.0             True
+P00856     Q0080             0.0     -0.003338  0.001069  1.068569e-06       1000.0             True
+P00854     Q0085             0.0     -0.003338  0.005341  5.340827e-06       1000.0             True
+P00163     Q0105             0.0     -0.003338  0.048374  4.837394e-05       1000.0             True
+P61829     Q0130             0.0     -0.003338  0.001424  1.424086e-06       1000.0             True
+P00410     Q0250             0.0     -0.003338  0.000699  6.994268e-07       1000.0             True
+P00420     Q0275             0.0     -0.003338  0.000743  7.433261e-07       1000.0             True
+P31373   YAL012W             0.0     -0.003338  0.120562  1.205622e-04       1000.0             True
+P31381   YAL022C             0.0     -0.003338  0.000000  0.000000e+00       1000.0             True
+P31382   YAL023C             0.0     -0.003338  0.000000  0.000000e+00       1000.0             True
 ```
 
 The result is a DataFrame indexed by UniProt identifier. `bottlenecks.attrs["n_resolved"]` and `bottlenecks.attrs["active_constraints"]` hold the same two numbers as in MATLAB.

@@ -39,7 +39,7 @@ A conventional reaction name selects every `ec.rxns` row of the reaction, that i
 summary(1:6, [1:6 9:end])
 ```
 
-The tutorial ecModel of yeast tuned 26 *k*{sub}`cat` values. `summary` has one row per tuned reaction (here without the columns `enzymes` and `eccodes`):
+The tutorial ecModel of yeast tuned 23 reactions in 26 steps. `summary` has one row per tuned reaction (here without the columns `enzymes` and `eccodes`):
 
 ```text
          ecRxn           kcat      tuned    fold     prior        origin       src_brenda    src_custom    src_ec_tree    src_okp_kinform_h
@@ -88,7 +88,7 @@ result = kcat_evidence(ec_model, tuned=tuned)
 result.summary.drop(columns=["enzymes", "eccodes"]).head(6)
 ```
 
-The tutorial ecModel of yeast tuned 26 *k*{sub}`cat` values. `summary` has one row per tuned reaction (here without the columns `enzymes` and `eccodes`):
+The tutorial ecModel of yeast tuned 23 reactions in 26 steps. `summary` has one row per tuned reaction (here without the columns `enzymes` and `eccodes`):
 
 ```text
          ec_rxn       kcat  tuned       fold     prior   origin  src_brenda  src_custom  src_ec_tree  src_okp_kinform_h
