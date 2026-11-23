@@ -36,7 +36,7 @@ Installs the `develop` branch of both packages, which is ahead of the latest PyP
 git clone --depth=1 https://github.com/CompMetEng/GECKO
 ```
 
-Then run `GECKOInstaller.install` in MATLAB. The clone is the `develop` branch; `--branch <tag>` selects a release tag listed on the [tags page](https://github.com/CompMetEng/GECKO/tags).
+Then run `GECKOInstaller.install` in MATLAB. GECKO 4 needs RAVEN 3.0.0b3 or later ([installation](installation/index.md)). The clone is the `develop` branch; `--branch <tag>` selects a release tag listed on the [tags page](https://github.com/CompMetEng/GECKO/tags).
 :::
 :::{tab-item} MATLAB (Add-Ons)
 
@@ -148,11 +148,11 @@ Publications that use GECKO cite:
 
 > Chen, Y., Gustafsson, J., Tafur Rangel, A., Anton, M., Domenzain, I., Kittikunapong, C., Li, F., Yuan, L., Nielsen, J. & Kerkhoven, E. J. **Reconstruction, simulation and analysis of enzyme-constrained metabolic models using GECKO Toolbox 3.0.** *Nature Protocols* **19**, 629-667 (2024). <https://doi.org/10.1038/s41596-023-00931-7>
 
-See [Citations](references.md) for the full list, including papers that have used this protocol.
+See [Citations](references.md) for the full list.
 
 ## Source code
 
-GECKO is publicly available under the MIT licence at <https://github.com/CompMetEng/GECKO>, archived at <https://doi.org/10.5281/zenodo.7699818>. geckopy, the Python port, is at <https://github.com/CompMetEng/geckopy>.
+GECKO is publicly available under the GNU General Public License v3 at <https://github.com/CompMetEng/GECKO>, archived at <https://doi.org/10.5281/zenodo.7699818>. geckopy, the Python port, is released under the same licence at <https://github.com/CompMetEng/geckopy>.
 
 ## Getting help
 

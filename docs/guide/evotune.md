@@ -326,7 +326,7 @@ Different kcat vectors can fit the data equally well, so two seeds can move a kc
 
 ## Run evotune from start to end
 
-The scripts below run the steps of this page on the project of the tutorial `full_ecModel`: they rank the kcats, tune with two seeds on the same kcats, list the large changes of both seeds and save the tuned ecModel. They start from the ecModel that the tutorial saves before its kcat tuning, with assigned kcats and a set protein pool: `ecYeastGEM_stage_untuned.yml` from `protocol.m` in GECKO, and `ecYeastGEM_stage2.yml` from `protocol.py` in geckopy. Run the tutorial first, and replace `path/to/full_ecModel` with the path of its project. The number of parallel processes is read from the variable `SLURM_CPUS_PER_TASK` of the scheduler, with 8 when it is not set.
+The scripts below run the steps of this page on the project of the tutorial `full_ecModel`: they rank the kcats, tune with two seeds on the same kcats, list the large changes of both seeds and save the tuned ecModel. They start from the ecModel that the tutorial saves before its kcat tuning, with assigned kcats and a set protein pool: `ecYeastGEM_stage_untuned.yml` from `protocol.m` in GECKO, and `ecYeastGEM_stage2.yml` from `protocol.py` in geckopy. Run the tutorial first, and replace `path/to/full_ecModel` with the path of its project. The scripts use 8 parallel processes; set `nProc` (Python `n_proc`) to the number of cores of the computer.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -337,8 +337,7 @@ The scripts below run the steps of this page on the project of the tutorial `ful
 ModelAdapterManager.setDefault('path/to/full_ecModel');
 params = ModelAdapterManager.getDefault().getParameters();
 setRavenSolver('gurobi');
-nProc = str2double(getenv('SLURM_CPUS_PER_TASK'));
-if isnan(nProc), nProc = 8; end
+nProc = 8;
 outDir = fullfile(params.path, 'output');
 
 % The ecModel with assigned kcats and a set protein pool, saved by protocol.m
@@ -394,7 +393,7 @@ sys.path.insert(0, os.path.join(project, "code"))
 from anaerobic import make_anaerobic  # noqa: E402
 
 adapter = ModelAdapter.from_folder(project)
-n_proc = int(os.environ.get("SLURM_CPUS_PER_TASK", 8))
+n_proc = 8
 out_dir = os.path.join(project, "output")
 
 # The ecModel with assigned kcats and a set protein pool, saved by protocol.py
@@ -454,24 +453,9 @@ import cobra
 print(cobra.Configuration().solver)
 ```
 
-### Run on an HPC cluster
+### Run a long tuning
 
-The screen and the tuning run in parallel over `nProc` (Python `n_proc`) processes, so a job on one node with several cores fits. An example job for the Slurm scheduler; the names of the modules and the account depend on the cluster:
-
-```bash
-#!/usr/bin/env bash
-#SBATCH -A <account>
-#SBATCH -N 1
-#SBATCH -c 32
-#SBATCH -t 24:00:00
-#SBATCH -J evotune
-#SBATCH -o evotune.%j.out
-
-module load MATLAB Gurobi
-matlab -batch "runEvotune"
-```
-
-For Python, load the Python environment with geckopy and `gurobipy`, and replace the last line with `python run_evotune.py`. Set the time limit with a margin: when the scheduler stops the job, the files that the script has not yet written are lost, and the scripts save the tuned ecModel at the end. MATLAB needs the Parallel Computing Toolbox for `nProc` above 1.
+The screen and the tuning run in parallel over `nProc` (Python `n_proc`) processes, so a computer with many cores shortens a long run. MATLAB needs the Parallel Computing Toolbox for `nProc` above 1. The scripts save the tuned ecModel at the end, so a run that is stopped before it ends loses the results that the script has not yet written. Run a long job in a way that keeps it alive when the terminal closes, and set a time limit, if the computer has one, with a margin over the expected run time.
 
 ### Choose the number of kcats and generations
 

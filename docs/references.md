@@ -1,6 +1,6 @@
 # Citations
 
-## GECKO 3
+## GECKO 3 protocol
 
 > Chen, Y., Gustafsson, J., Tafur Rangel, A., Anton, M., Domenzain, I.,
 > Kittikunapong, C., Li, F., Yuan, L., Nielsen, J. & Kerkhoven, E. J. (2024).
@@ -29,10 +29,6 @@
 > constraints.** *Molecular Systems Biology* 13: 935.
 > <https://doi.org/10.15252/msb.20167411>
 
-## Code and data availability
+## Source code and licence
 
-The source code of the GECKO toolbox is publicly available under the MIT license
-at [https://github.com/CompMetEng/GECKO/](https://github.com/CompMetEng/GECKO/),
-also archived at
-[https://doi.org/10.5281/zenodo.7699818](https://doi.org/10.5281/zenodo.7699818).
-All limited data used in the tutorials are distributed as part of the code.
+The source code of the GECKO toolbox is released under the GNU General Public License v3 at [github.com/CompMetEng/GECKO](https://github.com/CompMetEng/GECKO) and archived at [doi.org/10.5281/zenodo.7699818](https://doi.org/10.5281/zenodo.7699818). geckopy, the Python package, is released under the same licence at [github.com/CompMetEng/geckopy](https://github.com/CompMetEng/geckopy). The data of the tutorials are distributed with the code.

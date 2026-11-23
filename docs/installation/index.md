@@ -1,7 +1,3 @@
----
-icon: material/folder-open
----
-
 # Installation
 
 GECKO is available as a MATLAB toolbox and as the Python package geckopy. Both implement the same procedure and reconstruct, simulate and analyse the same ecModels (see [GECKO and geckopy](../gecko-to-geckopy.md)). GECKO 4 and geckopy 4 are pre-releases.
@@ -38,7 +34,7 @@ Both toolboxes also need a linear-programming solver (see [Choosing a solver](#c
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
-Installation instructions are in the [RAVEN documentation](https://raven-docs.readthedocs.io/en/latest/installation/raven.html): the repository is downloaded with `git clone`, as a ZIP archive from GitHub, or installed as a MATLAB Add-On. Instructions for installing the solver Gurobi are in the same page, under [Choosing and configuring a solver](https://raven-docs.readthedocs.io/en/latest/installation/raven.html#choosing-and-configuring-a-solver).
+Installation instructions are in the [RAVEN documentation](https://raven-docs.readthedocs.io/en/latest/installation/raven.html): the repository is downloaded with `git clone` or as a ZIP archive from GitHub. The MATLAB Add-On installs RAVEN 2, which GECKO 4 does not support. Instructions for installing the solver Gurobi are in the same page, under [Choosing and configuring a solver](https://raven-docs.readthedocs.io/en/latest/installation/raven.html#choosing-and-configuring-a-solver).
 
 After finishing installation, run the checks in MATLAB:
 
@@ -126,7 +122,7 @@ To remove:
 pip uninstall geckopy raven-toolbox
 ```
 
-geckopy installs the command-line tool `geckopy` with the subcommands `init` (new ecModel project), `upgrade` (GECKO 3 project to the GECKO 4 layout), `brenda-refresh`, `uniprot-download` and `kegg-download`.
+geckopy installs the command-line tool `geckopy` with the subcommands `init` (new ecModel project), `upgrade` (GECKO 3 project to the GECKO 4 layout), `brenda-refresh`, `uniprot-download`, `kegg-download` and `adapter` (`adapter show` prints the parameters of a project).
 :::
 ::::
 
@@ -138,12 +134,12 @@ geckopy installs the command-line tool `geckopy` with the subcommands `init` (ne
 | SCIP | Open source | Open-source solver of RAVEN (`setRavenSolver('scip')`); RAVEN provides a precompiled MEX binary for Windows only, and other systems compile the interface |
 | HiGHS through the optlang scipy interface | Open source | Solver of geckopy that needs no licence |
 
-MATLAB reaches the solvers through RAVEN and the COBRA Toolbox, Python through cobrapy.
+MATLAB reaches the solvers through RAVEN, Python through cobrapy.
 
 :::{admonition} Avoid GLPK
 :class: tip
 
-GLPK, the default solver of RAVEN, is not recommended for GECKO: ecModels are larger and more numerically demanding than the conventional GEMs for which GLPK is adequate. Configure Gurobi, or in MATLAB SCIP, before working with an ecModel of genome scale.
+GLPK, the default solver of RAVEN, is not recommended for GECKO: it solves a genome-scale ecModel many times slower than Gurobi, which lengthens the flux variability analysis and the kcat tuning. Configure Gurobi, or in MATLAB SCIP, before working with an ecModel of genome scale.
 :::
 
 ## OpenKineticsPredictor

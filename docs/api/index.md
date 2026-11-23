@@ -1,13 +1,9 @@
----
-icon: material/folder-open
----
-
 # API reference
 
 GECKO ships as two implementations that build the **same** enzyme-constrained
 metabolic models with the same algorithms:
 
-- **GECKO**: the **MATLAB** toolbox, built on RAVEN and the COBRA Toolbox.
+- **GECKO**: the **MATLAB** toolbox, built on RAVEN.
   Functions use `camelCase` names.
 - **geckopy**: the **Python** implementation, built on cobrapy. Functions use
   `snake_case` names.
