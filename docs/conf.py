@@ -112,9 +112,8 @@ html_theme_options = {
     "announcement": (
         "This site documents GECKO <strong>4.0.0b3</strong> "
         "(MATLAB and Python), a pre-release version. The API may still "
-        "change before the stable 4.0.0 release. Changes: "
-        '<a href="https://github.com/CompMetEng/GECKO/releases/tag/4.0.0b3">GECKO</a>, '
-        '<a href="https://github.com/CompMetEng/geckopy/blob/main/CHANGELOG.md">geckopy</a>.'
+        "change before the stable 4.0.0 release. "
+        '<a href="{release_notes}">Release notes</a>.'
     ),
 }
 
@@ -138,4 +137,14 @@ def setup(app):
     import gen_api_pages
 
     gen_api_pages.generate(Path(__file__).resolve().parent)
+
+    def link_release_notes(app, pagename, templatename, context, doctree):
+        """Point the announcement to the release notes from every page."""
+        announcement = context.get("theme_announcement")
+        if announcement and "{release_notes}" in announcement:
+            context["theme_announcement"] = announcement.replace(
+                "{release_notes}", context["pathto"]("release-notes/index")
+            )
+
+    app.connect("html-page-context", link_release_notes)
     return autolink.setup(app)

@@ -169,5 +169,6 @@ Report a bug or request a feature against whichever implementation it concerns; 
 migrate
 guide/index
 api/index
+release-notes/index
 references
 ```

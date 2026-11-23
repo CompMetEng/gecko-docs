@@ -398,3 +398,10 @@ jobTag
 job_tag
 flexed_enzymes
 src_ec_tree
+match_okp
+kcat_aggregate_brenda
+splitGeneCells
+parseGECKOargs
+parseRAVENargs
+fillCarbonNum
+evoData
