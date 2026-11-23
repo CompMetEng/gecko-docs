@@ -40,7 +40,7 @@ One documentation site for **GECKO**, the MATLAB toolbox, and **geckopy**, its P
   - *Features*: cards, each linking into the guide, with sentences of one grammar;
   - *Quick start*: an example in both languages, MATLAB first, that links [Build an ecModel](docs/guide/first-ecmodel.md) and the ecModels repository for the model it loads, and says what the project folder holds;
   - *Documentation*: cards for Installation, Build an ecModel, Guide, API reference, MATLAB and Python, Migration and Release notes, each with a sentence that names what the page holds;
-  - *Help*: one table with GECKO and geckopy as rows and Issues and Discussions as columns, text links.
+  - *Help*: two cards, one to report a bug or request a feature and one to ask a usage question, each with a link per repository.
 
   The home page holds no paper, no licence text, no DOI and no source-code section: the papers and the way to cite are on the references page, and the repositories are the two icons of the navbar. Every page ends with a footer that has the link to the Kerkhoven lab (<https://www.kerkhovenlab.eu>) with the mark of the lab, and a link to raven-docs with its icon, and nothing else.
 - **Installation** (`docs/installation/`), at the root of the sidebar before the guide. The sub-headings are Requirements, Install, Verify, Upgrade, Remove and Solver, in the order that the reader needs them. The solver section says why GLPK is not recommended for ecModels.

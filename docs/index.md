@@ -187,12 +187,23 @@ The changes of each release of GECKO and geckopy.
 
 ## Help
 
-Report a bug or request a feature against the implementation that it concerns; ask a usage question in the Discussions of either repository.
+::::{grid} 1 2 2 2
 
-| Repository | Issues | Discussions |
-| --- | --- | --- |
-| GECKO (MATLAB) | [Issues](https://github.com/CompMetEng/GECKO/issues) | [Discussions](https://github.com/CompMetEng/GECKO/discussions) |
-| geckopy (Python) | [Issues](https://github.com/CompMetEng/geckopy/issues) | [Discussions](https://github.com/CompMetEng/geckopy/discussions) |
+:::{grid-item-card} {octicon}`bug` Report a bug or request a feature
+Open an issue in the repository of the implementation that it concerns.
+
+- [GECKO (MATLAB) issues](https://github.com/CompMetEng/GECKO/issues)
+- [geckopy (Python) issues](https://github.com/CompMetEng/geckopy/issues)
+:::
+
+:::{grid-item-card} {octicon}`comment-discussion` Ask a usage question
+Start a discussion in the repository of the implementation that it concerns.
+
+- [GECKO (MATLAB) discussions](https://github.com/CompMetEng/GECKO/discussions)
+- [geckopy (Python) discussions](https://github.com/CompMetEng/geckopy/discussions)
+:::
+
+::::
 
 ```{toctree}
 :hidden:
