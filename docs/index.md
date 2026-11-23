@@ -134,6 +134,13 @@ print(f"Growth rate: {sol.objective_value:.4f} h-1")
 
 ::::{grid} 1 2 2 2
 
+:::{grid-item-card} Installation
+:link: installation/index
+:link-type: doc
+
+The requirements, the installation, the upgrade and the removal of GECKO and geckopy, and the choice of a solver.
+:::
+
 :::{grid-item-card} Build an ecModel
 :link: guide/first-ecmodel
 :link-type: doc
@@ -153,13 +160,6 @@ One page per choice, from the ecModel structure to the analysis, with MATLAB and
 :link-type: doc
 
 The functions of GECKO and geckopy, generated from their sources.
-:::
-
-:::{grid-item-card} Installation
-:link: installation/index
-:link-type: doc
-
-The requirements, the installation, the upgrade and the removal of GECKO and geckopy, and the choice of a solver.
 :::
 
 :::{grid-item-card} MATLAB and Python
