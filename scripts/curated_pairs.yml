@@ -19,7 +19,6 @@ aliases:
   applyECcodes: copy_ec_to_gem
   assignKcatValues: apply_kcat_list
   constrainFluxData: apply_flux_data_constraints
-  evotuneScore: evotune_distance
   fillKcatsFromIsozymes: fill_kcats_from_isozymes
   getComplexFamilies: complex_families
   getEcRxnKeys: ec_rxn_keys
