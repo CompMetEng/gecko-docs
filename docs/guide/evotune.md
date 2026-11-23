@@ -59,7 +59,7 @@ flowchart TB
   classDef opt stroke-dasharray: 5 4
   classDef ctx fill:transparent,stroke-dasharray: 2 3
   PV(["Previous: Choose a kcat tuning<br/>(protein pool set, sigma not fitted)"]):::ctx
-  DF["prepare the data files<br/>(read by load_evotune_data, which the tuning calls)"]
+  DF["prepare the data files<br/>(read by load_experiment_data, which the tuning calls)"]
   CG["[evotune] in model_adapter.toml"]
   SC["screen_kcat_leverage"]
   RV["review_assignment<br/>ec_stats_from_brenda"]:::opt
@@ -87,7 +87,7 @@ flowchart TB
 
 | MATLAB | Python | Note |
 | --- | --- | --- |
-| `loadEvotuneData` | `load_evotune_data` | reads the three data files; the tuning functions call it when no data are given |
+| `loadEvotuneData` | `load_experiment_data` | reads the three data files (see [Experimental data](experimental-data.md)); the tuning functions call it when no data are given |
 | `screenKcatLeverage` | `screen_kcat_leverage` | ranks the kcats by their effect on the fit, without tuning |
 | `selectTunableMask` | `select_tunable_mask` | selects the top kcats of the screen for the search |
 | `reviewKcatAssignment` | `review_assignment` | flags kcat assignments that may be wrong, independent of the data |
@@ -98,23 +98,23 @@ flowchart TB
 ## Setup
 
 - An ecModel with assigned kcats (see [Choose the kcat sources](kcat-sources.md)) and a set protein pool (see [Set the protein pool](protein-pool.md)), in a project with `model_adapter.toml`.
-- At least one of the files `evotuneMaxGrowth.tsv` and `evotuneFluxData.tsv` in the `data` folder of the project. The two files can be combined: the exchange fluxes of `evotuneFluxData.tsv` constrain the distribution of the fluxes in a condition, and the maximum growth rates of `evotuneMaxGrowth.tsv` constrain the growth rate on each carbon source. The tutorial `full_ecModel` of GECKO has all three data files in its `data` folder.
+- At least one of the files `maxGrowth.tsv` and `fluxData.tsv` in the `data` folder of the project. The two files can be combined: `fluxData.tsv` holds the flux conditions, with the uptake of the carbon source limited to the measured rate, and its exchange fluxes constrain the distribution of the fluxes in a condition; `maxGrowth.tsv` holds the maximum-growth conditions, with the uptake of the carbon source unlimited, and constrains the growth rate on each carbon source. The tutorial `full_ecModel` of GECKO has all three data files in its `data` folder.
 - MATLAB: `nProc` above 1 needs the Parallel Computing Toolbox. `cmaesKcatTuning` has its own CMA-ES. Python: geckopy installs the CMA-ES package `cma`.
 
 ## Prepare the data files
 
-`loadEvotuneData` reads three tab-separated files from `<project>/data/`. A missing file is skipped.
+`loadEvotuneData` (Python `load_experiment_data`) reads three tab-separated files from `<project>/data/`. A missing file is skipped. [Experimental data](experimental-data.md) describes the files and their scoring in full.
 
 | File | Contents |
 | --- | --- |
-| `evotuneMaxGrowth.tsv` | maximum growth rates, one row per condition |
-| `evotuneFluxData.tsv` | growth rates and exchange fluxes, one row per condition |
-| `evotuneZeroExch.tsv` | reactions that carry no flux in any condition of `evotuneFluxData.tsv` |
+| `maxGrowth.tsv` | maximum-growth conditions: maximum growth rates, one row per condition |
+| `fluxData.tsv` | flux conditions: growth rates and exchange fluxes, one row per condition |
+| `zeroFlux.tsv` | reactions that carry no flux in any condition of `fluxData.tsv` |
 
 The first two files have the layout of the flux data file that `loadFluxData` reads:
 
 ```text
-Condition	Ptot	grRate	glucose (r_1714)	fructose (r_1709)	oxygen (r_1992)	ethanol (r_1761)	evotuneRMSEweight	source
+Condition	Ptot	grRate	glucose (r_1714)	fructose (r_1709)	oxygen (r_1992)	ethanol (r_1761)	weight	source
 glucose	NaN	0.41	-1000	NaN	NaN	NaN	1	reference
 fructose	NaN	0.338	NaN	-1000	NaN	NaN	1	reference
 ```
@@ -125,17 +125,21 @@ fructose	NaN	0.338	NaN	-1000	NaN	NaN	1	reference
 | 2 (`Ptot`) | total protein content in g/gDCW, or `NaN`. A value other than `NaN` or 0 changes the protein content of the biomass for that condition (see [Conditions that change the model](#conditions-that-change-the-model)) |
 | 3 (`grRate`) | measured growth rate in 1/h |
 | `<metabolite> (<reaction id>)` | measured exchange flux in mmol/gDCW/h, or `NaN` when it was not measured. A column `oxygen` with the value 0 makes the condition anaerobic |
-| `evotuneRMSEweight` | optional; the RMSE of the row is multiplied by this weight |
+| `weight` | optional; the error of the row is multiplied by this weight, so that a row of lower quality counts less. A row with the weight 0 is left out of the simulation and of the score; without the column every row has the weight 1 |
 | `source` | optional; free text, not used in the fit |
 
 Each row is simulated with the uptake of its own carbon source open and the uptake of the carbon sources of the other rows of the same file closed (lower bound 0):
 
-- In `evotuneMaxGrowth.tsv`, the uptake of the carbon source of the row is set to -1000, and the growth rate is the sole compared value. The value in the carbon source column is not read.
-- In `evotuneFluxData.tsv`, the lower bound of the carbon source uptake is set to the measured value. The growth rate and every exchange flux that is not `NaN` are compared, and so is every reaction of `evotuneZeroExch.tsv` that carries flux in the simulation.
+- In `maxGrowth.tsv`, the uptake of the carbon source of the row is set to -1000, and the growth rate is the sole compared value. The value in the carbon source column is not read.
+- In `fluxData.tsv`, the lower bound of the carbon source uptake is set to the measured value. The growth rate and every exchange flux that is not `NaN` are compared, and so is every reaction of `zeroFlux.tsv` that carries flux in the simulation.
 
-Fluxes are compared in carbon units: each flux is multiplied by the number of carbon atoms of the exchanged metabolite (1 for a metabolite without carbon), and the growth rate by 41 Cmmol/gDCW. A row whose simulation is infeasible has an RMSE of 99. The RMSE of a file is the mean over its rows, and the RMSE of the fit is `(rmse_flux + w * rmse_max_growth) / (w + 1)`, with `w` the setting `max_growth_weight`.
+Fluxes are compared in carbon units: each flux is multiplied by the number of carbon atoms of the exchanged metabolite (1 for a metabolite without carbon), and the growth rate by 41 Cmmol/gDCW. A row whose simulation is infeasible has an RMSE of 99. The RMSE of a file is the mean over its rows with a weight other than 0, each multiplied by its weight, and the RMSE of the fit is `(rmse_flux + w * rmse_max_growth) / (w + 1)`, with `w` the setting `max_growth_weight`.
 
-`evotuneZeroExch.tsv` has the header `Rxns` and one reaction ID per line.
+The conditions are simulated by maximising the growth reaction `bioRxn` of the model adapter, whatever objective the model has; the objective of the model is not changed.
+
+`zeroFlux.tsv` has the header `Rxns` and one reaction ID per line.
+
+A file with the column `evotuneRMSEweight` raises an error that names `weight`. The first row of `fluxData.tsv` in the `full_ecModel` tutorial, `Std`, has the weight 0: it holds the standard condition of the protein-constraint step, which the tuning does not use.
 
 ## Configure the tuning
 
@@ -171,7 +175,7 @@ sigma0_log = 0.4
 | --- | --- |
 | `source_groups` (`kcatSources`) | trust groups, one table each with the `sources` it covers and its `sigma0_log`, the prior standard deviation of the natural log of the kcat |
 | `sigma0_log_default` (`sigma0logDefault`) | standard deviation of the natural log of a kcat that matches no group |
-| `max_growth_weight` (`maxGrowthWeight`) | weight `w` of the maximum growth rates against the fluxes in the RMSE |
+| `max_growth_weight` (`maxGrowthWeight`) | weight `w` of the maximum-growth conditions against the flux conditions in the RMSE |
 | `prior_penalty_weight` (`priorPenaltyWeight`) | weight `p` of a penalty for moving kcats; the search minimises `rmse + p * mean(((log k - log k0) / sigma0_log)^2)`. At 0 the objective is the RMSE |
 | `tie_isozymes` (`tieIsozymes`) | isozyme copies of one reaction with the same kcat and the same group get one shared kcat |
 | `rmse_threshold` (`rmseThreshold`) | the search stops when the best RMSE reaches this value; a negative value never stops the search early |
@@ -297,7 +301,7 @@ A data row with oxygen uptake 0 or with a value of `Ptot` needs a function that 
 
 ## The protein pool and sigma
 
-Set the protein pool before evotune, with `setProtPoolSize` and the values of Ptot, f and $\sigma$ in the model adapter (see [Set the protein pool](protein-pool.md)). Evotune simulates each data row with the protein pool of the model; only a row with a value of `Ptot` changes it, through the protein content of the biomass (see [Conditions that change the model](#conditions-that-change-the-model)). The maximum growth rates of `evotuneMaxGrowth.tsv` are part of the fit, so the tuning fits the kcats to these growth rates with that pool.
+Set the protein pool before evotune, with `setProtPoolSize` and the values of Ptot, f and $\sigma$ in the model adapter (see [Set the protein pool](protein-pool.md)). Evotune simulates each data row with the protein pool of the model; only a row with a value of `Ptot` changes it, through the protein content of the biomass (see [Conditions that change the model](#conditions-that-change-the-model)). The maximum growth rates of `maxGrowth.tsv` are part of the fit, so the tuning fits the kcats to these growth rates with that pool.
 
 Do not run `sigmaFitter` (Python `fit_sigma`) after evotune. It changes the protein pool so that the model reaches one growth rate, which moves every simulated growth rate and flux away from the values that the tuning fitted. A $\sigma$ fitted before evotune, to an ecModel with kcats that are too low, makes the pool compensate for the kcats (see [Sigma and kcat tuning](protein-pool.md#sigma-and-kcat-tuning)), and evotune then fits the kcats to that pool.
 
@@ -369,7 +373,7 @@ writetable(review, fullfile(outDir, 'evotune_review.tsv'), 'FileType', 'text', '
 saveEcModel(ecTuned, 'ecYeastGEM_evotune.yml');
 ```
 
-The anaerobic rows of `evotuneFluxData.tsv` use the function `anaerobicModel_GECKO` in the `code` folder of the tutorial, which `make_model_anaerobic` in `model_adapter.toml` names.
+The anaerobic rows of `fluxData.tsv` use the function `anaerobicModel_GECKO` in the `code` folder of the tutorial, which `make_model_anaerobic` in `model_adapter.toml` names.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -433,7 +437,7 @@ with open(os.path.join(out_dir, "evotune_corrections.tsv"), "w") as fh:
 save_ec_model(ec_model, "ecYeastGEM_evotune.yml", adapter=adapter)
 ```
 
-The anaerobic rows of `evotuneFluxData.tsv` need `make_anaerobic` from `code/anaerobic.py` of the tutorial; without it, these rows are simulated with oxygen. The function is defined at module level, so the parallel processes of the screen and the tuning can import it.
+The anaerobic rows of `fluxData.tsv` need `make_anaerobic` from `code/anaerobic.py` of the tutorial; without it, these rows are simulated with oxygen. The function is defined at module level, so the parallel processes of the screen and the tuning can import it.
 :::
 ::::
 
@@ -484,17 +488,17 @@ A fit to the data that were used for the tuning does not show that the tuned kca
 :sync: matlab
 
 ```matlab
-evoData = loadEvotuneData();
-test = ismember(evoData.maxGrate.conds, {'galactose', 'maltose'});
-train = evoData;
-train.maxGrate.evotuneRMSEweight = double(~test);
+experimentData = loadEvotuneData();
+test = ismember(experimentData.maxGrowth.conds, {'galactose', 'maltose'});
+train = experimentData;
+train.maxGrowth.weight = double(~test);
 
-screenTrain = screenKcatLeverage(ecModel, 'evoData', train, 'nProc', nProc);
-ecTrain = cmaesKcatTuning(ecModel, 'evoData', train, 'screen', screenTrain, ...
+screenTrain = screenKcatLeverage(ecModel, 'experimentData', train, 'nProc', nProc);
+ecTrain = cmaesKcatTuning(ecModel, 'experimentData', train, 'screen', screenTrain, ...
     'nProc', nProc, 'seed', 0);
 
 % Score the maximum growth rates of the left-out conditions
-held = evoData;
+held = experimentData;
 held.fluxData = [];
 [~, ~, before] = evotuneScore(ecModel, held);
 [~, ~, after] = evotuneScore(ecTrain, held);
@@ -508,31 +512,32 @@ fprintf('Left-out RMSE: %.3f before, %.3f after the tuning\n', ...
 ```python
 import copy
 
-from geckopy.kcat_tuning.evotune import (
-    compute_excarbon, dataset_rmse, load_evotune_data, simulate_evotune_dataset,
+from raven_toolbox.experiments import (
+    compute_carbon_weights, dataset_rmse, load_experiment_data, simulate_conditions,
 )
 
 ec_model = load_ec_model("ecYeastGEM_stage2.yml", adapter=adapter)
 bio = adapter.params.bio_rxn
-data = load_evotune_data(adapter)
-test = np.isin(data.max_grate.conds, ["galactose", "maltose"])
-train = copy.deepcopy(data)
-train.max_grate.evotune_rmse_weight = (~test).astype(float)
+experiment_data = load_experiment_data(adapter.params.path / "data")
+test = np.isin(experiment_data.max_growth.conds, ["galactose", "maltose"])
+train = copy.deepcopy(experiment_data)
+train.max_growth.weight = (~test).astype(float)
 
 ec_train = ec_model.copy()
-screen_train = screen_kcat_leverage(ec_train, evotune_data=train,
+screen_train = screen_kcat_leverage(ec_train, experiment_data=train,
                                     make_anaerobic=make_anaerobic, n_proc=n_proc)
-cmaes_kcat_tuning(ec_train, evotune_data=train, screen=screen_train,
+cmaes_kcat_tuning(ec_train, experiment_data=train, screen=screen_train,
                   make_anaerobic=make_anaerobic, n_proc=n_proc, seed=0)
 
 # Score the maximum growth rates of the left-out conditions
-mg = data.max_grate
-excarbon = compute_excarbon(ec_model, mg.exch_rxn_ids, bio)
+mg = experiment_data.max_growth
+carbon_weights = compute_carbon_weights(ec_model, mg.exch_rxn_ids, bio)
 for when, model in [("before", ec_model), ("after", ec_train)]:
-    sims = simulate_evotune_dataset(model, mg, constrain=False, zero_flux_rxns=[],
-                                    bio_rxn_id=bio)
-    _, per_row = dataset_rmse(mg, sims, constrain=False, excarbon=excarbon,
-                              bio_rxn_id=bio)
+    with model:
+        model.objective = bio
+        sims = simulate_conditions(model, mg, constrain=False, zero_flux_rxns=[],
+                                   bio_rxn_id=bio)
+    _, per_row = dataset_rmse(mg, sims, constrain=False, carbon_weights=carbon_weights)
     print(f"Left-out RMSE {when} the tuning: {per_row[test].mean():.3f}")
 ```
 :::
@@ -552,7 +557,7 @@ The tuned ecModel holds the tuned kcats, but the next `assignKcats` replaces the
 | The RMSE still falls at the last generation | `max_generations` ends the search before it converges | Raise `max_generations` |
 | The RMSE of the fit falls, but the RMSE of left-out conditions does not | The tuning fits the kcats to the conditions of the data | Search fewer kcats (`targetImpactShare`), or raise `prior_penalty_weight` |
 | The anaerobic conditions fit badly (Python) | `make_anaerobic` was not given, so these rows are simulated with oxygen | Pass `make_anaerobic` to the screen and the tuning |
-| Error `evotune:noData` (MATLAB), or `ValueError` that `evotune_data` has neither `flux_data` nor `max_grate` (Python) | Neither `evotuneFluxData.tsv` nor `evotuneMaxGrowth.tsv` is in `<project>/data/` | Add one of the files |
+| Error `evotune:noData` (MATLAB), or `ValueError` that `experiment_data` has neither `flux_data` nor `max_growth` (Python) | Neither `fluxData.tsv` nor `maxGrowth.tsv` is in `<project>/data/` | Add one of the files, or pass the loaded data |
 | Error that a carbon source cannot be matched by name with an exchange reaction | The `Condition` of a row differs from every metabolite name in the exchange column headers | Use the metabolite name of the column header as the condition |
 | Error `No tunable kcats` | No kcat is above 0, or the mask excludes every kcat | Assign kcats first, or widen the mask |
 | Error `Only 1 free parameter(s) after masking and tying` | The mask and the isozyme tying leave fewer than two free kcats | Raise `targetImpactShare`, or give a wider `tunableMask` |

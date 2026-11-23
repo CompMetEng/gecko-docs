@@ -53,7 +53,12 @@ exclude_patterns = [
 ]
 
 # External links that reject crawlers go here, each with the reason.
-linkcheck_ignore: list[str] = []
+linkcheck_ignore: list[str] = [
+    # These sites answer the link checker with 403 but open in a browser.
+    r"https://doi\.org/10\.1128/spectrum\.01705-23",  # ASM journals
+    r"https://doi\.org/10\.3390/biom12010065",  # MDPI
+    r"https://mathworks\.com/.*",  # MathWorks
+]
 linkcheck_timeout = 20
 linkcheck_retries = 2
 
@@ -64,15 +69,16 @@ html_title = "GECKO documentation"
 html_favicon = "_static/gecko-icon.png"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
-# Page-view statistics of GoatCounter, which sets no cookies.
+# Remembers the language of the code tabs across pages, browser tabs and visits.
 html_js_files = [
+    "language-sync.js",
+    "mermaid-zoom.js",
+    # Page-view statistics of GoatCounter, which sets no cookies.
     (
         "https://gc.zgo.at/count.js",
         {"async": "async", "data-goatcounter": "https://gecko-docs.goatcounter.com/count"},
     ),
 ]
-# Remembers the language of the code tabs across pages, browser tabs and visits.
-html_js_files = ["language-sync.js", "mermaid-zoom.js"]
 # The source pages are generated MyST files, not something a reader can edit.
 html_show_sourcelink = False
 

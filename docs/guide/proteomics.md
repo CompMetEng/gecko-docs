@@ -124,7 +124,7 @@ Start with `'loose'` and `'max'`. The ecModel then has a solution also when the 
 
 `data/proteomics.tsv` is tab-delimited with one header row. The first column holds the UniProt identifiers, and every following column holds one replicate, in mg/gDCW. The replicates of the first condition come first, then those of the second condition, and so on. The header must have one column more than the total number of replicates; otherwise `loadProtData` raises the error `loadProtData:replicateMismatch` (Python: `ValueError`). A cell with `NA`, `na`, `NaN`, `#VALUE!` or no value is not measured, and a row without an identifier is removed. Relative proteomics data cannot be used: a concentration in another unit gives wrong bounds and no error.
 
-`data/fluxData.tsv` is tab-delimited with one header row and one row per condition. The columns are the condition name, the total protein content Ptot (g/gDCW), the growth rate (1/h), and then one column per exchange reaction, in mmol/gDCW/h, negative for uptake and positive for excretion. The header of an exchange column has the form `<metabolite> (<reaction id>)`. Optional columns `evotuneRMSEweight` and `source` can be at any position. A line with a different number of cells than the header raises an error. The example shows 7 of the 11 columns (the first six and the last one) of `fluxData.tsv` in the `full_ecModel` tutorial of GECKO, which uses yeast-GEM; `r_1714` is the glucose exchange of yeast-GEM:
+`data/fluxData.tsv` is tab-delimited with one header row and one row per condition. The columns are the condition name, the total protein content Ptot (g/gDCW), the growth rate (1/h), and then one column per exchange reaction, in mmol/gDCW/h, negative for uptake and positive for excretion. The header of an exchange column has the form `<metabolite> (<reaction id>)`. Optional columns `weight` and `source` can be at any position. [Experimental data](experimental-data.md) describes the columns. A line with a different number of cells than the header raises an error. The example shows 7 of the 11 columns (the first six and the last one) of `fluxData.tsv` in the `full_ecModel` tutorial of GECKO, which uses yeast-GEM; `r_1714` is the glucose exchange of yeast-GEM:
 
 ```text
 Condition	Ptot	grRate	glucose (r_1714)	CO2 (r_1672)	oxygen (r_1992)	ethanol (r_1761)
@@ -265,7 +265,7 @@ The upper bound of the protein pool exchange is $P_{tot} \cdot f \cdot \sigma \c
 :sync: matlab
 
 ```matlab
-fluxData = loadFluxData();
+fluxData = loadFluxData(fullfile(params.path, 'data', 'fluxData.tsv'));
 protAll  = loadProtData([3, 3], 'filterData', false);
 protAll.abundances = protAll.abundances(:, 1);
 f = calculateFfactor(ecModel, 'protData', protAll);

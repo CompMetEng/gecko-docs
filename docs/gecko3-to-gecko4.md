@@ -44,6 +44,7 @@ The changes in this table, and calls of removed functions (see [Removed](#remove
 | `loadEcModel` checks the ecModel format | `gecko_format` in the file is higher than 4 | Update GECKO |
 | Adapter keys | `model_adapter.toml` has a key that is not in `adapterParameters.tsv` | Remove or rename the key, or place a key that GECKO uses and geckopy does not use under `[matlab.params]` |
 | Options of `assignKcats` and `upgradeGECKOproject` | an option name that the function does not have | Correct the option name |
+| `loadFluxData` takes a file path | the call has no file path (`loadFluxData()` read `data/fluxData.tsv` of the model adapter) or has a `modelAdapter` argument | Pass the path: `loadFluxData(fullfile(params.path, 'data', 'fluxData.tsv'))`, or read the whole folder with `loadEvotuneData` |
 | `runDLKcat`, `writeDLKcatInput` | every call in MATLAB: the functions are deprecated and raise an error | Use `kcatsFromDLKcat(ecModel, 'via', 'docker')` |
 | `sigmaFitter` raises `sigmaFitter:growthRate` | the target growth rate is not above 0 | Give a growth rate above 0 |
 | `setProtPoolSize` raises `setProtPoolSize:noPoolExchange` | the model has no `prot_pool_exchange` (GECKO 3 left the model unchanged) | Give an ecModel made by `makeEcModel` |
@@ -107,8 +108,8 @@ kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, thr
 | BRENDA files in `databases/` | `fetchBrendaAsset` downloads the files of the toolbox-assets release `brenda-2026.1-1` into `databases/brenda-2026.1-1` on first use. A project keeps its own files in `data/brenda` |
 | `truncateValues` | `round(x, 6, 'significant')` |
 | `findMaxValue` | `kcatsFromBrenda` or `kcatsFromECTree` |
-| `bayesianSensitivityTuning` and its helpers `abc_max`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels) | `cmaesKcatTuning`, the evotune kcat tuning, with the data files `data/evotune*.tsv` (see [Tune kcats with evotune](guide/evotune.md)) |
-| `getcarbonnum` | `fillCarbonNum` writes the carbon number of each exchange reaction to `model.excarbon` |
+| `bayesianSensitivityTuning` and its helpers `abc_max`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels) | `cmaesKcatTuning`, the evotune kcat tuning, with the data files `data/fluxData.tsv`, `data/maxGrowth.tsv` and `data/zeroFlux.tsv` (see [Experimental data](guide/experimental-data.md) and [Tune kcats with evotune](guide/evotune.md)) |
+| `addCarbonNum`, `getcarbonnum` | both raise `GECKO:removedFunction`. RAVEN's `computeCarbonWeights` returns the carbon weight of each exchange reaction, as a map keyed by reaction ID, without a field in the model |
 | `anaerobicModel_GECKO`, `changeMedia` | copies in `tutorials/full_ecModel/code`, for *Saccharomyces cerevisiae* |
 
 The removed functions in the table, except `truncateValues`, `anaerobicModel_GECKO` and `changeMedia`, have a stub in `src/deprecated` that raises an error naming the replacement. `upgradeGECKOproject` lists the lines of a project's scripts that call them.
@@ -133,7 +134,6 @@ The old name of each function in the table calls the new function and prints a d
 | `startGECKOproject` | `createGECKOproject` | |
 | `copyECtoGEM` | `applyECcodes` | |
 | `enzymeUsage` | `getEnzymeUsage` | |
-| `addCarbonNum` | `fillCarbonNum` | |
 | `updateGECKOdoc` | `buildGECKOdoc` | |
 | `selectKcatValue` | `assignKcatValues` | the function writes `ecModel.ec.kcat` |
 | `mergeDLKcatAndFuzzyKcats` | `mergeKcats` | merges kcat lists of any number of sources |

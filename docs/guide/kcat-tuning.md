@@ -102,7 +102,7 @@ If both hold, some kcats are too low for the enzymes that carry most of the flux
 
 | Property | `sensitivityTuning` | evotune: `cmaesKcatTuning` |
 | --- | --- | --- |
-| Data it needs | one maximum growth rate (`gR_exp` in the model adapter, or the option `desiredGrowthRate`) | maximum growth rates (`evotuneMaxGrowth.tsv`), exchange fluxes (`evotuneFluxData.tsv`), or both, measured in one or more conditions |
+| Data it needs | one maximum growth rate (`gR_exp` in the model adapter, or the option `desiredGrowthRate`) | maximum growth rates (`maxGrowth.tsv`), exchange fluxes (`fluxData.tsv`), or both, measured in one or more conditions |
 | What it changes | `ec.kcat` of the reactions it selects, and their enzyme constraints | `ec.kcat` of the kcats with the largest effect on the fit to the data, and their enzyme constraints |
 | Which kcats | one reaction per iteration: the reaction with the largest use of the most used enzyme | the top kcats of a screen, up to 90 % of the weighted effect on the fit (option `targetImpactShare`) |
 | How much | the kcat is multiplied by `foldChange` (default 10) per iteration; a kcat that is selected again is multiplied again | any value between `min(0.01, k0/100)` and `max(10000, 100*k0)` per s, where `k0` is the kcat before tuning |

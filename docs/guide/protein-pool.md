@@ -218,14 +218,15 @@ Both functions return 0 when no measured protein is an enzyme of the ecModel (Py
 
 ## Use the protein content of a condition
 
-`data/fluxData.tsv` has one row per condition, with the total protein content in the column `Ptot` (g/gDCW), the growth rate and the exchange fluxes. The file is described in [Files in the data folder](data-folder-files.md). To set the pool for one condition, give its $P_{tot}$:
+`data/fluxData.tsv` has one row per condition, with the total protein content in the column `Ptot` (g/gDCW), the growth rate and the exchange fluxes. The file is described in [Experimental data](experimental-data.md) and [Files in the data folder](data-folder-files.md). To set the pool for one condition, give its $P_{tot}$:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
 ```matlab
-fluxData = loadFluxData();
+params = ModelAdapterManager.getDefault().getParameters();
+fluxData = loadFluxData(fullfile(params.path, 'data', 'fluxData.tsv'));
 ecModel = setProtPoolSize(ecModel, 'Ptot', fluxData.Ptot(1));
 ```
 :::

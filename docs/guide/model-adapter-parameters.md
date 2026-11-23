@@ -206,9 +206,9 @@ The `[evotune]` section holds the hyperparameters of the CMA-ES kcat tuning desc
 |---|---|---|---|
 | `evotune.sigma0_log_default` | `evotune.sigma0logDefault` | `0.5` | Prior standard deviation of the natural log of the kcat, for the kcats that match no source group |
 | `evotune.source_groups` | `evotune.kcatSources` | four groups (see [Source groups](#source-groups)) | Trust tiers: one table `[evotune.source_groups.<group>]` per group, with `sources` and `sigma0_log` |
-| `evotune.rmse_threshold` | `evotune.rmseThreshold` | `0.2` | The search stops when the best RMSE reaches this value |
+| `evotune.rmse_threshold` | `evotune.rmseThreshold` | `0.2` | The search stops when the best distance to the measurements reaches this value |
 | `evotune.max_generations` | `evotune.maxGenerations` | `150` | Maximum number of CMA-ES generations |
-| `evotune.max_growth_weight` | `evotune.maxGrowthWeight` | `1.0` | Weight of the maximum-growth RMSE against the flux RMSE |
+| `evotune.max_growth_weight` | `evotune.maxGrowthWeight` | `1.0` | Weight of the distance of the maximum-growth conditions against that of the flux conditions |
 | `evotune.prior_penalty_weight` | `evotune.priorPenaltyWeight` | `0.03` | Weight of the prior term in the search objective |
 | `evotune.tie_isozymes` | `evotune.tieIsozymes` | `true` | Give the isozyme copies of one reaction a single kcat |
 

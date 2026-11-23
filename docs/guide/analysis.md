@@ -101,7 +101,7 @@ adapter  = ModelAdapterManager.setDefault(pwd);
 params   = adapter.getParameters();
 model    = loadConventionalGEM();
 ecModel  = loadEcModel();        % models/ecModel.yml
-fluxData = loadFluxData();       % data/fluxData.tsv
+fluxData = loadFluxData(fullfile(params.path, 'data', 'fluxData.tsv'));
 ```
 :::
 :::{tab-item} 🐍 Python
