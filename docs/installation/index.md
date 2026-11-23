@@ -20,7 +20,7 @@ The starting point is a conventional constraint-based metabolic model, at genome
 
 - **MATLAB**. The test workflow of GECKO runs MATLAB R2024b; the repository states no minimum version
   ([MathWorks](https://mathworks.com/products/matlab.html)). No additional MathWorks toolboxes are required.
-- **RAVEN toolbox** version 3 or later ([repository](https://github.com/CompMetEng/RAVEN)), which provides the reconstruction functions GECKO builds on, and some of the functions used to simulate and analyse ecModels. GECKO 4 does not support RAVEN 2.
+- **RAVEN toolbox** version 3.0.0b3 or later ([repository](https://github.com/CompMetEng/RAVEN)), which provides the reconstruction functions GECKO builds on, and some of the functions used to simulate and analyse ecModels. GECKO 4 does not support RAVEN 2.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -30,7 +30,7 @@ The starting point is a conventional constraint-based metabolic model, at genome
 :::
 ::::
 
-Both toolboxes also need a linear-programming solver (see [Choosing a solver](#choosing-a-solver) below) and, for DLKcat, [Docker](#docker).
+Both toolboxes also need a linear-programming solver (see [Choosing a solver](#choosing-a-solver) below). Predicted kcats come from the hosted [OpenKineticsPredictor](#openkineticspredictor) service.
 
 ## RAVEN toolbox / raven-toolbox
 
@@ -114,10 +114,10 @@ Verify the install:
 python -c "from importlib.metadata import version; print(version('geckopy'))"
 ```
 
-Optional extras: `geckopy[tutorial]` adds matplotlib for the plots of the tutorial, and `geckopy[evotune]` adds `cma`, which `cmaes_kcat_tuning` needs.
+The extra `geckopy[tutorial]` adds matplotlib for the plots of the tutorial.
 
 ```bash
-pip install --pre "geckopy[tutorial,evotune]"
+pip install --pre "geckopy[tutorial]"
 ```
 
 To remove:
@@ -146,14 +146,14 @@ MATLAB reaches the solvers through RAVEN and the COBRA Toolbox, Python through c
 GLPK, the default solver of RAVEN, is not recommended for GECKO: ecModels are larger and more numerically demanding than the conventional GEMs for which GLPK is adequate. Configure Gurobi, or in MATLAB SCIP, before working with an ecModel of genome scale.
 :::
 
-## Docker
+## OpenKineticsPredictor
 
-`runDLKcat` (Python: `run_dlkcat`) runs DLKcat in a Docker container from the image `ghcr.io/sysbiochalmers/dlkcat-gecko:0.1`. Installation instructions are at [docs.docker.com/get-started/get-docker](https://docs.docker.com/get-started/get-docker/).
+`kcatsFromOKP` and `kcatsFromDLKcat` (Python: `kcats_from_okp`, `kcats_from_dlkcat`) predict kcat values with the hosted [OpenKineticsPredictor](https://predictor.openkinetics.org/) service. The service needs an API key, which GECKO reads from the environment variable `OKP_API_KEY` or from `data/okpApiKey.txt` in the project folder. A project made with `createGECKOproject` (Python: `geckopy init`) has a `.gitignore` that keeps that file out of git. [Choose the kcat sources](../guide/kcat-sources.md) describes the method and the job.
 
-:::{admonition} kcat prediction without Docker
-:class: tip
+:::{admonition} DLKcat on the local computer
+:class: note
 
-`kcatsFromOKP` (Python: `kcats_from_okp`) predicts kcat values with the hosted [OpenKineticsPredictor](https://predictor.openkinetics.org/) service. The service needs an API key and no Docker installation (see [Kcat assignment](../gecko4-kcat-assignment.md)).
+`kcatsFromDLKcat(ecModel, 'via', 'docker')` (Python: `kcats_from_dlkcat(ec_model, via="docker")`) runs DLKcat on the local computer in a Docker container from the image `ghcr.io/sysbiochalmers/dlkcat-gecko:0.1`. This is the older method; it needs [Docker](https://docs.docker.com/get-started/get-docker/) and no API key.
 :::
 
 ## Tutorial code
