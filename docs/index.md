@@ -6,10 +6,8 @@
     <img class="site-logo-dark" src="_static/gecko-logo-white.png" alt="GECKO">
     <p class="site-tag">MATLAB &amp; Python</p>
   </div>
-  <p class="site-tagline">Reconstruction, simulation and analysis of enzyme-constrained metabolic models (ecModels): a MATLAB toolbox built on RAVEN, and geckopy, a Python package built on cobrapy.</p>
+  <p class="site-tagline">Reconstruction, simulation and analysis of enzyme-constrained metabolic models (ecModels), available as the MATLAB toolbox GECKO, which is built on RAVEN, and the Python package geckopy, which is built on cobrapy. This site documents both.</p>
 </div>
-
-GECKO exists as a MATLAB toolbox and as the Python package geckopy. This site documents both.
 
 ## Installation
 
