@@ -8,7 +8,7 @@ Migration pages answer two questions: what changes when a workflow moves from GE
 | [Upgrade a GECKO 3 project](gecko3-upgrade-project.md) | the steps of `upgradeGECKOproject` and `upgradeEcModel` |
 | [GECKO and geckopy](gecko-to-geckopy.md) | what each implementation has, and where they answer the same question differently |
 
-[Project format 4](gecko4-project-format.md) and [Kcat assignment](gecko4-kcat-assignment.md) describe GECKO 4 and are in the Background of the [guide](guide/index.md).
+[Project format 4](gecko4-project-format.md) and [*K*{sub}`cat` assignment](gecko4-kcat-assignment.md) describe GECKO 4 and are in the Background of the [guide](guide/index.md).
 
 ```{toctree}
 :hidden:

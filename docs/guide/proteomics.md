@@ -98,7 +98,7 @@ flowchart TB
 
 ## Setup
 
-A full ecModel with kcats and a protein pool (see [Build an ecModel](first-ecmodel.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python), and the files `data/proteomics.tsv` and `data/fluxData.tsv` of the project. In MATLAB, the model adapter of the project is the default adapter, and `params = ModelAdapterManager.getDefault().getParameters();` holds its parameters; in Python, `params = ec_model.adapter.params` holds them. The objective is the biomass reaction, maximised: `ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);` in MATLAB, and `ec_model.objective = params.bio_rxn` with `ec_model.objective_direction = "max"` in Python (see [Basic model operations](basic-model-operations.md)). The examples assume a `proteomics.tsv` with two conditions of three replicates each, and select the first condition in both files.
+A full ecModel with *k*{sub}`cat`s and a protein pool (see [Build an ecModel](first-ecmodel.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python), and the files `data/proteomics.tsv` and `data/fluxData.tsv` of the project. In MATLAB, the model adapter of the project is the default adapter, and `params = ModelAdapterManager.getDefault().getParameters();` holds its parameters; in Python, `params = ec_model.adapter.params` holds them. The objective is the biomass reaction, maximised: `ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);` in MATLAB, and `ec_model.objective = params.bio_rxn` with `ec_model.objective_direction = "max"` in Python (see [Basic model operations](basic-model-operations.md)). The examples assume a `proteomics.tsv` with two conditions of three replicates each, and select the first condition in both files.
 
 ## Choose the options
 
@@ -330,7 +330,7 @@ print(f"Growth rate: {growth:g} /h, measured: {flux_data.gr_rate[0]:g} /h")
 :::
 ::::
 
-With `'max'`, the growth rate cannot exceed the measured one. A growth rate below it means that the enzyme concentrations, the kcats, the protein pool or the exchange fluxes limit growth. [Relax proteomics constraints](relaxing-proteomics.md) raises the limiting enzyme bounds and shows how to find which of these limits growth.
+With `'max'`, the growth rate cannot exceed the measured one. A growth rate below it means that the enzyme concentrations, the *k*{sub}`cat`s, the protein pool or the exchange fluxes limit growth. [Relax proteomics constraints](relaxing-proteomics.md) raises the limiting enzyme bounds and shows how to find which of these limits growth.
 
 ## Troubleshooting
 

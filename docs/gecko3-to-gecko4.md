@@ -1,6 +1,6 @@
 # GECKO 3 to GECKO 4
 
-GECKO 4 keeps the ecModel structure of GECKO 3 (`ecModel.ec`, the `MW/kcat` coefficient) and changes the direction of the protein reactions, how a project is configured, and how kcats are gathered and assigned. GECKO 3.0 is the version described in the published Nature Protocols pipeline (see [Citations](references.md)). The sections below follow the risk of a wrong result for a GECKO 3 script or project. geckopy implements the GECKO 4 behaviour described here.
+GECKO 4 keeps the ecModel structure of GECKO 3 (`ecModel.ec`, the `MW/kcat` coefficient) and changes the direction of the protein reactions, how a project is configured, and how *k*{sub}`cat`s are gathered and assigned. GECKO 3.0 is the version described in the published Nature Protocols pipeline (see [Citations](references.md)). The sections below follow the risk of a wrong result for a GECKO 3 script or project. geckopy implements the GECKO 4 behaviour described here.
 
 :::{admonition} Changes that pass without an error
 :class: important
@@ -8,9 +8,9 @@ GECKO 4 keeps the ecModel structure of GECKO 3 (`ecModel.ec`, the `MW/kcat` coef
 A GECKO 3 script keeps running after each change in this box and returns a different result.
 
 - The protein pool exchange and the enzyme usage reactions run forward, so bounds and fluxes of `prot_pool_exchange` and `usage_prot_*` have the opposite sign ([PR #419](https://github.com/SysBioChalmers/GECKO/pull/419)).
-- `fuzzyKcatMatching` divides a BRENDA kcat by the coefficient of the substrate the kcat was measured on. GECKO 3 divided by the smallest coefficient in the reaction.
+- `fuzzyKcatMatching` divides a BRENDA *k*{sub}`cat` by the coefficient of the substrate the *k*{sub}`cat` was measured on. GECKO 3 divided by the smallest coefficient in the reaction.
 - `assignKcats` and `collectKcats` use the preset `brenda_ec_tree` when `model_adapter.toml` sets no other.
-- `fuzzyKcatMatching` and `loadBRENDAdata` read the BRENDA median kcat by default, as `kcatsFromBrenda` does. GECKO 3 read the maximum unless the adapter set `kcatAggregation`.
+- `fuzzyKcatMatching` and `loadBRENDAdata` read the BRENDA median *k*{sub}`cat` by default, as `kcatsFromBrenda` does. GECKO 3 read the maximum unless the adapter set `kcatAggregation`.
 - `calculateFfactor` averages each protein over the samples in which it is measured.
 - `sigmaFitter` returns the smallest sigma within a tolerance of the smallest error, and the returned ecModel has the protein pool of that sigma (see below the first table).
 - `flexibilizeEnzConcs` keeps an upper bound that is higher than the new bound, and stops after a total number of iterations.
@@ -24,9 +24,9 @@ A GECKO 3 script keeps running after each change in this box and returns a diffe
 | Change | GECKO 3 | GECKO 4 | Action |
 | --- | --- | --- | --- |
 | Direction of protein reactions | `usage_prot_<id>` and `prot_pool_exchange` run in reverse and carry negative flux | both run forward, and the usage of an enzyme is the positive flux of its usage reaction | Reverse the sign of bounds and fluxes read from these reactions. `upgradeEcModel` turns a GECKO 3 ecModel (see [Upgrade a GECKO 3 project](gecko3-upgrade-project.md)) |
-| Substrate of a BRENDA kcat | the kcat is divided by the smallest coefficient in the reaction | the kcat is divided by the coefficient of the substrate that matched | Rebuild the kcat list. Reactions that are not written per the measured substrate get a lower kcat |
-| BRENDA value of direct calls | `fuzzyKcatMatching` and `loadBRENDAdata` read the maximum per EC number, substrate and organism, unless the adapter sets `kcatAggregation` | `fuzzyKcatMatching`, `kcatsFromBrenda` and `loadBRENDAdata` called without an aggregation read `[kcat_sources.brenda] aggregation` as the kcat assignment resolves it: the median for the default preset `brenda_ec_tree`, the maximum for `gecko_classic` (see [BRENDA aggregation](guide/model-adapter-parameters.md#brenda-aggregation)) | Set `aggregation = "max"` in `[kcat_sources.brenda]`, or give `'kcatAggregation', 'max'` in the call |
-| Default kcat assignment | `selectKcatValue` (`assignKcatValues` in GECKO 4) merges a DLKcat list and a BRENDA list | `assignKcats` determines the kcat from the kcat source files in `data/kcats` with the preset `brenda_ec_tree` | Set `preset = "gecko_classic"` in `[kcat_assignment]` to keep the GECKO 3 order (see [Kcat assignment](gecko4-kcat-assignment.md)) |
+| Substrate of a BRENDA *k*{sub}`cat` | the *k*{sub}`cat` is divided by the smallest coefficient in the reaction | the *k*{sub}`cat` is divided by the coefficient of the substrate that matched | Rebuild the *k*{sub}`cat` list. Reactions that are not written per the measured substrate get a lower *k*{sub}`cat` |
+| BRENDA value of direct calls | `fuzzyKcatMatching` and `loadBRENDAdata` read the maximum per EC number, substrate and organism, unless the adapter sets `kcatAggregation` | `fuzzyKcatMatching`, `kcatsFromBrenda` and `loadBRENDAdata` called without an aggregation read `[kcat_sources.brenda] aggregation` as the *k*{sub}`cat` assignment resolves it: the median for the default preset `brenda_ec_tree`, the maximum for `gecko_classic` (see [BRENDA aggregation](guide/model-adapter-parameters.md#brenda-aggregation)) | Set `aggregation = "max"` in `[kcat_sources.brenda]`, or give `'kcatAggregation', 'max'` in the call |
+| Default *k*{sub}`cat` assignment | `selectKcatValue` (`assignKcatValues` in GECKO 4) merges a DLKcat list and a BRENDA list | `assignKcats` determines the *k*{sub}`cat` from the *k*{sub}`cat` source files in `data/kcats` with the preset `brenda_ec_tree` | Set `preset = "gecko_classic"` in `[kcat_assignment]` to keep the GECKO 3 order (see [*K*{sub}`cat` assignment](gecko4-kcat-assignment.md)) |
 | Protein fraction `f` | `calculateFfactor` averages over all samples, so a protein missing in one sample is left out of both totals | the average is over the samples in which the protein is measured | Recalculate `f` when the proteomics file has missing values |
 | Enzyme bounds of `flexibilizeEnzConcs` | the new upper bound of an enzyme replaces the old bound, also when the old bound is higher; the iterations have no total limit | an upper bound is never lowered, and the iterations have a total limit (see below the table) | Check the warnings and `flexEnz` |
 | File name of `loadConventionalGEM` | `.xml` is appended to every name | a name ending in `.yml` is loaded as YAML; `.xml` is appended to a name without `.xml` or `.yml` | none |
@@ -53,7 +53,7 @@ The changes in this table, and calls of removed functions (see [Removed](#remove
 
 ### Changes of the project
 
-A GECKO 3 project is configured by an adapter class and keeps its kcats in `data/DLKcat.tsv`, `data/customKcats.tsv` and in the variables of the script. A GECKO 4 project is configured by `model_adapter.toml`, keeps each kcat source in its own file in `data/kcats`, and records the ecModel format in the saved model. `assignKcats` writes its decisions to `output/<model id>_kcatDecisions.tsv`, with column names in `snake_case` (`ec_rxn`, `spread_log10`, `sd_log10`); the table that `collectKcats` returns keeps `camelCase` names. [Project format 4](gecko4-project-format.md) describes the files, and [Upgrade a GECKO 3 project](gecko3-upgrade-project.md) the steps that convert a project.
+A GECKO 3 project is configured by an adapter class and keeps its *k*{sub}`cat`s in `data/DLKcat.tsv`, `data/customKcats.tsv` and in the variables of the script. A GECKO 4 project is configured by `model_adapter.toml`, keeps each *k*{sub}`cat` source in its own file in `data/kcats`, and records the ecModel format in the saved model. `assignKcats` writes its decisions to `output/<model id>_kcatDecisions.tsv`, with column names in `snake_case` (`ec_rxn`, `spread_log10`, `sd_log10`); the table that `collectKcats` returns keeps `camelCase` names. [Project format 4](gecko4-project-format.md) describes the files, and [Upgrade a GECKO 3 project](gecko3-upgrade-project.md) the steps that convert a project.
 
 Functions with name-value arguments also take them positionally, in the GECKO 3 order: `loadEcModel(filename, modelAdapter)` and `loadEcModel('filename', filename)` are equivalent. A call uses one of the two forms for all its optional arguments.
 
@@ -84,12 +84,12 @@ The table lists a selection.
 
 | Group | Functions |
 | --- | --- |
-| Kcat sources | `kcatsFromBrenda`, `kcatsFromECTree`, `kcatsFromHomologs`, `kcatsFromDLKcat`, `kcatsFromOKP`, `saveKcatSource`, `loadKcatSource`, `getEcRxnKeys` |
-| Kcat assignment | `collectKcats`, `assignKcats`, `updateKcatSources`, `kcatAssignmentConfig`, `convertCustomKcats` |
+| *K*{sub}`cat` sources | `kcatsFromBrenda`, `kcatsFromECTree`, `kcatsFromHomologs`, `kcatsFromDLKcat`, `kcatsFromOKP`, `saveKcatSource`, `loadKcatSource`, `getEcRxnKeys` |
+| *K*{sub}`cat` assignment | `collectKcats`, `assignKcats`, `updateKcatSources`, `kcatAssignmentConfig`, `convertCustomKcats` |
 | Databases | `fetchBrendaAsset`, `loadBrendaMeasurements`, `resolveKcatAggregation` |
 | Project and model upgrade | `upgradeGECKOproject`, `upgradeEcModel`, `convertAdapterToToml` |
 | Adapter | `TomlAdapter`, `readAdapterToml`, `writeAdapterToml`, `loadAdapterParams` |
-| Kcat tuning | `cmaesKcatTuning`, `screenKcatLeverage`, `selectTunableMask`, `reviewKcatAssignment`, `tunePriorPenaltyWeight`, `loadEvotuneData` |
+| *K*{sub}`cat` tuning | `cmaesKcatTuning`, `screenKcatLeverage`, `selectTunableMask`, `reviewKcatAssignment`, `tunePriorPenaltyWeight`, `loadEvotuneData` |
 | Proteomics | `levelComplexConcs`, `getComplexFamilies`, and the option `perComplex` of `flexibilizeEnzConcs` |
 | Analysis | `getEnzymeBottlenecks`, `relaxProteomicsGreedy`, `relaxEnzConcs`, and the option `method` of `getConcControlCoeffs` |
 
@@ -99,7 +99,7 @@ The table lists a selection.
 
 `levelComplexConcs` gives the subunits of a multi-subunit complex one abundance. The complex is then not capped by its least abundant subunit. It runs after `fillEnzConcs` and before `constrainEnzConcs`.
 
-kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, through `kcatsFromOKP`. `[kcat_sources.okp] method` names the OKP method, by default KinForm-H: the `okp` stage of the presets reads the file of this method, and `kcatsFromOKP` without a method uses it. `kcatsFromDLKcat` uses its DLKcat method unless `data/DLKcat.tsv` exists, or the option `'via', 'docker'` selects a local run in the Docker image. The DLKcat Docker context is not part of the GECKO repository (`src/dlkcat-gecko` is removed).
+*k*{sub}`cat` prediction goes through the hosted OpenKineticsPredictor (OKP) service, through `kcatsFromOKP`. `[kcat_sources.okp] method` names the OKP method, by default KinForm-H: the `okp` stage of the presets reads the file of this method, and `kcatsFromOKP` without a method uses it. `kcatsFromDLKcat` uses its DLKcat method unless `data/DLKcat.tsv` exists, or the option `'via', 'docker'` selects a local run in the Docker image. The DLKcat Docker context is not part of the GECKO repository (`src/dlkcat-gecko` is removed).
 
 ## Removed
 
@@ -108,7 +108,7 @@ kcat prediction goes through the hosted OpenKineticsPredictor (OKP) service, thr
 | BRENDA files in `databases/` | `fetchBrendaAsset` downloads the files of the toolbox-assets release `brenda-2026.1-1` into `databases/brenda-2026.1-1` on first use. A project keeps its own files in `data/brenda` |
 | `truncateValues` | `round(x, 6, 'significant')` |
 | `findMaxValue` | `kcatsFromBrenda` or `kcatsFromECTree` |
-| `bayesianSensitivityTuning` and its helpers `abc_max`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels) | `cmaesKcatTuning`, the evotune kcat tuning, with the data files `data/fluxData.tsv`, `data/maxGrowth.tsv` and `data/zeroFlux.tsv` (see [Experimental data](guide/experimental-data.md) and [Tune kcats with evotune](guide/evotune.md)) |
+| `bayesianSensitivityTuning` and its helpers `abc_max`, `getrSample`, `updateprior` (Bayesian ABC-SMC tuning of light ecModels) | `cmaesKcatTuning`, the evotune *k*{sub}`cat` tuning, with the data files `data/fluxData.tsv`, `data/maxGrowth.tsv` and `data/zeroFlux.tsv` (see [Experimental data](guide/experimental-data.md) and [Tune *k*{sub}`cat`s with evotune](guide/evotune.md)) |
 | `addCarbonNum`, `getcarbonnum` | both raise `GECKO:removedFunction`. RAVEN's `computeCarbonWeights` returns the carbon weight of each exchange reaction, as a map keyed by reaction ID, without a field in the model |
 | `anaerobicModel_GECKO`, `changeMedia` | copies in `tutorials/full_ecModel/code`, for *Saccharomyces cerevisiae* |
 
@@ -136,7 +136,7 @@ The old name of each function in the table calls the new function and prints a d
 | `enzymeUsage` | `getEnzymeUsage` | |
 | `updateGECKOdoc` | `buildGECKOdoc` | |
 | `selectKcatValue` | `assignKcatValues` | the function writes `ecModel.ec.kcat` |
-| `mergeDLKcatAndFuzzyKcats` | `mergeKcats` | merges kcat lists of any number of sources |
+| `mergeDLKcatAndFuzzyKcats` | `mergeKcats` | merges *k*{sub}`cat` lists of any number of sources |
 
 geckopy names a counterpart in `snake_case`; the prefix `get` is dropped for some (`enzyme_usage` for `getEnzymeUsage`, `pfba_enzymes` for `getPfbaEnzymes`) and kept by others (`merge_kcats` for `mergeKcats`). The counterpart of `createGECKOproject` is the command `geckopy init`, and the counterpart of `upgradeGECKOproject` is `geckopy upgrade`. [MATLAB and Python](matlab-vs-python.md) lists the full mapping.
 
@@ -171,7 +171,7 @@ The Add-On manager distributes the latest release. Uninstall the Add-On (`GECKOI
 
 GECKO 1 ([Sánchez et al., 2017](references.md#gecko-1)) and GECKO 2 ([Domenzain et al., 2022](references.md#gecko-2)) share one ecModel structure, which differs from GECKO 3 and GECKO 4:
 
-- Enzyme and kcat information is spread over several model fields. From GECKO 3, `ecModel.ec` (Python: `ec_model.ec`) collects it.
+- Enzyme and *k*{sub}`cat` information is spread over several model fields. From GECKO 3, `ecModel.ec` (Python: `ec_model.ec`) collects it.
 - Enzymes enter the S-matrix as `1/kcat`, with the molecular weight in the protein exchange reactions. From GECKO 3 the coefficient is `MW/kcat` (see [Choose the ecModel structure](guide/ecmodel-structure.md)).
 - The YAML format of GECKO 3 and GECKO 4 retains the full model content. GECKO 1 and GECKO 2 have no such format.
 
@@ -188,11 +188,11 @@ The last GECKO 2 release is [2.0.3](https://github.com/SysBioChalmers/GECKO/rele
 | Warning when `loadEcModel` loads a model | the ecModel was saved by GECKO 3 and its protein reactions run in reverse | `loadEcModel` upgrades the loaded model. Run `saveEcModel` to store the upgraded model |
 | An enzyme usage flux is negative | the model was not upgraded | Run `upgradeEcModel` |
 | Error `GECKO:loadAdapterParams` that names a key of `model_adapter.toml` | the key is not in `adapterParameters.tsv` | Place a key that GECKO uses and geckopy does not use under `[matlab.params]` |
-| A rebuilt ecModel has other kcats than the GECKO 3 model | the default preset and the substrate of BRENDA kcats changed | Use `preset = "gecko_classic"` and compare the output of `collectKcats` |
+| A rebuilt ecModel has other *k*{sub}`cat`s than the GECKO 3 model | the default preset and the substrate of BRENDA *k*{sub}`cat`s changed | Use `preset = "gecko_classic"` and compare the output of `collectKcats` |
 
 ## See also
 
 - [Project format 4](gecko4-project-format.md)
 - [Upgrade a GECKO 3 project](gecko3-upgrade-project.md)
-- [Kcat assignment](gecko4-kcat-assignment.md)
+- [*K*{sub}`cat` assignment](gecko4-kcat-assignment.md)
 - [GECKO and geckopy](gecko-to-geckopy.md)

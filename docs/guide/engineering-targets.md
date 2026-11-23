@@ -72,7 +72,7 @@ The other names in the examples are placeholders for values of the project:
 
 ## Target selection
 
-`ecFSEOF` first finds the production at maximum growth and the maximum production. It then fixes the production reaction at `nSteps` (Python: `n_steps`, default 16) evenly spaced values from the first to 90 % of the second. At each value it maximises growth and then minimises the total flux. A reaction is a target when the absolute Pearson correlation between its absolute flux and the enforced production is at least `corrThreshold` (Python: `correlation_threshold`, default 0.9). The scan covers the reactions with a gene rule, except those that use the standard enzyme ([Choose the kcat sources](kcat-sources.md)). The `usage_prot_*` reactions take part in the scan and are left out of the result.
+`ecFSEOF` first finds the production at maximum growth and the maximum production. It then fixes the production reaction at `nSteps` (Python: `n_steps`, default 16) evenly spaced values from the first to 90 % of the second. At each value it maximises growth and then minimises the total flux. A reaction is a target when the absolute Pearson correlation between its absolute flux and the enforced production is at least `corrThreshold` (Python: `correlation_threshold`, default 0.9). The scan covers the reactions with a gene rule, except those that use the standard enzyme ([Choose the *k*{sub}`cat` sources](kcat-sources.md)). The `usage_prot_*` reactions take part in the scan and are left out of the result.
 
 Each target reaction gets an action from the slope of its absolute flux:
 

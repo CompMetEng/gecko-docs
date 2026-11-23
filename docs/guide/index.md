@@ -12,11 +12,11 @@ The guide shows how to build an enzyme-constrained model (ecModel) from a conven
 
 | Page | Content |
 | --- | --- |
-| [Build an ecModel](first-ecmodel.md) | create a project, make the ecModel, assign kcats, set the protein pool, check the growth rate and save the model, with the default settings |
+| [Build an ecModel](first-ecmodel.md) | create a project, make the ecModel, assign *k*{sub}`cat`s, set the protein pool, check the growth rate and save the model, with the default settings |
 
 ## Workflow
 
-[![Flowchart of the guide pages: project, ecModel structure, kcat sources, protein pool, kcat tuning, proteomics, relaxation and analysis](../_static/workflow-overview.png){width=200px .no-scaled-link}](workflow.md)
+[![Flowchart of the guide pages: project, ecModel structure, *k*{sub}`cat` sources, protein pool, *k*{sub}`cat` tuning, proteomics, relaxation and analysis](../_static/workflow-overview.png){width=200px .no-scaled-link}](workflow.md)
 
 The [workflow overview](workflow.md) shows the order of the pages below, the steps of the quick path, the alternative paths and the functions of each page, in MATLAB and Python.
 
@@ -27,13 +27,13 @@ The decision pages are in the order of the work.
 | Page | Choice |
 | --- | --- |
 | [Choose the ecModel structure](ecmodel-structure.md) | full or light ecModel, matching of genes to UniProt and KEGG, enzyme complexes |
-| [Choose the kcat sources](kcat-sources.md) | the kcat assignment preset, and the treatment of isozymes and of reactions without a kcat |
-| [Set custom kcats](custom-kcats.md) | curated kcats that take precedence over the kcat sources |
+| [Choose the *k*{sub}`cat` sources](kcat-sources.md) | the *k*{sub}`cat` assignment preset, and the treatment of isozymes and of reactions without a *k*{sub}`cat` |
+| [Set custom *k*{sub}`cat`s](custom-kcats.md) | curated *k*{sub}`cat`s that take precedence over the *k*{sub}`cat` sources |
 | [Set the protein pool](protein-pool.md) | the values of the total protein content, the enzyme fraction $f$ and the saturation factor $\sigma$ |
-| [Choose a kcat tuning](kcat-tuning.md) | `sensitivityTuning` or evotune, when the ecModel grows too slowly, and the check of a tuned kcat |
-| [Tune kcats with sensitivityTuning](standard-tuning.md) | the tuning to one maximum growth rate, and the fit of $\sigma$ after it |
-| [Tune kcats with evotune](evotune.md) | the data and the settings of the tuning against measured growth rates and fluxes |
-| [Compare kcat sources](kcat-evidence.md) | the kcat of every source file next to the kcat of the ecModel and its tuned value, and a kcat prediction for a few reactions |
+| [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) | `sensitivityTuning` or evotune, when the ecModel grows too slowly, and the check of a tuned *k*{sub}`cat` |
+| [Tune *k*{sub}`cat`s with sensitivityTuning](standard-tuning.md) | the tuning to one maximum growth rate, and the fit of $\sigma$ after it |
+| [Tune *k*{sub}`cat`s with evotune](evotune.md) | the data and the settings of the tuning against measured growth rates and fluxes |
+| [Compare *k*{sub}`cat` sources](kcat-evidence.md) | the *k*{sub}`cat` of every source file next to the *k*{sub}`cat` of the ecModel and its tuned value, and a *k*{sub}`cat` prediction for a few reactions |
 | [Constrain enzymes with proteomics](proteomics.md) | the integration of measured enzyme concentrations |
 | [Relax proteomics constraints](relaxing-proteomics.md) | the method that loosens proteomics constraints that prevent growth |
 | [Analyse an ecModel](analysis.md) | objectives, flux variability, sampling and the mapping of fluxes to the conventional GEM |
@@ -49,8 +49,8 @@ The decision pages are in the order of the work.
 | [Files in the data folder](data-folder-files.md) | the files that the `data` folder of a project can hold |
 | [Experimental data](experimental-data.md) | the growth rates and exchange fluxes of growth conditions that constrain and test an ecModel |
 | [Model adapter parameters](model-adapter-parameters.md) | every parameter of `model_adapter.toml` in both languages |
-| [Project format 4](../gecko4-project-format.md) | the project folder, `model_adapter.toml`, the kcat source files and the ecModel format |
-| [Kcat assignment](../gecko4-kcat-assignment.md) | the kcat sources, stages and presets of `collectKcats` and `assignKcats` |
+| [Project format 4](../gecko4-project-format.md) | the project folder, `model_adapter.toml`, the *k*{sub}`cat` source files and the ecModel format |
+| [*K*{sub}`cat` assignment](../gecko4-kcat-assignment.md) | the *k*{sub}`cat` sources, stages and presets of `collectKcats` and `assignKcats` |
 | [Basic model operations](basic-model-operations.md) | bounds, objectives, flux balance analysis, flux inspection and export, for conventional GEMs and ecModels |
 
 ## Notes

@@ -56,14 +56,14 @@ The command installs the development version, the `develop` branch of both packa
 :link: guide/ecmodel-structure
 :link-type: doc
 
-Converts a conventional GEM into a full or a light ecModel by bounding reaction rates with enzyme kcat and abundance.
+Converts a conventional GEM into a full or a light ecModel by bounding reaction rates with enzyme *k*{sub}`cat` and abundance.
 :::
 
-:::{grid-item-card} kcat sources and tuning
+:::{grid-item-card} *k*{sub}`cat` sources and tuning
 :link: guide/kcat-sources
 :link-type: doc
 
-Assigns a kcat to each reaction from source files in a set order, and tunes the kcats that limit growth to measured data.
+Assigns a *k*{sub}`cat` to each reaction from source files in a set order, and tunes the *k*{sub}`cat`s that limit growth to measured data.
 :::
 
 :::{grid-item-card} Proteomics integration

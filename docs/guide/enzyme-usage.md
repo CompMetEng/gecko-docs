@@ -157,14 +157,14 @@ A `demandRatio` above 1 means that the solution uses more of the measured enzyme
 
 | Field (MATLAB / Python) | Content | Option, default |
 | --- | --- | --- |
-| `topAbsUsage` / `top_abs_usage` | the enzymes with the highest absolute usage, with the usage as a percentage of the upper bound of `prot_pool_exchange`, the kcat, its source and the reaction | `topAbsUsage` (Python: `top_abs_usage`), 10; 0 or `Inf` lists all enzymes |
+| `topAbsUsage` / `top_abs_usage` | the enzymes with the highest absolute usage, with the usage as a percentage of the upper bound of `prot_pool_exchange`, the *k*{sub}`cat`, its source and the reaction | `topAbsUsage` (Python: `top_abs_usage`), 10; 0 or `Inf` lists all enzymes |
 | `highCapUsage` / `high_cap_usage` | the enzymes with a capacity usage above the threshold, with the same columns and the capacity usage | `highCapUsage` (Python: `high_cap_usage`), 0.9 |
 | `totalUsageFlux` / `total_usage_flux` | the upper bound of `prot_pool_exchange`, in mg/gDCW | (none) |
 | `demandRatio`, `demandRatioActive` (Python: `demand_ratio`, `demand_ratio_active`) | copied from the usage data | (none) |
 
 An enzyme that catalyses several reactions with flux has one row with the combined usage, marked `===` in the text columns, followed by one row per reaction. In `topAbsUsage`, enzymes whose reactions carry no flux are left out after the top N are selected, so the table can have fewer than N enzymes. In `highCapUsage`, MATLAB lists such an enzyme as a `===` row without reaction rows, and Python leaves it out.
 
-The `source` column shows where the kcat of the reaction came from. An enzyme near the top of `topAbsUsage` with the source `standard` has the standard kcat, a value that GECKO gives to reactions without a kcat from any source ([Choose the kcat sources](kcat-sources.md)). The usage of that enzyme depends on a value that is not specific to it; check the reaction for a measured kcat and put it in `data/kcats/custom.tsv` ([Set custom kcats](custom-kcats.md)).
+The `source` column shows where the *k*{sub}`cat` of the reaction came from. An enzyme near the top of `topAbsUsage` with the source `standard` has the standard *k*{sub}`cat`, a value that GECKO gives to reactions without a *k*{sub}`cat` from any source ([Choose the *k*{sub}`cat` sources](kcat-sources.md)). The usage of that enzyme depends on a value that is not specific to it; check the reaction for a measured *k*{sub}`cat` and put it in `data/kcats/custom.tsv` ([Set custom *k*{sub}`cat`s](custom-kcats.md)).
 
 ## Rank the enzymes that limit the objective
 

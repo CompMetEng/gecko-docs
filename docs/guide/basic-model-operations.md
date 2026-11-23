@@ -239,6 +239,6 @@ As on [Build an ecModel](first-ecmodel.md#7-save-the-ecmodel), this plain-cobrap
 
 ## See also
 
-- [Choose a kcat tuning](kcat-tuning.md)
+- [Choose a *k*{sub}`cat` tuning](kcat-tuning.md)
 - [Analyse an ecModel](analysis.md)
 - [Enzyme usage and bottlenecks](enzyme-usage.md)

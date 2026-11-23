@@ -2,7 +2,7 @@
 
 <!-- docs-site: concept-page -->
 
-An enzyme-constrained model (ecModel) is a genome-scale metabolic model (GEM) in which the amount of each enzyme limits the rate of the reactions that the enzyme catalyses. GECKO and geckopy build an ecModel from a conventional GEM. They add the molecular weight (MW) and the turnover number (kcat) of each enzyme, and a limit on the total mass of enzyme that the model can use.
+An enzyme-constrained model (ecModel) is a genome-scale metabolic model (GEM) in which the amount of each enzyme limits the rate of the reactions that the enzyme catalyses. GECKO and geckopy build an ecModel from a conventional GEM. They add the molecular weight (MW) and the turnover number (*k*{sub}`cat`) of each enzyme, and a limit on the total mass of enzyme that the model can use.
 
 ## Conventional GEMs
 
@@ -20,9 +20,9 @@ The enzyme mass that a flux $v$ needs is therefore at least $v \cdot MW / k_{cat
 
 $$ -\frac{n \cdot MW}{3600 \cdot k_{cat}} $$
 
-where $MW$ is the molecular weight of the enzyme in g/mol, $k_{cat}$ is the kcat of the reaction in 1/s, and $n$ is the number of copies of the subunit in the enzyme complex (1 for an enzyme of one subunit). The factor 3600 converts the kcat to 1/h. With fluxes in mmol/gDCW/h, one unit of flux then uses the enzyme mass of the coefficient in mg/gDCW. MW and kcat form one coefficient, which is the protein cost of the reaction. `applyKcatConstraints` (Python: `apply_kcat_constraints`) writes these coefficients from `ec.kcat`, `ec.mw` and `ec.rxnEnzMat`. A reaction with kcat 0 gets no enzyme coefficient and has no protein cost.
+where $MW$ is the molecular weight of the enzyme in g/mol, $k_{cat}$ is the *k*{sub}`cat` of the reaction in 1/s, and $n$ is the number of copies of the subunit in the enzyme complex (1 for an enzyme of one subunit). The factor 3600 converts the *k*{sub}`cat` to 1/h. With fluxes in mmol/gDCW/h, one unit of flux then uses the enzyme mass of the coefficient in mg/gDCW. MW and *k*{sub}`cat` form one coefficient, which is the protein cost of the reaction. `applyKcatConstraints` (Python: `apply_kcat_constraints`) writes these coefficients from `ec.kcat`, `ec.mw` and `ec.rxnEnzMat`. A reaction with *k*{sub}`cat` 0 gets no enzyme coefficient and has no protein cost.
 
-A reaction that more than one enzyme can catalyse (isozymes) is split into one reaction per isozyme in a full ecModel, so each copy has one enzyme and one kcat. A reversible reaction, except an exchange reaction, is split into a forward and a reverse reaction, so these fluxes are positive.
+A reaction that more than one enzyme can catalyse (isozymes) is split into one reaction per isozyme in a full ecModel, so each copy has one enzyme and one *k*{sub}`cat`. A reversible reaction, except an exchange reaction, is split into a forward and a reverse reaction, so these fluxes are positive.
 
 ## The protein pool
 
@@ -53,9 +53,9 @@ The enzyme data of an ecModel are in the field `ec` of the model (MATLAB: `ecMod
 | Field | Content | One entry per |
 | --- | --- | --- |
 | `rxns` | reaction identifiers that correspond to the reactions of the model | reaction (each isozyme has its own entry) |
-| `kcat` | kcat in 1/s; 0 marks a reaction without a kcat | reaction |
-| `source` | the source of the kcat | reaction |
-| `notes` | notes that functions add, for example the kcat before tuning | reaction |
+| `kcat` | *k*{sub}`cat` in 1/s; 0 marks a reaction without a *k*{sub}`cat` | reaction |
+| `source` | the source of the *k*{sub}`cat` | reaction |
+| `notes` | notes that functions add, for example the *k*{sub}`cat` before tuning | reaction |
 | `eccodes` | EC numbers | reaction |
 | `genes` | the genes that code for the enzymes | enzyme |
 | `enzymes` | UniProt identifiers of the enzymes | enzyme |
@@ -70,17 +70,17 @@ The enzyme data of an ecModel are in the field `ec` of the model (MATLAB: `ecMod
 
 A full ecModel has one pseudometabolite and one usage reaction per enzyme, so it can be constrained with the concentration of each enzyme and reports the usage of each enzyme. A light ecModel has no pseudometabolite per enzyme: each reaction takes protein directly from `prot_pool`, with the lowest protein cost of its isozymes. It is smaller, and it cannot use proteomics data or report the usage of an enzyme (see [Choose the ecModel structure](ecmodel-structure.md)).
 
-## Kcat values
+## *K*{sub}`cat` values
 
-The kcat values determine how much protein each reaction costs, so they determine the predictions of an ecModel. Measured kcats come from databases such as [BRENDA](https://www.brenda-enzymes.org/), which covers few enzymes of most organisms. GECKO fills the reactions without a measured kcat with values estimated from other measurements of the same EC number, or predicted from the enzyme sequence and the substrate structure by the OpenKineticsPredictor service. [Choose the kcat sources](kcat-sources.md) describes the sources and the presets that combine them.
+The *k*{sub}`cat` values determine how much protein each reaction costs, so they determine the predictions of an ecModel. Measured *k*{sub}`cat`s come from databases such as [BRENDA](https://www.brenda-enzymes.org/), which covers few enzymes of most organisms. GECKO fills the reactions without a measured *k*{sub}`cat` with values estimated from other measurements of the same EC number, or predicted from the enzyme sequence and the substrate structure by the OpenKineticsPredictor service. [Choose the *k*{sub}`cat` sources](kcat-sources.md) describes the sources and the presets that combine them.
 
-Most measured kcats are in vitro values, and predicted kcats are estimates. A new ecModel can therefore grow more slowly than the organism. [Choose a kcat tuning](kcat-tuning.md) describes how to find and correct the kcats that limit growth.
+Most measured *k*{sub}`cat`s are in vitro values, and predicted *k*{sub}`cat`s are estimates. A new ecModel can therefore grow more slowly than the organism. [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) describes how to find and correct the *k*{sub}`cat`s that limit growth.
 
 ## Limitations
 
 - An ecModel has more reactions and metabolites than its GEM, so simulations take longer. A light ecModel reduces this.
-- The enzyme constraint describes the capacity of each enzyme at a given kcat and saturation. Regulation such as allosteric control and post-translational modification is not part of the model.
-- The predictions depend on the kcat values, which are uncertain for most reactions, in particular for enzyme complexes. Measured growth rates, fluxes and proteomics data are needed to test an ecModel.
+- The enzyme constraint describes the capacity of each enzyme at a given *k*{sub}`cat` and saturation. Regulation such as allosteric control and post-translational modification is not part of the model.
+- The predictions depend on the *k*{sub}`cat` values, which are uncertain for most reactions, in particular for enzyme complexes. Measured growth rates, fluxes and proteomics data are needed to test an ecModel.
 
 ## See also
 

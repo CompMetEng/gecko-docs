@@ -93,16 +93,16 @@ There are two ways to get an ecModel of a context:
 
 | Order | What it needs | Result |
 | --- | --- | --- |
-| make the context-specific GEM, then build an ecModel from it | the full ecModel workflow per context | each context has its own kcat assignment |
-| build one generic ecModel, then trim it with `getSubsetEcModel` | the generic ecModel and the context-specific GEM | all contexts have the kcats of the generic ecModel |
+| make the context-specific GEM, then build an ecModel from it | the full ecModel workflow per context | each context has its own *k*{sub}`cat` assignment |
+| build one generic ecModel, then trim it with `getSubsetEcModel` | the generic ecModel and the context-specific GEM | all contexts have the *k*{sub}`cat`s of the generic ecModel |
 
-The second way builds the enzyme data once, which saves time when many contexts are made from one generic model, and gives all contexts the same kcats. The first way fits when a context has its own data to tune the kcats against.
+The second way builds the enzyme data once, which saves time when many contexts are made from one generic model, and gives all contexts the same *k*{sub}`cat`s. The first way fits when a context has its own data to tune the *k*{sub}`cat`s against.
 
 ## Build from the context-specific GEM
 
 On this way, the context-specific GEM is the GEM of a project, and every step of [Build an ecModel](first-ecmodel.md) runs for each context. Compared with the trimmed generic ecModel:
 
-- The kcat assignment and the kcat tuning run on the reactions of the context. A kcat tuning fits the kcats to the growth rate or the data of that context, so a kcat can differ between contexts.
+- The *k*{sub}`cat` assignment and the *k*{sub}`cat` tuning run on the reactions of the context. A *k*{sub}`cat` tuning fits the *k*{sub}`cat`s to the growth rate or the data of that context, so a *k*{sub}`cat` can differ between contexts.
 - Ptot, f and sigma in `model_adapter.toml` are the values of the context (see [Set the protein pool](protein-pool.md)).
 - Each context is its own build, so the time of a build is spent once per context. A project folder with its own `model_adapter.toml` per context keeps the values of each context apart.
 

@@ -14,7 +14,7 @@ Publications that use GECKO or geckopy cite the paper of the GECKO 3 protocol be
 
 ## DLKcat
 
-> Li, F. et al. (2022). **Deep learning-based kcat prediction enables
+> Li, F. et al. (2022). **Deep learning-based *k*{sub}`cat` prediction enables
 > improved enzyme-constrained model reconstruction.** *Nature Catalysis* 5:
 > 662-672.
 > <https://doi.org/10.1038/s41929-022-00798-z>

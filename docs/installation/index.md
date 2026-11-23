@@ -24,7 +24,7 @@ The starting point is a conventional constraint-based metabolic model, at genome
 :::
 ::::
 
-Both toolboxes also need a linear-programming solver (see [Solver](#solver)). Predicted kcats come from the hosted [OpenKineticsPredictor](#openkineticspredictor) service.
+Both toolboxes also need a linear-programming solver (see [Solver](#solver)). Predicted *k*{sub}`cat`s come from the hosted [OpenKineticsPredictor](#openkineticspredictor) service.
 
 ## Install
 
@@ -172,12 +172,12 @@ MATLAB reaches the solvers through RAVEN, Python through cobrapy.
 :::{admonition} Avoid GLPK
 :class: tip
 
-GLPK, the default solver of RAVEN, is not recommended for GECKO: it solves a genome-scale ecModel many times slower than Gurobi, which lengthens the flux variability analysis and the kcat tuning. Configure Gurobi, or in MATLAB SCIP, before working with an ecModel of genome scale.
+GLPK, the default solver of RAVEN, is not recommended for GECKO: it solves a genome-scale ecModel many times slower than Gurobi, which lengthens the flux variability analysis and the *k*{sub}`cat` tuning. Configure Gurobi, or in MATLAB SCIP, before working with an ecModel of genome scale.
 :::
 
 ## OpenKineticsPredictor
 
-`kcatsFromOKP` and `kcatsFromDLKcat` (Python: `kcats_from_okp`, `kcats_from_dlkcat`) predict kcat values with the hosted [OpenKineticsPredictor](https://predictor.openkinetics.org/) service. The service needs an API key, which GECKO reads from the environment variable `OKP_API_KEY` or from `data/okpApiKey.txt` in the project folder. A project made with `createGECKOproject` (Python: `geckopy init`) has a `.gitignore` that keeps that file out of git. [Choose the kcat sources](../guide/kcat-sources.md) describes the method and the job.
+`kcatsFromOKP` and `kcatsFromDLKcat` (Python: `kcats_from_okp`, `kcats_from_dlkcat`) predict *k*{sub}`cat` values with the hosted [OpenKineticsPredictor](https://predictor.openkinetics.org/) service. The service needs an API key, which GECKO reads from the environment variable `OKP_API_KEY` or from `data/okpApiKey.txt` in the project folder. A project made with `createGECKOproject` (Python: `geckopy init`) has a `.gitignore` that keeps that file out of git. [Choose the *k*{sub}`cat` sources](../guide/kcat-sources.md) describes the method and the job.
 
 :::{admonition} DLKcat on the local computer
 :class: note

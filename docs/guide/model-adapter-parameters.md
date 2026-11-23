@@ -95,7 +95,7 @@ show_adapter_params(ModelAdapter.from_folder(project_path))
 :::
 ::::
 
-Each line has the form `<key> = <value>  [<origin>]`, in the order of `adapterParameters.tsv`. The origin is `file` (set in `model_adapter.toml`, or by an adapter class), `default`, `preset <name>` (set by the kcat assignment preset) or `not set`. Strings are printed without quotes, lists comma-separated, and whole numbers without decimals. The kcat assignment stages, the settings of each kcat source and the evotune source groups are printed as they are resolved. Some of the lines for a project that sets `gr_exp` and no kcat assignment:
+Each line has the form `<key> = <value>  [<origin>]`, in the order of `adapterParameters.tsv`. The origin is `file` (set in `model_adapter.toml`, or by an adapter class), `default`, `preset <name>` (set by the *k*{sub}`cat` assignment preset) or `not set`. Strings are printed without quotes, lists comma-separated, and whole numbers without decimals. The *k*{sub}`cat` assignment stages, the settings of each *k*{sub}`cat` source and the evotune source groups are printed as they are resolved. Some of the lines for a project that sets `gr_exp` and no *k*{sub}`cat` assignment:
 
 ```text
 sigma = 0.5  [default]
@@ -149,21 +149,21 @@ A stage line lists the action, the sources, and the criteria and limits that dif
 | `spontaneous.name_contains` | `spontaneous.name_contains` | none | Reactions whose name contains this text are spontaneous |
 | `spontaneous.file` | `spontaneous.file` | none | TSV of spontaneous reactions, relative to the project folder: a header row, reaction identifiers in the first column and, optionally, a second column in which `1` or `true` marks the spontaneous reactions |
 
-A reaction is spontaneous when either rule matches. `getStandardKcat` (Python: `assign_standard_kcat`) gives spontaneous reactions no standard kcat.
+A reaction is spontaneous when either rule matches. `getStandardKcat` (Python: `assign_standard_kcat`) gives spontaneous reactions no standard *k*{sub}`cat`.
 
-## Kcat assignment
+## *K*{sub}`cat` assignment
 
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
 | `kcat_assignment.preset` | `kcat_assignment.preset` | `"brenda_ec_tree"` without stages | One of `brenda_ec_tree`, `ec_tree_homologs`, `ec_tree_okp`, `okp`, `gecko_median` and `gecko_classic`. A preset and stages exclude each other |
-| `kcat_assignment.isozymes` | `kcat_assignment.isozymes` | `true` | Fill reactions without a kcat from their isozymes after the stages |
-| `kcat_assignment.standard` | `kcat_assignment.standard` | `true` | Give the remaining reactions the standard kcat |
+| `kcat_assignment.isozymes` | `kcat_assignment.isozymes` | `true` | Fill reactions without a *k*{sub}`cat` from their isozymes after the stages |
+| `kcat_assignment.standard` | `kcat_assignment.standard` | `true` | Give the remaining reactions the standard *k*{sub}`cat` |
 | `kcat_assignment.stage` | `kcat_assignment.stage` | none | Stages in place of a preset, written as `[[kcat_assignment.stage]]` tables |
-| `kcat_sources.<name>` | `kcat_sources.<name>` | set by the preset | Settings of one source file, described in [Kcat source settings](#kcat-source-settings) |
+| `kcat_sources.<name>` | `kcat_sources.<name>` | set by the preset | Settings of one source file, described in [*K*{sub}`cat` source settings](#kcat-source-settings) |
 
-A stage has the keys `action` (`select`, the default, or `combine`), `sources`, `criteria` (`max`, `min`, `median` or `mean`; default `max`), `top_origin_limit` (default 4), `bottom_origin_limit` (default 6) and `wildcard_limit` (default 3). [Kcat assignment](../gecko4-kcat-assignment.md) describes the presets and the stages.
+A stage has the keys `action` (`select`, the default, or `combine`), `sources`, `criteria` (`max`, `min`, `median` or `mean`; default `max`), `top_origin_limit` (default 4), `bottom_origin_limit` (default 6) and `wildcard_limit` (default 3). [*K*{sub}`cat` assignment](../gecko4-kcat-assignment.md) describes the presets and the stages.
 
-## Kcat source settings
+## *K*{sub}`cat` source settings
 
 A `[kcat_sources.<name>]` table holds the settings with which `updateKcatSources` (Python: `update_kcat_sources`) gathers the source file `data/kcats/<name>.tsv`. A preset sets some of these settings. A table in the file replaces the keys that it sets and keeps the other settings of the preset. Each source takes the keys in the table; [Gather the source files](kcat-sources.md#gather-the-source-files) gives their meaning and defaults.
 
@@ -179,9 +179,9 @@ A table of another source is an unknown key, and so is `[kcat_sources.okp_<x>]` 
 
 ### BRENDA aggregation
 
-`kcat.tsv` of the BRENDA release records a maximum and a median kcat per EC number, substrate and organism. `[kcat_sources.brenda] aggregation` selects which of the two is used, and no other key of the file selects it. `updateKcatSources` gathers `brenda.tsv` with this setting. `kcatsFromBrenda`, `fuzzyKcatMatching` and `loadBRENDAdata` (Python: `kcats_from_brenda` and `fuzzy_kcat_matching`), called without an aggregation, use the same setting as the kcat assignment configuration resolves it:
+`kcat.tsv` of the BRENDA release records a maximum and a median *k*{sub}`cat` per EC number, substrate and organism. `[kcat_sources.brenda] aggregation` selects which of the two is used, and no other key of the file selects it. `updateKcatSources` gathers `brenda.tsv` with this setting. `kcatsFromBrenda`, `fuzzyKcatMatching` and `loadBRENDAdata` (Python: `kcats_from_brenda` and `fuzzy_kcat_matching`), called without an aggregation, use the same setting as the *k*{sub}`cat` assignment configuration resolves it:
 
-| Kcat assignment in the file | BRENDA aggregation |
+| *K*{sub}`cat` assignment in the file | BRENDA aggregation |
 |---|---|
 | none, so the default preset `brenda_ec_tree` | `median` |
 | preset `ec_tree_homologs`, `ec_tree_okp` or `gecko_median` | `median` |
@@ -198,23 +198,23 @@ To use the BRENDA maximum with the default preset:
 aggregation = "max"
 ```
 
-## Kcat tuning
+## *K*{sub}`cat` tuning
 
-The `[evotune]` section holds the hyperparameters of the CMA-ES kcat tuning described in [Tune kcats with evotune](evotune.md).
+The `[evotune]` section holds the hyperparameters of the CMA-ES *k*{sub}`cat` tuning described in [Tune *k*{sub}`cat`s with evotune](evotune.md).
 
 | TOML key | MATLAB parameter | Default | Description |
 |---|---|---|---|
-| `evotune.sigma0_log_default` | `evotune.sigma0logDefault` | `0.5` | Prior standard deviation of the natural log of the kcat, for the kcats that match no source group |
+| `evotune.sigma0_log_default` | `evotune.sigma0logDefault` | `0.5` | Prior standard deviation of the natural log of the *k*{sub}`cat`, for the *k*{sub}`cat`s that match no source group |
 | `evotune.source_groups` | `evotune.kcatSources` | four groups (see [Source groups](#source-groups)) | Trust tiers: one table `[evotune.source_groups.<group>]` per group, with `sources` and `sigma0_log` |
 | `evotune.rmse_threshold` | `evotune.rmseThreshold` | `0.2` | The search stops when the best distance to the measurements reaches this value |
 | `evotune.max_generations` | `evotune.maxGenerations` | `150` | Maximum number of CMA-ES generations |
 | `evotune.max_growth_weight` | `evotune.maxGrowthWeight` | `1.0` | Weight of the distance of the maximum-growth conditions against that of the flux conditions |
 | `evotune.prior_penalty_weight` | `evotune.priorPenaltyWeight` | `0.03` | Weight of the prior term in the search objective |
-| `evotune.tie_isozymes` | `evotune.tieIsozymes` | `true` | Give the isozyme copies of one reaction a single kcat |
+| `evotune.tie_isozymes` | `evotune.tieIsozymes` | `true` | Give the isozyme copies of one reaction a single *k*{sub}`cat` |
 
 ### Source groups
 
-A source group gives the kcats of some sources one prior width. Each group is a table with two required keys:
+A source group gives the *k*{sub}`cat`s of some sources one prior width. Each group is a table with two required keys:
 
 ```toml
 [evotune.source_groups.brenda]
@@ -228,17 +228,17 @@ sigma0_log = 0.5
 
 | Key | Value |
 |---|---|
-| `sources` | non-empty list of origins of `ec.source` (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). An entry that ends in `*` is a prefix pattern on the origin: `okp_*` matches `okp_kinform_h` and `okp_unikp` |
-| `sigma0_log` | positive number: the prior standard deviation of the natural log of the kcat. A smaller value is more trust |
+| `sources` | non-empty list of origins of `ec.source` (see [Provenance of a *k*{sub}`cat`](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). An entry that ends in `*` is a prefix pattern on the origin: `okp_*` matches `okp_kinform_h` and `okp_unikp` |
+| `sigma0_log` | positive number: the prior standard deviation of the natural log of the *k*{sub}`cat`. A smaller value is more trust |
 
-The `sd` in an `ec.source` label such as `combined (sd=0.10, n=2)` is a standard deviation of the log10 of the kcat; a standard deviation of 0.1 in log10 is 0.23 in natural log.
+The `sd` in an `ec.source` label such as `combined (sd=0.10, n=2)` is a standard deviation of the log10 of the *k*{sub}`cat`; a standard deviation of 0.1 in log10 is 0.23 in natural log.
 
-A kcat is in the group of the first entry that matches it, in this order:
+A *k*{sub}`cat` is in the group of the first entry that matches it, in this order:
 
 1. The entries without `*`, of all groups in the order of the file. An entry matches when it equals the origin of `ec.source` or the whole `ec.source`, without regard to case.
 2. The patterns, the longest prefix first, and patterns of equal length in the order of the file. A pattern matches when the origin starts with its prefix, without regard to case.
 
-A kcat is labelled with the name of its group, in `sourceGroup` of the screen and `groups` of the tuning result (Python `source_group` and `groups`). A kcat that matches no group gets `sigma0_log_default`. When more than 20 % of the tunable kcats match no group, the tuning warns:
+A *k*{sub}`cat` is labelled with the name of its group, in `sourceGroup` of the screen and `groups` of the tuning result (Python `source_group` and `groups`). A *k*{sub}`cat` that matches no group gets `sigma0_log_default`. When more than 20 % of the tunable *k*{sub}`cat`s match no group, the tuning warns:
 
 ```text
 <n> of <m> tunable kcats match no evotune source group and get sigma0_log_default (<value>); origins: <origins>
@@ -298,7 +298,7 @@ A GECKO 3 adapter class sets the same parameters in MATLAB code; [GECKO 3 to GEC
 
 | Problem | Possible reason | Solution |
 |---|---|---|
-| `GECKO:loadAdapterParams`: `<file>: unknown key <dotted.key> in model_adapter.toml` | the key is missing from the tables above, is misspelled, or belongs to no key list of its group, stage or kcat source table | Correct the key, or place a parameter that GECKO alone uses under `[matlab.params]` |
+| `GECKO:loadAdapterParams`: `<file>: unknown key <dotted.key> in model_adapter.toml` | the key is missing from the tables above, is misspelled, or belongs to no key list of its group, stage or *k*{sub}`cat` source table | Correct the key, or place a parameter that GECKO alone uses under `[matlab.params]` |
 | `GECKO:loadAdapterParams`: `<file>: matlab.params.kcatAggregation is not allowed; set it in [kcat_sources.brenda] aggregation` (or `matlab.params.evotune`, `set it in [evotune]`) | `[matlab.params]` sets a parameter that has a key of its own | Move the setting to `[kcat_sources.brenda]` or `[evotune]` |
 | `GECKO:loadAdapterParams`: `<file>: evotune.source_groups.<group> needs both sources and sigma0_log`, or `must be a table with sources and sigma0_log` | a group lacks one of the two keys, or is a single value in place of a table | Write the group as a table with `sources` and `sigma0_log` |
 | `GECKO:loadAdapterParams`: `<file>: evotune.source_groups.<group>.sources must be a non-empty list of strings`, or `.sigma0_log must be a positive number` | `sources` is empty or not a list of strings; `sigma0_log` is zero, negative, not finite or not a number | Correct the value |
@@ -310,6 +310,6 @@ A GECKO 3 adapter class sets the same parameters in MATLAB code; [GECKO 3 to GEC
 ## See also
 
 - [Project format 4](../gecko4-project-format.md), the sections of `model_adapter.toml`.
-- [Kcat assignment](../gecko4-kcat-assignment.md), the presets and stages of `[kcat_assignment]`.
+- [*K*{sub}`cat` assignment](../gecko4-kcat-assignment.md), the presets and stages of `[kcat_assignment]`.
 - [Build an ecModel](first-ecmodel.md), where the model adapter is created and populated.
 - [Files in the data folder](data-folder-files.md), the other project-wide reference table.

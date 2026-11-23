@@ -16,7 +16,7 @@ Measured growth rates and exchange fluxes of growth conditions constrain an ecMo
 | `computeCarbonWeights` | `compute_carbon_weights` | weight of each exchange reaction in the score |
 | `datasetRmse`, `experimentDistance` | `dataset_rmse`, `experiment_distance` | distance between the simulation and the measurements, for one kind of condition and for both kinds combined |
 
-`constrainFluxData` and `apply_flux_data_constraints` take the biomass reaction and the preferred carbon source from the model adapter and pass them on to RAVEN's `applyFluxDataConstraints` and raven-toolbox's `apply_flux_data_constraints`. The tuning functions of [Tune kcats with evotune](evotune.md) call the loaders and the scoring functions.
+`constrainFluxData` and `apply_flux_data_constraints` take the biomass reaction and the preferred carbon source from the model adapter and pass them on to RAVEN's `applyFluxDataConstraints` and raven-toolbox's `apply_flux_data_constraints`. The tuning functions of [Tune *k*{sub}`cat`s with evotune](evotune.md) call the loaders and the scoring functions.
 
 ## Files
 
@@ -24,9 +24,9 @@ The files are read from `<project>/data/`. Each file is optional, and a missing 
 
 | File | Content | Used by |
 | --- | --- | --- |
-| `fluxData.tsv` | Flux conditions: growth rate, protein content and measured exchange fluxes of each condition, one row per condition. | the constraints of [Constrain enzymes with proteomics](proteomics.md), and the kcat tuning |
-| `maxGrowth.tsv` | Maximum-growth conditions: the maximum growth rate with each carbon source, one carbon source per row, at `-1000` (unconstrained). | the kcat tuning |
-| `zeroFlux.tsv` | Reaction IDs that carry no flux in any condition. The header is `Rxns` and each following line holds one reaction ID. | the kcat tuning |
+| `fluxData.tsv` | Flux conditions: growth rate, protein content and measured exchange fluxes of each condition, one row per condition. | the constraints of [Constrain enzymes with proteomics](proteomics.md), and the *k*{sub}`cat` tuning |
+| `maxGrowth.tsv` | Maximum-growth conditions: the maximum growth rate with each carbon source, one carbon source per row, at `-1000` (unconstrained). | the *k*{sub}`cat` tuning |
+| `zeroFlux.tsv` | Reaction IDs that carry no flux in any condition. The header is `Rxns` and each following line holds one reaction ID. | the *k*{sub}`cat` tuning |
 
 ## Columns of the flux files
 
@@ -38,11 +38,11 @@ glucose     NaN    0.41     -1000              NaN                 ...   1      
 fructose    NaN    0.338    NaN                -1000               ...   1        DLKcat
 ```
 
-- `Condition` names the row. In the files of the kcat tuning, the name is the name of the carbon source of the row and equals the metabolite name of one exchange column, for example `glucose` for `glucose (r_1714)`. A name that matches no exchange column raises an error, except in a row with the `weight` 0.
+- `Condition` names the row. In the files of the *k*{sub}`cat` tuning, the name is the name of the carbon source of the row and equals the metabolite name of one exchange column, for example `glucose` for `glucose (r_1714)`. A name that matches no exchange column raises an error, except in a row with the `weight` 0.
 - `Ptot` is the measured protein content in g/gDCW, and `NaN` when it is not measured.
 - `grRate` is the measured growth rate in 1/h.
 - Each exchange column is headed `<metabolite> (<reaction ID>)` and holds the flux of that reaction in mmol/gDCW/h. Uptake is negative and excretion is positive. The header is split at the parenthesis that closes it, so a reaction ID may contain parentheses (`X (EX_a(e))` is the metabolite `X` and the reaction `EX_a(e)`). A flux of `-1000` or `1000` leaves uptake or excretion unconstrained, and an empty or non-numeric cell is read as `NaN`, which means not measured.
-- `weight` is optional and scales the error of the row in the score of the kcat tuning. A row with the weight `0` is left out of the simulation and of the score, and its `Condition` need not match an exchange column. Without the column every row has the weight 1. A file with the column `evotuneRMSEweight` raises an error that names `weight`.
+- `weight` is optional and scales the error of the row in the score of the *k*{sub}`cat` tuning. A row with the weight `0` is left out of the simulation and of the score, and its `Condition` need not match an exchange column. Without the column every row has the weight 1. A file with the column `evotuneRMSEweight` raises an error that names `weight`.
 - `source` is optional free text that names where the data come from. The columns `weight` and `source` may stand in any position after `grRate`.
 
 A row with the weight `0` can hold a condition that the tuning does not use but another step reads. The first row of `fluxData.tsv` in the `full_ecModel` tutorial is `Std`, with `Ptot` 0.4228, the growth rate 0.1 and the glucose uptake -1.1. Its weight is `0`, so the tuning leaves it out, and the protein-constraint step of the tutorial reads it as the first condition (`condition=0` in Python, `'condition',1` in MATLAB).
@@ -53,7 +53,7 @@ A row with the weight `0` can hold a condition that the tuning does not use but 
 
 ## Scoring a model against all conditions
 
-The kcat tuning simulates every row of `fluxData.tsv` and `maxGrowth.tsv` whose `weight` is not `0`.
+The *k*{sub}`cat` tuning simulates every row of `fluxData.tsv` and `maxGrowth.tsv` whose `weight` is not `0`.
 
 1. For a flux condition (a row of `fluxData.tsv`), the uptake of the carbon source is fixed at the measured value. Exchange reactions that are the carbon source of some row are blocked in every other row. The growth rate and the measured exchange fluxes are compared with the simulation, and so is the flux of each reaction of `zeroFlux.tsv`, which adds a term only when its simulated flux is not zero.
 2. For a maximum-growth condition (a row of `maxGrowth.tsv`), the uptake of the carbon source is opened to `-1000`, and only the growth rate is compared.
@@ -124,7 +124,7 @@ Output in the `full_ecModel` tutorial:
 
 ## See also
 
-- [Tune kcats with evotune](evotune.md), the kcat tuning that scores a model against these files.
+- [Tune *k*{sub}`cat`s with evotune](evotune.md), the *k*{sub}`cat` tuning that scores a model against these files.
 - [Constrain enzymes with proteomics](proteomics.md), where `fluxData.tsv` constrains the ecModel.
 - [Files in the data folder](data-folder-files.md), every file of the `data` folder.
 - [API reference](../api/index.md), every function in both toolboxes.
