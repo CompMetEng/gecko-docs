@@ -79,4 +79,4 @@ git commit -m "chore: update submodules to latest tracked branches"
 
 ## License and attribution
 
-The GECKO source code is released under the MIT license at https://github.com/CompMetEng/GECKO. The scientific content summarized in these pages is the work of the original authors; see [Citations](docs/references.md) for the papers to cite.
+The GECKO source code is released under the GNU General Public License v3 at https://github.com/CompMetEng/GECKO. The scientific content summarized in these pages is the work of the original authors; see [Citations](docs/references.md) for the papers to cite.

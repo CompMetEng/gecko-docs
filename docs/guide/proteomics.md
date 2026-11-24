@@ -1,5 +1,7 @@
 # Constrain enzymes with proteomics
 
+<!-- run-examples: skip-file -->
+
 Load the absolute proteomics data and the exchange fluxes of one experiment, bound the usage of each measured enzyme by its concentration, set the protein pool for the experiment, and constrain the exchange reactions and the growth rate. At the end, the ecModel describes the experiment, and solving it shows whether the ecModel reaches the measured growth rate. Proteomics data require a full ecModel, which has a usage reaction per enzyme; a light ecModel has none (see [Choose the ecModel structure](ecmodel-structure.md)).
 
 <!-- workflow-place -->
@@ -98,7 +100,7 @@ flowchart TB
 
 ## Setup
 
-A full ecModel with kcats and a protein pool (see [Build an ecModel](first-ecmodel.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python), and the files `data/proteomics.tsv` and `data/fluxData.tsv` of the project. In MATLAB, the model adapter of the project is the default adapter, and `params = ModelAdapterManager.getDefault().getParameters();` holds its parameters; in Python, `params = ec_model.adapter.params` holds them. The objective is the biomass reaction, maximised: `ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);` in MATLAB, and `ec_model.objective = params.bio_rxn` with `ec_model.objective_direction = "max"` in Python (see [Basic model operations](basic-model-operations.md)). The examples assume a `proteomics.tsv` with two conditions of three replicates each, and select the first condition in both files.
+A full ecModel with *k*{sub}`cat` values and a protein pool (see [Build an ecModel](first-ecmodel.md)), in the variable `ecModel` (MATLAB) or `ec_model` (Python), and the files `data/proteomics.tsv` and `data/fluxData.tsv` of the project. In MATLAB, the model adapter of the project is the default adapter, and `params = ModelAdapterManager.getDefault().getParameters();` holds its parameters; in Python, `params = ec_model.adapter.params` holds them. The objective is the biomass reaction, maximised: `ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);` in MATLAB, and `ec_model.objective = params.bio_rxn` with `ec_model.objective_direction = "max"` in Python (see [Basic model operations](basic-model-operations.md)). The examples use the `proteomics.tsv` of the tutorial, which has one condition of three replicates, and select the first condition in both files.
 
 ## Choose the options
 
@@ -131,7 +133,7 @@ Condition	Ptot	grRate	glucose (r_1714)	CO2 (r_1672)	oxygen (r_1992)	ethanol (r_1
 Std	0.4228	0.1	-1.1	2.7	-2.5	1.00E-05
 ```
 
-The `proteomics.tsv` of the same tutorial has one condition with three replicates, so it is loaded with `loadProtData(3)`; the `[3, 3]` of the examples below raises `loadProtData:replicateMismatch` on it. See [Files in the data folder](data-folder-files.md) for the other files of the project.
+The `proteomics.tsv` of the same tutorial has one condition with three replicates, so the examples below load it with `loadProtData(3)` (Python: `[3]`). Two conditions of three replicates each are loaded with `loadProtData([3, 3])` (Python: `[3, 3]`), which raises `loadProtData:replicateMismatch` on the file of the tutorial. See [Files in the data folder](data-folder-files.md) for the other files of the project.
 
 ## Load the proteomics data
 
@@ -156,8 +158,8 @@ A protein that is removed is NaN for that condition, and its enzyme draws from t
 :sync: matlab
 
 ```matlab
-% two conditions with three replicates each
-protData = loadProtData([3, 3]);
+% one condition with three replicates
+protData = loadProtData(3);
 ecModel  = fillEnzConcs(ecModel, protData, 'dataCol', 1);
 ```
 :::
@@ -168,8 +170,8 @@ ecModel  = fillEnzConcs(ecModel, protData, 'dataCol', 1);
 from geckopy import fill_enz_concs, load_prot_data
 
 params = ec_model.adapter.params
-# two conditions with three replicates each
-prot_data = load_prot_data(params.path / "data" / "proteomics.tsv", [3, 3])
+# one condition with three replicates
+prot_data = load_prot_data(params.path / "data" / "proteomics.tsv", [3])
 fill_enz_concs(ec_model, prot_data, data_col=0)
 ```
 :::
@@ -185,6 +187,19 @@ fill_enz_concs(ec_model, prot_data, data_col=0)
 
 ```matlab
 [ecModel, levelResult] = levelComplexConcs(ecModel);
+levelResult
+```
+
+The number of subunits in each field of `levelResult` in the `full_ecModel` tutorial:
+
+```text
+levelResult =
+  struct with fields:
+
+    adjusted: {65x1 cell}
+       added: {49x1 cell}
+      shared: {25x1 cell}
+     skipped: {51x1 cell}
 ```
 
 `levelResult` has the fields `adjusted` (measured subunits that received the concentration of the complex), `added` (unmeasured subunits that received it), `shared` (subunits kept as measured) and `skipped` (complexes without a measured subunit).
@@ -196,6 +211,14 @@ fill_enz_concs(ec_model, prot_data, data_col=0)
 from geckopy import level_complex_concs
 
 level_result = level_complex_concs(ec_model)
+print(len(level_result.adjusted), len(level_result.added),
+      len(level_result.shared), len(level_result.skipped))
+```
+
+The number of subunits in `adjusted`, `added`, `shared` and `skipped`, in this order, in the `full_ecModel` tutorial:
+
+```text
+65 49 25 51
 ```
 
 `level_complex_concs` changes `ec_model.ec.concs` and returns a `LevelComplexResult` with the attributes `adjusted`, `added`, `shared` and `skipped`.
@@ -240,6 +263,27 @@ A reaction can have a measured isozyme and an unmeasured one. The unmeasured iso
 ```matlab
 [coverage, zeroable] = getIsozymeCoverage(ecModel);
 [ecModel, changed] = zeroUnmeasuredIsozymes(ecModel, 'method', 'detectionLimit');
+head(coverage, 5)
+head(changed, 5)
+```
+
+The first five rows of `coverage` and of `changed` in the `full_ecModel` tutorial:
+
+```text
+         rxn          nEntries    nMeasured    nUnmeasured    measuredEnzymes    unmeasuredEnzymes    sharedEnzymes
+    ______________    ________    _________    ___________    _______________    _________________    _____________
+    {'r_0018'    }       3            2             1           {2x1 cell}          {1x1 cell}         {0x1 cell}
+    {'r_0018_REV'}       3            2             1           {2x1 cell}          {1x1 cell}         {0x1 cell}
+    {'r_0024'    }       2            1             1           {1x1 cell}          {1x1 cell}         {0x1 cell}
+    {'r_0033'    }       2            1             1           {1x1 cell}          {1x1 cell}         {1x1 cell}
+    {'r_0062'    }       3            2             1           {2x1 cell}          {1x1 cell}         {0x1 cell}
+     uniprot      newUpperBound
+    __________    _____________
+    {'P80235'}      0.0040388
+    {'P32784'}      0.0040388
+    {'P18238'}      0.0040388
+    {'P38131'}      0.0040388
+    {'P38139'}      0.0040388
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -250,6 +294,25 @@ from geckopy import get_isozyme_coverage, zero_unmeasured_isozymes
 
 coverage, zeroable = get_isozyme_coverage(ec_model)
 changed = zero_unmeasured_isozymes(ec_model, method="detection_limit")
+print(coverage.head())
+print(changed.head())
+```
+
+The first five rows of `coverage` and of `changed` in the `full_ecModel` tutorial:
+
+```text
+          rxn  n_entries  n_measured  n_unmeasured  measured_enzymes unmeasured_enzymes shared_enzymes
+0      r_0018          3           2             1  [P53090, P47039]           [P10356]             []
+1  r_0018_REV          3           2             1  [P53090, P47039]           [P10356]             []
+2      r_0024          2           1             1          [P06208]           [Q12166]             []
+3      r_0033          2           1             1          [P22434]           [P06776]       [P06776]
+4      r_0062          3           2             1  [P26263, P06169]           [P16467]             []
+  uniprot  new_upper_bound
+0  P80235         0.004039
+1  P32784         0.004039
+2  P18238         0.004039
+3  P38131         0.004039
+4  P38139         0.004039
 ```
 :::
 ::::
@@ -266,10 +329,17 @@ The upper bound of the protein pool exchange is $P_{tot} \cdot f \cdot \sigma \c
 
 ```matlab
 fluxData = loadFluxData(fullfile(params.path, 'data', 'fluxData.tsv'));
-protAll  = loadProtData([3, 3], 'filterData', false);
+protAll  = loadProtData(3, 'filterData', false);
 protAll.abundances = protAll.abundances(:, 1);
-f = calculateFfactor(ecModel, 'protData', protAll);
+f = calculateFfactor(ecModel, 'protData', protAll)
 ecModel = setProtPoolSize(ecModel, 'Ptot', fluxData.Ptot(1), 'f', f);
+```
+
+The *f* of the first condition in the `full_ecModel` tutorial:
+
+```text
+f =
+    0.5332
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -282,13 +352,21 @@ from geckopy import (
 
 flux_data = load_flux_data(params.path / "data" / "fluxData.tsv")
 prot_all = load_prot_data(
-    params.path / "data" / "proteomics.tsv", [3, 3], filter_data=False,
+    params.path / "data" / "proteomics.tsv", [3], filter_data=False,
 )
 prot_cond = ProtData(
     uniprot_ids=prot_all.uniprot_ids, abundances=prot_all.abundances[:, [0]],
 )
 f = calculate_f_factor(ec_model, prot_cond)
+print(f)
 set_prot_pool_size(ec_model, p_tot=float(flux_data.p_tot[0]), f=f)
+```
+
+The *f* of the first condition in the `full_ecModel` tutorial, and the upper bound of `prot_pool_exchange` (mg/gDCW) that `set_prot_pool_size` returns:
+
+```text
+0.5331538851120664
+112.70873131269084
 ```
 :::
 ::::
@@ -313,6 +391,12 @@ ecModel = constrainFluxData(ecModel, 'fluxData', fluxData, 'condition', 1, ...
 sol = solveLP(ecModel);
 fprintf('Growth rate: %g /h, measured: %g /h\n', sol.f, fluxData.grRate(1))
 ```
+
+In the `full_ecModel` tutorial, the enzyme concentrations limit growth far below the measured growth rate:
+
+```text
+Growth rate: 0.000546413 /h, measured: 0.1 /h
+```
 :::
 :::{tab-item} 🐍 Python
 :sync: python
@@ -327,10 +411,16 @@ apply_flux_data_constraints(
 growth = ec_model.slim_optimize()
 print(f"Growth rate: {growth:g} /h, measured: {flux_data.gr_rate[0]:g} /h")
 ```
+
+In the `full_ecModel` tutorial, the enzyme concentrations limit growth far below the measured growth rate:
+
+```text
+Growth rate: 0.000546413 /h, measured: 0.1 /h
+```
 :::
 ::::
 
-With `'max'`, the growth rate cannot exceed the measured one. A growth rate below it means that the enzyme concentrations, the kcats, the protein pool or the exchange fluxes limit growth. [Relax proteomics constraints](relaxing-proteomics.md) raises the limiting enzyme bounds and shows how to find which of these limits growth.
+With `'max'`, the growth rate cannot exceed the measured one. A growth rate below it means that the enzyme concentrations, the *k*{sub}`cat` values, the protein pool or the exchange fluxes limit growth. [Relax proteomics constraints](relaxing-proteomics.md) raises the limiting enzyme bounds and shows how to find which of these limits growth.
 
 ## Troubleshooting
 

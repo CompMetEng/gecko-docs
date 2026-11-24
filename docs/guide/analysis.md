@@ -97,7 +97,7 @@ The examples use the model adapter parameters `params`, the ecModel, the convent
 :sync: matlab
 
 ```matlab
-adapter  = ModelAdapterManager.setDefault(pwd);
+adapter  = ModelAdapterManager.setDefault('ecMyModel');
 params   = adapter.getParameters();
 model    = loadConventionalGEM();
 ecModel  = loadEcModel();        % models/ecModel.yml
@@ -135,13 +135,13 @@ flux_data = load_flux_data(params.path / "data" / "fluxData.tsv")
 
 [Enzyme usage and bottlenecks](enzyme-usage.md) describes the analyses of single enzymes: which enzymes a solution uses, and which enzymes limit the objective.
 
-For flux ranges, use `ecFVA`. A [convergence study of the samplers of raven-toolbox](https://raven-docs.readthedocs.io/en/latest/parameter-tuning/studies/sampling-convergence-calibration.html) found no setting that gave converged samples on yeast-GEM, a conventional GEM of about 4,100 reactions. The study did not test an ecModel.
+For flux ranges, use `ecFVA`. A [convergence study of the samplers of raven-toolbox](inv:raven:std:doc#parameter-tuning/studies/sampling-convergence-calibration) found no setting that gave converged samples on yeast-GEM, a conventional GEM of about 4,100 reactions. The study did not test an ecModel.
 
 ## Set the objective
 
 ### Maximise growth
 
-The biomass reaction of the model adapter is the objective. The protein pool exchange limits growth when its flux reaches the upper bound that `setProtPoolSize` sets ([Set the protein pool](protein-pool.md)).
+The biomass reaction of the model adapter is the objective. The protein pool exchange limits growth when its flux reaches the upper bound that `setProtPoolSize` sets ([Set the protein pool](protein-pool.md)). The output is the maximum growth rate (1/h) of the ecModel of the `full_ecModel` tutorial.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -150,7 +150,12 @@ The biomass reaction of the model adapter is the objective. The protein pool exc
 ```matlab
 ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);
 sol = solveLP(ecModel);
-maxGrowth = sol.f;
+maxGrowth = sol.f
+```
+
+```text
+maxGrowth =
+    0.4081
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -160,6 +165,11 @@ maxGrowth = sol.f;
 ec_model.objective = params.bio_rxn
 sol = ec_model.optimize()
 max_growth = sol.objective_value
+print(max_growth)
+```
+
+```text
+0.408084294...
 ```
 :::
 ::::
@@ -168,7 +178,7 @@ To see the effect of the protein pool constraint, solve a copy of the ecModel wi
 
 ### Minimise protein pool usage at fixed growth
 
-`prot_pool_exchange` runs forward: its flux is the protein that the solution draws from the pool, a positive number in mg/gDCW. Fix growth at a value slightly below the maximum, for example 99 %. The second problem then stays feasible within the tolerance of the solver. Then minimise the flux of `prot_pool_exchange`.
+`prot_pool_exchange` runs forward: its flux is the protein that the solution draws from the pool, a positive number in mg/gDCW. Fix growth at a value slightly below the maximum, for example 99 %. The second problem then stays feasible within the tolerance of the solver. Then minimise the flux of `prot_pool_exchange`. The output is the minimal protein pool usage (mg/gDCW) at 99 % of the maximum growth rate.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -180,7 +190,12 @@ To see the effect of the protein pool constraint, solve a copy of the ecModel wi
 ecModel = setParam(ecModel, 'lb', params.bioRxn, 0.99 * maxGrowth);
 ecModel = setParam(ecModel, 'obj', 'prot_pool_exchange', -1);
 sol = solveLP(ecModel);
-poolUsage = -sol.f;   % mg/gDCW
+poolUsage = -sol.f   % mg/gDCW
+```
+
+```text
+poolUsage =
+  121.2773
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -192,6 +207,11 @@ ec_model.objective = "prot_pool_exchange"
 ec_model.objective_direction = "min"
 sol = ec_model.optimize()
 pool_usage = sol.objective_value   # mg/gDCW
+print(pool_usage)
+```
+
+```text
+121.277341050...
 ```
 :::
 ::::
@@ -204,11 +224,13 @@ If `prot_pool_exchange` or the `usage_prot_*` reactions carry negative flux, the
 
 `ecFVA` groups the reactions of the ecModel by identifier without the suffixes `_REV` and `_EXP_<n>`: the isozyme copies and the reverse copy of a reaction form one group. For each group it minimises and maximises the combined flux, which takes two linear problems per group, the enzyme usage reactions and `prot_pool_exchange` included. The result has the reaction order of the conventional GEM and leaves out the enzyme usage reactions; for those, run a plain FVA on the ecModel (`getAllowedBounds` in RAVEN, `cobra.flux_analysis.flux_variability_analysis` in Python). The objective of the model is not used: each reaction varies within the bounds of the model, so set the bounds that define the condition (growth rate, uptake rates) on all models first. In MATLAB, a conventional GEM that does not match the ecModel raises its error after all problems are solved.
 
-The example gives the conventional GEM and the ecModel the same exchange constraints from `fluxData` (from `loadFluxData`, Python: `load_flux_data`) and compares the ranges:
+The example gives the conventional GEM and the ecModel the same exchange constraints from `fluxData` (from `loadFluxData`, Python: `load_flux_data`) and compares the ranges. The output is the median range of the fluxes (in mmol per gDCW and hour) of the conventional GEM and of the ecModel for the first condition of the `full_ecModel` tutorial:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
+
+<!-- run-examples: skip -->
 
 ```matlab
 model   = constrainFluxData(model, fluxData, 1, 'max', 'loose');
@@ -217,12 +239,22 @@ ecModel = constrainFluxData(ecModel, fluxData, 1, 'max', 'loose');
 [minFlux(:,1), maxFlux(:,1)] = ecFVA(model, model);
 [minFlux(:,2), maxFlux(:,2)] = ecFVA(ecModel, model);
 plotEcFVA(minFlux, maxFlux);
+median(maxFlux - minFlux)
 ```
+
+```text
+ans =
+    0.7183    0.4907
+```
+
+The first value is the median range of the conventional GEM and the second value that of the ecModel.
 
 `ecFVA` runs in parallel when the Parallel Computing Toolbox is installed (option `runParallel`, default `true`). `plotEcFVA` takes one column per model, leaves out the reactions whose minimum and maximum are both 0, and plots the cumulative distribution of the ranges (`maxFlux - minFlux`) on a log scale, with the median of each model in the legend.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
+
+<!-- run-examples: skip -->
 
 ```python
 from geckopy import apply_flux_data_constraints, ec_fva
@@ -238,6 +270,12 @@ fva_ec = ec_fva(ec_model, model)
 ranges = (fva_ec["max_flux"] - fva_ec["min_flux"]).rename("ecModel").to_frame()
 ranges["GEM"] = fva_gem["max_flux"] - fva_gem["min_flux"]
 print(ranges.median())
+```
+
+```text
+ecModel    0.490656
+GEM        0.718276
+dtype: float64
 ```
 
 `ec_fva` returns a DataFrame indexed by the reaction identifiers of the conventional GEM, with the columns `min_flux` and `max_flux`. The option `n_proc` sets the number of worker processes (default `cobra.Configuration().processes`). With the default solver GLPK, `ec_fva` is slow on a genome-scale ecModel; a commercial solver (`ec_model.solver = "gurobi"`, with a licence) or more worker processes shorten the run. geckopy has no counterpart of `plotEcFVA`.
@@ -260,6 +298,8 @@ FVA gives the extremes of each reaction, one reaction at a time. A sampler draws
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
+<!-- run-examples: skip -->
+
 ```matlab
 samples = randomSampling(ecModel, 1000, 'method', 'chrr', 'seed', 1);
 mappedSamples = mapRxnsToConv(ecModel, model, samples);
@@ -267,6 +307,8 @@ mappedSamples = mapRxnsToConv(ecModel, model, samples);
 :::
 :::{tab-item} 🐍 Python
 :sync: python
+
+<!-- run-examples: skip -->
 
 ```python
 from geckopy import map_rxns_to_conv
@@ -281,7 +323,7 @@ mapped_samples = map_rxns_to_conv(ec_model, model, samples).mapped_flux
 :::
 ::::
 
-Run several chains with different seeds and compare them, for example with the R-hat statistic, before the samples are used. The [convergence study](https://raven-docs.readthedocs.io/en/latest/parameter-tuning/studies/sampling-convergence-calibration.html) describes the check and the settings it tested.
+Run several chains with different seeds and compare them, for example with the R-hat statistic, before the samples are used. The [convergence study](inv:raven:std:doc#parameter-tuning/studies/sampling-convergence-calibration) describes the check and the settings it tested.
 
 ## Map fluxes to the conventional GEM
 

@@ -1,6 +1,10 @@
 # Citations
 
-## GECKO 3
+## Citing the software
+
+Publications that use GECKO or geckopy cite the paper of the GECKO 3 protocol below, which describes GECKO 3; the changes in GECKO 4 are in [GECKO 3 to GECKO 4](gecko3-to-gecko4.md). A publication also names the version that it used: the version of GECKO is in the file `version.txt` of the toolbox, and the versions of the Python packages geckopy and raven-toolbox are printed by `pip show geckopy raven-toolbox`.
+
+## GECKO 3 protocol
 
 > Chen, Y., Gustafsson, J., Tafur Rangel, A., Anton, M., Domenzain, I.,
 > Kittikunapong, C., Li, F., Yuan, L., Nielsen, J. & Kerkhoven, E. J. (2024).
@@ -10,7 +14,7 @@
 
 ## DLKcat
 
-> Li, F. et al. (2022). **Deep learning-based kcat prediction enables
+> Li, F. et al. (2022). **Deep learning-based *k*{sub}`cat` prediction enables
 > improved enzyme-constrained model reconstruction.** *Nature Catalysis* 5:
 > 662-672.
 > <https://doi.org/10.1038/s41929-022-00798-z>
@@ -29,10 +33,6 @@
 > constraints.** *Molecular Systems Biology* 13: 935.
 > <https://doi.org/10.15252/msb.20167411>
 
-## Code and data availability
+## Source code and licence
 
-The source code of the GECKO toolbox is publicly available under the MIT license
-at [https://github.com/CompMetEng/GECKO/](https://github.com/CompMetEng/GECKO/),
-also archived at
-[https://doi.org/10.5281/zenodo.7699818](https://doi.org/10.5281/zenodo.7699818).
-All limited data used in the tutorials are distributed as part of the code.
+The source code of the GECKO toolbox is released under the GNU General Public License v3 at [github.com/CompMetEng/GECKO](https://github.com/CompMetEng/GECKO) and archived at [doi.org/10.5281/zenodo.7699818](https://doi.org/10.5281/zenodo.7699818). geckopy, the Python package, is released under the same licence at [github.com/CompMetEng/geckopy](https://github.com/CompMetEng/geckopy). The data of the tutorials are distributed with the code.

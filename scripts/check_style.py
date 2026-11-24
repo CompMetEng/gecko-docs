@@ -13,6 +13,13 @@ a heuristic: one hit can be correct, a family that recurs on a page is a reason 
 the page. ``--summary`` prints the rate per 1000 words of every family over the site and
 the pages with the highest rates. The exit code is 0 unless ``--strict`` is given and there
 is a finding.
+
+The families are aids for writing quality. A hit is not evidence about who wrote a text.
+Lines between ``<!-- check_style:ignore-start -->`` and ``<!-- check_style:ignore-end -->``
+(each marker on its own line, nestable) are not scanned, so a page can quote a pattern on purpose.
+The families that depend on sentence position (concession, importance opener, sentence-initial
+transition) are reported at the first line of the paragraph and are not
+checked in docstrings.
 """
 
 from __future__ import annotations
@@ -25,14 +32,82 @@ from pathlib import Path
 EM_DASH = chr(0x2014)
 EN_DASH = chr(0x2013)
 
-INTENSIFIERS = (
-    "actually|genuine(?:ly)?|really|exactly|simply|just|entirely|completely|essentially|"
-    "effectively|basically|clearly|obviously|quite|very|truly|merely|fundamentally"
+# Only the words that occur far more often in formulaic text than in ordinary prose; "very", "just",
+# "quite", "simply" and "only" are common in careful writing and are not reported.
+INTENSIFIERS = "actually|genuine(?:ly)?|essentially|basically|truly|fundamentally"
+EVALUATIVE = "crucial|powerful|powerfully|comprehensive|seamless(?:ly)?|elegant"
+# Adverbs that grade a method or other people's work. "well" counts when it ends a clause or follows a
+# verb of performance; "as well", "well-defined", "well plate" and the noun ("the same well") do not
+# match. "successfully" counts next to a verb of performance, since "completes successfully" reports
+# a status.
+EVALUATIVE_ADVERB = (
+    r"elegantly|neatly|nicely|effortlessly"
+    r"|successfully\s+(?:recover|reproduc|captur|identif|predict|combin|solv)\w*"
+    r"|(?:recover|reproduc|captur|identif|predict|combin|solv)\w*\s+successfully"
+    r"|(?<=\w\s)well(?=\s*(?:[.,;:!?)]|$|\s(?:but|and|yet|enough|for)\b))(?<!as well)"
+    r"(?<!the well)(?<!a well)(?<!each well)(?<!per well)(?<!every well)(?<!one well)"
+    r"(?<!same well)(?<!either well)(?<!empty well)(?<!this well)(?<!that well)(?<!other well)(?<!not do well)"
+    r"|(?:works?|performs?|scales?|handles?|fits?|generali[sz]es?|captures?|describes?|predicts?|explains?|"
+    r"does|did|answers?|covers?|serves?|reproduces?|recovers?|supports?|addresses|matches|agrees?)"
+    r"(?: (?!as\b|not\b)[\w-]+){0,4} well\b(?! as\b)(?!-)(?!\s+plates?\b)"
 )
-EVALUATIVE = (
-    "easy|easily|simple|obvious|important|key|crucial|critical|useful|robust|powerful|"
-    "comprehensive|straightforward|seamless(?:ly)?|elegant|convenient|painful|sensible"
+# Words that occur far more often in formulaic scientific and encyclopaedic text than in earlier text.
+# Words that are common in ordinary scientific prose (potential, findings, across, within) are left out.
+STOCK_VOCABULARY = (
+    r"delv(?:e|es|ed|ing)|tapestr(?:y|ies)|testament|pivotal|intricate|intricacies|meticulous(?:ly)?|"
+    r"multifaceted|holistic(?:ally)?|paramount|cornerstone|myriad|plethora|realm|embark(?:s|ed|ing)?|"
+    r"noteworthy|transformative|ever-evolving|cutting-edge|game-chang\w+|groundbreaking|invaluable|interplay|"
+    r"(?:evolving|changing|shifting|current|competitive|regulatory|funding|digital|research|scientific) landscape"
 )
+STOCK_PHRASE = (
+    r"plays? an? (?:\w+ )?(?:key|crucial|pivotal|vital|significant|important|critical|central)(?: \w+)? role"
+    r"|a testament to|stands? as|stood as|sets? the stage|setting the stage|at its core|at the heart of"
+    r"|in today's|in the realm of|when it comes to|it is worth (?:noting|mentioning)"
+    r"|it is important to (?:note|mention|remember)|it should be noted|it bears mentioning|needless to say"
+    r"|the reality is|the truth is|it turns out|here's (?:what|the thing|why|the catch|the problem|the kicker)"
+    r"|the real (?:question|story|point|problem|issue)|dive (?:in|into)|deep dive|take a step back"
+    r"|moving forward|at the end of the day|in this day and age|in recent years"
+    r"|over the past (?:few |several )?(?:years|decades?)"
+)
+CONCESSION_INLINE = (
+    r"\b(?:is|are|was|were|remains?) (?:\w+ ){0,2}(?:useful|valuable|effective|powerful|impressive|"
+    r"successful|promising|well[- ]established),? (?:but|yet|though|however)\b"
+    r"|\b(?:admittedly|to be fair|it is true that)\b"
+)
+TRANSITIONS = (
+    "moreover|furthermore|additionally|notably|importantly|interestingly|crucially|ultimately|overall|"
+    "consequently|indeed|in conclusion|in summary|to summari[sz]e|in essence|in short|put simply"
+)
+CONCESSIVE_OPENERS = re.compile(r"(?:although|though|even though|while)\b", re.I)
+# A concession is formulaic when the concessive clause states a merit (the reference: "states a merit of
+# the work so that the next clause can state its limit"). Ordinary concessives with "yet", "still" or
+# "but" in the second clause and a fact in the first are plain English and are not reported.
+CONCESSION_MERIT = re.compile(
+    r"\b(?:valuable|useful|well|important|powerful|effective|impressive|successful|promising)\b",
+    re.I,
+)
+IMPORTANCE_OPENER = re.compile(
+    r"\b(?:among|one of) the (?:largest|most|biggest|greatest|leading|major|top)\b"
+    r"|\bis (?:a|an) (?:major|growing|critical|pressing|fundamental|central|key|important|significant|global)\b"
+    r"|\b(?:increasingly|ever-increasing|ever-growing)\b"
+    r"|\bremains? (?:a|one of)\b[^.]{0,40}\b(?:challenge|threat|problem)\b",
+    re.I,
+)
+
+
+def standalone_importance(sent: str) -> bool:
+    """True when an importance phrase is the claim of the sentence. A phrase set off by commas
+    inside a sentence that goes on to make another claim ("X, among the largest threats to
+    health, is not only ...") is subordinated and is not reported."""
+    for m in IMPORTANCE_OPENER.finditer(sent):
+        before = sent[:m.start()].rfind(",")
+        after = sent.find(",", m.end())
+        if before > 0 and after != -1 and sent[after + 1:].strip() and not sent[before + 1:m.start()].strip(" ").count("."):
+            continue
+        return True
+    return False
+
+
 FIGURATIVE = (
     r"travels?|lands?|buys?|hooks?|traps?|silently|quietly|loses|"
     r"sits? (?:in|on|at|inside|where)|lives? (?:in|on|at|inside)|"
@@ -49,25 +124,42 @@ FAMILIES: dict[str, re.Pattern[str]] = {
     "evaluative word": re.compile(rf"\b(?:{EVALUATIVE})\b", re.I),
     "figurative verb": re.compile(rf"\b(?:{FIGURATIVE})\b", re.I),
     "inflated verb": re.compile(rf"\b(?:{INFLATED})\b", re.I),
+    "evaluative adverb": re.compile(rf"\b(?:{EVALUATIVE_ADVERB})\b", re.I),
+    "concession": re.compile(CONCESSION_INLINE, re.I),
+    "rhetorical number": re.compile(
+        r"\b(?:one|a single) (?:(?:key|main|central|simple|big|real) )?(?:question|insight|lesson|takeaway)\b", re.I
+    ),
+    "stock vocabulary": re.compile(rf"\b(?:{STOCK_VOCABULARY})\b", re.I),
+    "stock phrase": re.compile(rf"\b(?:{STOCK_PHRASE})\b", re.I),
+    "vague attribution": re.compile(
+        r"\b(?:experts?|(?:many|some|several) (?:researchers|scientists|experts)) (?:believe|argue|agree|say)\b"
+        r"|\b(?:studies|research|work) (?:have |has )?(?:show|shown|suggest|indicate|demonstrate)s?\b"
+        r"(?!(?: that)?\s*[\d\[(])|\bit (?:has been shown|is well known)\b"
+        r"|\bit is (?:widely|generally|commonly) (?:believed|recogni[sz]ed|accepted|assumed)\b"
+        r"|\bwidely (?:recogni[sz]ed|regarded|accepted|adopted)\b",
+        re.I,
+    ),
+    "reply boilerplate": re.compile(
+        r"\b(?:I hope this helps|Great question|Good question|Happy to help|as of my last|knowledge cutoff)\b"
+        r"|\b(?:Certainly|Of course)!|\[INSERT",
+        re.I,
+    ),
     "contrast scaffolding": re.compile(
         r"\bnot (?:just|only|merely|simply)\b|\bnot an? [^.;:,]{1,60}\bbut\b|\bnot [^.;:,]{1,40}, but\b"
-        r"|\brather than\b|\binstead of\b",
+        r"|\bmore than (?:just|merely|simply)\b",
         re.I,
     ),
-    "and not": re.compile(
-        r"\b(?:and|but) not (?:a|an|the|by|in|to|for|as|on|of|with|its|their|from|at)\b"
-        r"|, not (?:a|an|the|by|in|to|for|as|on|of|with|its|their|from|at)\b",
-        re.I,
-    ),
-    "restriction word": re.compile(r"\bonly\b", re.I),
     "passive instruction": re.compile(
         r"\b(?:is|are) (?:set|checked|inspected|closed|opened|added|run|restricted|excluded|compared) "
         r"(?:first|before|afterwards)\b",
         re.I,
     ),
     "evaluative tail": re.compile(
-        r", (?:which is why|which means|making|ensuring|allowing|thereby|so that)\b"
-        r"|\bThis is (?:what|why)\b|\bThat is why\b",
+        r", (?:which is why|making|thereby)\b"
+        r"|, (?:highlighting|underscoring|reflecting|showcasing|emphasi[sz]ing|symboli[sz]ing|demonstrating|"
+        r"illustrating|fostering|cultivating|contributing to|paving|cementing|solidifying|reinforcing|"
+        r"signalling|signaling)\b"
+        r"|\bThis is what\b|\bThat is why\b",
     ),
     "labelled opener": re.compile(
         r"\b(?:the )?(?:practical consequence|catch|upshot|takeaway|bottom line|short version|key point|trick)\s*:",
@@ -84,7 +176,7 @@ FAMILIES: dict[str, re.Pattern[str]] = {
     ),
     "copula avoidance": re.compile(r"\b(?:serves? as|acts? as|functions? as|boasts?)\b", re.I),
     "generic attribution": re.compile(
-        r"\b(?:generally|commonly|typically|in practice|arguably|potentially|perhaps|presumably|it appears that)\b", re.I
+        r"\b(?:generally|commonly|typically|in practice|arguably|potentially|possibly|perhaps|presumably|it appears that)\b", re.I
     ),
     "american spelling": re.compile(
         r"\b(?:behavior\w*|colors?|normaliz\w+|artifacts?|analyz\w+|optimiz\w+|initializ\w+|"
@@ -108,13 +200,17 @@ FAMILIES: dict[str, re.Pattern[str]] = {
 
 # Families that hold for documentation pages only; the others hold for every text.
 DOCS_ONLY = {
-    "second person", "first person plural", "heading form", "box title", "bold",
+    "second person", "first person plural", "contraction", "passive instruction", "heading form", "box title", "bold",
     "italic emphasis", "section number", "table header", "long table cell",
 }
 
 HEADING_WORDS = re.compile(r"^(?:\d+(?:\.\d+)*\s+)?(?:what|why|how|when|which|where|who|is|are|do|does|can)\b", re.I)
 HEADING_CONTRAST = re.compile(r"\bnot\b|\bvs\.?\b|\bversus\b|\?$", re.I)
 GENERIC_BOX = re.compile(r"^(?:what can go wrong|if you read nothing else|heads up|gotcha)$", re.I)
+IGNORE_START = re.compile(r"^\s*<!--\s*check_style:ignore-start\s*-->\s*$")
+IGNORE_END = re.compile(r"^\s*<!--\s*check_style:ignore-end\s*-->\s*$")
+ABBREVIATION = re.compile(r"\b(?:e\.g|i\.e|et al|vs|cf|Figs?|Eq|approx|ca|Dr|Mr|Ms|No|Ref)\.")
+SENTENCE_BREAK = re.compile(r"(?<=[.!?])[\"')\]]*\s+(?=[\"'(\[]?(?:`|[A-Z0-9]))")
 
 SKIP_FILES = {"docs/matlab-vs-python.md"}
 SKIP_PREFIXES = ("docs/api/", "docs/_build/", "docs/_")
@@ -140,6 +236,85 @@ def prose_lines(text: str) -> list[tuple[int, str]]:
         line = re.sub(r"\{[a-z-]+\}`[^`]*`", "", line)
         out.append((i, line))
     return out
+
+
+def strip_ignored(text: str) -> tuple[str, int]:
+    """Text with the lines between ignore markers (and the markers) blanked, and the line of the
+    first ignore-start marker that has no end marker (0 when all are closed). Line numbers are kept."""
+    depth = 0
+    open_lines: list[int] = []
+    out = []
+    for i, raw in enumerate(text.splitlines(), 1):
+        if IGNORE_START.match(raw):
+            depth += 1
+            open_lines.append(i)
+            out.append("")
+        elif IGNORE_END.match(raw):
+            depth = max(depth - 1, 0)
+            if open_lines:
+                open_lines.pop()
+            out.append("")
+        else:
+            out.append("" if depth else raw)
+    return "\n".join(out) + ("\n" if text.endswith("\n") else ""), (open_lines[0] if open_lines else 0)
+
+
+def split_sentences(paragraph: str) -> list[str]:
+    protected = ABBREVIATION.sub(lambda m: m.group(0).replace(".", "\x00"), paragraph)
+    return [s.replace("\x00", ".").strip() for s in SENTENCE_BREAK.split(protected) if s.strip()]
+
+
+def paragraphs(text: str) -> list[tuple[int, bool, list[str]]]:
+    """(first line, is list item, sentences) of every prose paragraph; headings, tables and boxes are skipped."""
+    out: list[tuple[int, bool, list[str]]] = []
+    current: list[str] = []
+    start, item, prev = 0, False, None
+
+    def flush() -> None:
+        if current:
+            out.append((start, item, split_sentences(" ".join(current))))
+        current.clear()
+
+    for i, line in prose_lines(text):
+        s = line.strip()
+        if re.match(r"#{1,6}\s", s) or s.startswith("|") or re.match(r":{3,}\{", s):
+            flush()
+            prev = None
+            continue
+        marker = re.match(r"(?:>\s*|(?:[-*+]|\d+[.)])\s+)", s)
+        if prev is None or i != prev + 1 or (marker and not s.startswith(">")):
+            flush()
+            start, item = i, bool(marker and not s.startswith(">"))
+        current.append(s[marker.end():] if marker else s)
+        prev = i
+    flush()
+    return out
+
+
+def sentence_hits(text: str) -> dict[str, list[tuple[int, str]]]:
+    """Families that depend on the position in a sentence or paragraph. The reported line is the
+    first line of the paragraph."""
+    hits: dict[str, list[tuple[int, str]]] = defaultdict(list)
+    transition = re.compile(rf"(?:{TRANSITIONS})\b", re.I)
+    for start, item, sentences in paragraphs(text):
+        found = [sent.split(",")[0][:40] for sent in sentences if transition.match(sent)]
+        if len(found) >= 2:  # one transition is ordinary prose; a recurrence in a paragraph is the signal
+            hits["sentence-initial transition"].append((start, ", ".join(found[:2])))
+        for k, sent in enumerate(sentences):
+            m = CONCESSIVE_OPENERS.match(sent)
+            if m and CONCESSION_MERIT.search(sent[m.end():sent.find(",", m.end()) if "," in sent[m.end():] else None]):
+                hits["concession"].append((start, sent[:60]))
+            if k == 0 and standalone_importance(sent):
+                hits["importance opener"].append((start, sent[:60]))
+    return hits
+
+
+def title_case_heading(title: str) -> bool:
+    """A heading of 4 or more words in which every later word of 4 or more letters starts with a capital
+    letter (all-caps and mixed-case names are skipped) and there are at least 3 such words."""
+    words = re.findall(r"[A-Za-z][A-Za-z'-]*", title.replace("`x`", ""))
+    plain = [w for w in words[1:] if len(w) > 3 and not w.isupper() and w[1:] == w[1:].lower()]
+    return len(words) >= 4 and len(plain) >= 3 and all(w[0].isupper() for w in plain)
 
 
 TABLE_CELL_WORDS = 35
@@ -169,17 +344,26 @@ def table_hits(text: str) -> dict[str, list[tuple[int, str]]]:
     return hits
 
 
-def scan_page(text: str, docs: bool = True) -> tuple[int, dict[str, list[tuple[int, str]]]]:
+def scan_page(
+    text: str, docs: bool = True, sentences: bool = True
+) -> tuple[int, dict[str, list[tuple[int, str]]]]:
     """(word count, family -> [(line, matched text)]) for one page or file."""
     words = 0
     hits: dict[str, list[tuple[int, str]]] = defaultdict(list)
     bold = 0
+    text, unclosed = strip_ignored(text)
+    if unclosed:
+        hits["ignore marker"].append((unclosed, "ignore-start without ignore-end"))
     for i, line in prose_lines(text):
         heading = re.match(r"(#{1,6})\s+(.*)", line)
         box = re.match(r":{3,}\{(?:note|warning|tip|important|admonition)\}\s*(.*)", line.strip())
         if heading:
             title = heading.group(2).strip()
-            if HEADING_WORDS.match(title) or HEADING_CONTRAST.search(title):
+            if (
+                HEADING_WORDS.match(title)
+                or HEADING_CONTRAST.search(title)
+                or title_case_heading(title)
+            ):
                 hits["heading form"].append((i, title))
         elif box:
             if GENERIC_BOX.match(box.group(1).strip()) or box.group(1).strip().endswith(("?", ".")):
@@ -191,6 +375,9 @@ def scan_page(text: str, docs: bool = True) -> tuple[int, dict[str, list[tuple[i
         for name, pat in FAMILIES.items():
             for m in pat.finditer(line):
                 hits[name].append((i, m.group(0)))
+    if sentences:
+        for name, found in sentence_hits(text).items():
+            hits[name].extend(found)
     if docs:
         for name, found in table_hits(text).items():
             hits[name].extend(found)
@@ -252,7 +439,7 @@ def run(site: Path, summary: bool = False, files: list[Path] | None = None) -> t
             n += len(found)
             line_no, text = found[0]
             where = f"{rel}:{line_no}" if line_no else rel
-            lines.append(f"S warning {where} {len(found)} x {name}: {text}")
+            lines.append(f"S warning {where} {len(found)} x {name}: {text[:80]}")
             findings += 1
         if words:
             per_page.append((n * 1000 / words, rel, n, words))
@@ -270,7 +457,7 @@ def run_docstrings(path: Path) -> tuple[list[str], int]:
     """Scan the docstrings of a Python file or the help block of a MATLAB file, general families only."""
     totals: dict[str, list[tuple[int, str]]] = defaultdict(list)
     for doc in docstrings(path):
-        _, hits = scan_page(doc, docs=False)
+        _, hits = scan_page(doc, docs=False, sentences=False)
         for name, found in hits.items():
             totals[name].extend(found)
     lines = [f"S warning {path} {len(found)} x {name}: {found[0][1]}" for name, found in totals.items()]

@@ -405,3 +405,4 @@ parseGECKOargs
 parseRAVENargs
 fillCarbonNum
 evoData
+ecYeastGEM

@@ -163,3 +163,42 @@ html[data-theme="dark"] .site-logo-dark { display: inline; }
 @media (min-width: 960px) {
   .bd-sidebar-primary { --pst-sidebar-primary-width: 18%; }
 }
+
+/* ===== Footer: the lab and the sibling site ========================== */
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1.5rem;
+  margin: 0;
+}
+.site-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+.site-footer-link img {
+  height: 20px;
+  width: 20px;
+  /* The icon of the sibling site is not square. */
+  object-fit: contain;
+  background-color: transparent !important;
+}
+
+/* ===== Narrow screens ================================================= */
+/* A fixed layout gives every column the same width, about 110 px on a phone,
+   and breaks identifiers in the middle of a word. Below the breakpoint the
+   table keeps its natural column widths and scrolls sideways inside the
+   article. The download icon of a workflow diagram stays in the flow of the
+   page, because the tab label row it floats over wraps on a narrow screen. */
+@media (max-width: 640px) {
+  .bd-article table {
+    table-layout: auto;
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  .bd-article table code .pre {
+    white-space: nowrap;
+  }
+  .workflow-pdf { position: static; margin: 0 0 .5rem; }
+}

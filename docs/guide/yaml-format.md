@@ -18,7 +18,7 @@ The file is an ordered mapping (`!!omap`) that is written as a list of single-ke
 | `genes` | list of genes. A model without genes has `- genes: []` |
 | `compartments` | mapping of compartment identifier to compartment name |
 | `gecko_light` | `true` for a light ecModel, `false` for a full ecModel |
-| `ec-rxns` | list with the kcat, source and enzymes of every row of `ec.rxns` |
+| `ec-rxns` | list with the *k*{sub}`cat`, source and enzymes of every row of `ec.rxns` |
 | `ec-enzymes` | list with the molecular weight, sequence and concentration of every enzyme |
 
 The writers add `gecko_light`, `ec-rxns` and `ec-enzymes` when the model has an `ec` structure. A file with one of `ec-rxns` and `ec-enzymes` and without the other is an error in geckopy, and `load_ec_model` raises a `ValueError` when `ec-rxns` or `ec-enzymes` is missing or empty. The readers also accept `id`, `name`, `version` and `gecko_light` at the top level of the file.
@@ -105,7 +105,7 @@ The entries have these keys, in this order. A key is left out when its value is 
 - Numbers have at least one decimal (`1000.0`). A string that YAML reads as a number, boolean, null or date is written in double quotes.
 - `compartments` is a flat mapping, for example `c: cytoplasm`.
 
-The reactions of an ecModel have the identifiers of the build: `_REV` for the reverse direction and `_EXP_<n>` for an isozyme (see [Choose the ecModel structure](ecmodel-structure.md#steps-of-makeecmodel)). Once kcats are applied, the metabolites of a reaction include the enzymes (`prot_<id>`) with the coefficient `-MW/(kcat*3600)`:
+The reactions of an ecModel have the identifiers of the build: `_REV` for the reverse direction and `_EXP_<n>` for an isozyme (see [Choose the ecModel structure](ecmodel-structure.md#steps-of-makeecmodel)). Once *k*{sub}`cat` values are applied, the metabolites of a reaction include the enzymes (`prot_<id>`) with the coefficient `-MW/(kcat*3600)`:
 
 ```yaml
 - reactions:
@@ -180,8 +180,8 @@ A file with a `gecko_format` above 4 is an error (`loadEcModel:format` in MATLAB
 | Key | Content |
 | --- | --- |
 | `id` | the identifier in `ec.rxns`, a reaction identifier with `_REV` and `_EXP_<n>` where they apply |
-| `kcat` | turnover number in s⁻¹. The value 0 marks a reaction without kcat |
-| `source` | origin of the kcat, for example `brenda` or `custom`. The default is an empty string |
+| `kcat` | turnover number in s⁻¹. The value 0 marks a reaction without *k*{sub}`cat` |
+| `source` | origin of the *k*{sub}`cat`, for example `brenda` or `custom`. The default is an empty string |
 | `notes` | free text. The default is an empty string |
 | `eccodes` | one EC code as a string, or a list for several codes. The default is an empty string |
 | `enzymes` | mapping of enzyme identifier (`ec.enzymes`) to the number of subunit copies in the reaction. Every identifier is also in `ec-enzymes` |
@@ -224,7 +224,7 @@ A reaction without enzymes has an empty `enzymes` entry or none; both are read a
 | `sequence` | amino acid sequence. The default is an empty string |
 | `concs` | measured concentration in mg/gDCW (see [Constrain enzymes with proteomics](proteomics.md)). The key is left out when not measured |
 
-The pseudo-enzyme `standard` has `standard` as gene and enzyme identifier (see [Choose the kcat sources](kcat-sources.md)).
+The pseudo-enzyme `standard` has `standard` as gene and enzyme identifier (see [Choose the *k*{sub}`cat` sources](kcat-sources.md)).
 
 ```yaml
 - ec-enzymes:
@@ -263,6 +263,6 @@ geckopy repairs an entry `enzymes: !!omap` without items and a value in double q
 ## See also
 
 - [Constrain enzymes with proteomics](proteomics.md), where the values of `concs` come from.
-- [Choose the ecModel structure](ecmodel-structure.md) and [Choose the kcat sources](kcat-sources.md), where `ec-rxns` and `ec-enzymes` are populated.
+- [Choose the ecModel structure](ecmodel-structure.md) and [Choose the *k*{sub}`cat` sources](kcat-sources.md), where `ec-rxns` and `ec-enzymes` are populated.
 - [Project format 4](../gecko4-project-format.md), for the ecModel format and the project folder.
 - [API reference](../api/index.md), for the read and write functions.

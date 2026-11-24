@@ -7,6 +7,9 @@ CompMetEng/skills; a difference from the template is listed in DESIGN.md.
 
 from __future__ import annotations
 
+import sys
+import urllib.request
+
 project = "GECKO"
 copyright = "CompMetEng"
 author = "Chen, Gustafsson, Tafur Rangel et al."
@@ -32,6 +35,28 @@ mermaid_height = "auto"
 mermaid_d3_zoom = True
 
 intersphinx_mapping = {"cobra": ("https://cobrapy.readthedocs.io/en/latest/", None)}
+
+
+def _inventory_reachable(base: str) -> bool:
+    """True when base + objects.inv can be fetched; a miss prints a note only."""
+    try:
+        # Read the Docs answers the default Python user agent with 403.
+        request = urllib.request.Request(base + "objects.inv", headers={"User-Agent": "sphinx"})
+        urllib.request.urlopen(request, timeout=10).close()
+    except OSError as err:
+        print(f"note: inventory {base} unreachable ({err}); links to it stay plain text", file=sys.stderr)
+        return False
+    return True
+
+
+# raven-docs is the sibling site: guide pages link to its pages through its
+# inventory. Sphinx fails a strict build on an unreachable inventory and the
+# warning has no name to suppress, so the inventory is added only when it can
+# be fetched. A link of the form inv:raven:... to a missing inventory then
+# stays plain text.
+if _inventory_reachable("https://raven-docs.readthedocs.io/en/latest/"):
+    intersphinx_mapping["raven"] = ("https://raven-docs.readthedocs.io/en/latest/", None)
+suppress_warnings = ["intersphinx.external"]
 
 source_suffix = {".md": "markdown"}
 root_doc = "index"
@@ -68,6 +93,8 @@ html_theme = "pydata_sphinx_theme"
 html_title = "GECKO documentation"
 html_favicon = "_static/gecko-icon.png"
 html_static_path = ["_static"]
+# site-footer.html is the footer of every page.
+templates_path = ["_templates"]
 html_css_files = ["custom.css"]
 # Remembers the language of the code tabs across pages, browser tabs and visits.
 html_js_files = [
@@ -104,6 +131,11 @@ html_theme_options = {
         },
     ],
     "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    # One footer: the lab and the sibling site. The theme's copyright and
+    # Sphinx version lines are left out.
+    "footer_start": ["site-footer"],
+    "footer_center": [],
+    "footer_end": [],
     # The wordmark carries the project name, so there is no navbar logo text.
     "logo": {
         "image_light": "_static/gecko-logo.png",
@@ -112,7 +144,9 @@ html_theme_options = {
     "announcement": (
         "This site documents GECKO <strong>4.0.0b3</strong> "
         "(MATLAB and Python), a pre-release version. The API may still "
-        "change before the stable 4.0.0 release. "
+        "change before the stable 4.0.0 release. The latest stable version is "
+        "GECKO <strong>3.2.5</strong>, installed as a MATLAB Add-On; "
+        '<a href="{upgrade}">upgrade a GECKO 3 project</a>. '
         '<a href="{release_notes}">Release notes</a>.'
     ),
 }
@@ -138,13 +172,16 @@ def setup(app):
 
     gen_api_pages.generate(Path(__file__).resolve().parent)
 
-    def link_release_notes(app, pagename, templatename, context, doctree):
-        """Point the announcement to the release notes from every page."""
+    def link_announcement(app, pagename, templatename, context, doctree):
+        """Point the announcement to the upgrade page and the release notes from every page."""
         announcement = context.get("theme_announcement")
-        if announcement and "{release_notes}" in announcement:
-            context["theme_announcement"] = announcement.replace(
-                "{release_notes}", context["pathto"]("release-notes/index")
-            )
+        if announcement:
+            for key, target in (
+                ("{upgrade}", "gecko3-upgrade-project"),
+                ("{release_notes}", "release-notes/index"),
+            ):
+                announcement = announcement.replace(key, context["pathto"](target))
+            context["theme_announcement"] = announcement
 
-    app.connect("html-page-context", link_release_notes)
+    app.connect("html-page-context", link_announcement)
     return autolink.setup(app)

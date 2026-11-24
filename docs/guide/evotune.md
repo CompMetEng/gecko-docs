@@ -1,6 +1,8 @@
-# Tune kcats with evotune
+# Tune *k*{sub}`cat` values with evotune
 
-Evotune is the kcat tuning of GECKO that fits many kcats at once to maximum growth rates and exchange fluxes, measured in one or more conditions, by minimising the root-mean-square error (RMSE) between simulated and measured values. It searches with CMA-ES (covariance matrix adaptation evolution strategy), and the trust in the source of each kcat limits how far the kcat moves. The steps are: prepare the data files, configure the tuning, rank the kcats by their effect on the fit, review the assignment of the top kcats, and tune. The result is an ecModel whose selected kcats fit the data, and a list of the changed kcats. The functions and settings carry the name: `loadEvotuneData`, `[evotune]` in `model_adapter.toml`, and in Python the module `geckopy.kcat_tuning.evotune`. [Choose a kcat tuning](kcat-tuning.md) compares evotune with `sensitivityTuning`, which reaches one growth rate.
+<!-- run-examples: skip-file -->
+
+Evotune is the *k*{sub}`cat` tuning of GECKO that fits many *k*{sub}`cat` values at once to maximum growth rates and exchange fluxes, measured in one or more conditions, by minimising the root-mean-square error (RMSE) between simulated and measured values. It searches with CMA-ES (covariance matrix adaptation evolution strategy), and the trust in the source of each *k*{sub}`cat` limits how far the *k*{sub}`cat` moves. The steps are: prepare the data files, configure the tuning, rank the *k*{sub}`cat` values by their effect on the fit, review the assignment of the top *k*{sub}`cat` values, and tune. The result is an ecModel whose selected *k*{sub}`cat` values fit the data, and a list of the changed *k*{sub}`cat` values. The functions and settings carry the name: `loadEvotuneData`, `[evotune]` in `model_adapter.toml`, and in Python the module `geckopy.kcat_tuning.evotune`. [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) compares evotune with `sensitivityTuning`, which reaches one growth rate.
 
 <!-- workflow-place -->
 :::::{dropdown} Place in the workflow
@@ -88,16 +90,16 @@ flowchart TB
 | MATLAB | Python | Note |
 | --- | --- | --- |
 | `loadEvotuneData` | `load_experiment_data` | reads the three data files (see [Experimental data](experimental-data.md)); the tuning functions call it when no data are given |
-| `screenKcatLeverage` | `screen_kcat_leverage` | ranks the kcats by their effect on the fit, without tuning |
-| `selectTunableMask` | `select_tunable_mask` | selects the top kcats of the screen for the search |
-| `reviewKcatAssignment` | `review_assignment` | flags kcat assignments that may be wrong, independent of the data |
+| `screenKcatLeverage` | `screen_kcat_leverage` | ranks the *k*{sub}`cat` values by their effect on the fit, without tuning |
+| `selectTunableMask` | `select_tunable_mask` | selects the top *k*{sub}`cat` values of the screen for the search |
+| `reviewKcatAssignment` | `review_assignment` | flags *k*{sub}`cat` assignments that may be wrong, independent of the data |
 | `ecStatsFromBrenda` | `ec_stats_from_brenda` | summarises the BRENDA data per EC number for the review |
-| `cmaesKcatTuning` | `cmaes_kcat_tuning` | searches the selected kcats for the best fit to the data |
+| `cmaesKcatTuning` | `cmaes_kcat_tuning` | searches the selected *k*{sub}`cat` values for the best fit to the data |
 | `tunePriorPenaltyWeight` | `tune_prior_penalty_weight` | runs the tuning for several `prior_penalty_weight` values and seeds, and reports fit and reproducibility |
 
 ## Setup
 
-- An ecModel with assigned kcats (see [Choose the kcat sources](kcat-sources.md)) and a set protein pool (see [Set the protein pool](protein-pool.md)), in a project with `model_adapter.toml`.
+- An ecModel with assigned *k*{sub}`cat` values (see [Choose the *k*{sub}`cat` sources](kcat-sources.md)) and a set protein pool (see [Set the protein pool](protein-pool.md)), in a project with `model_adapter.toml`.
 - At least one of the files `maxGrowth.tsv` and `fluxData.tsv` in the `data` folder of the project. The two files can be combined: `fluxData.tsv` holds the flux conditions, with the uptake of the carbon source limited to the measured rate, and its exchange fluxes constrain the distribution of the fluxes in a condition; `maxGrowth.tsv` holds the maximum-growth conditions, with the uptake of the carbon source unlimited, and constrains the growth rate on each carbon source. The tutorial `full_ecModel` of GECKO has all three data files in its `data` folder.
 - MATLAB: `nProc` above 1 needs the Parallel Computing Toolbox. `cmaesKcatTuning` has its own CMA-ES. Python: geckopy installs the CMA-ES package `cma`.
 
@@ -173,21 +175,21 @@ sigma0_log = 0.4
 
 | Setting (MATLAB field) | Meaning |
 | --- | --- |
-| `source_groups` (`kcatSources`) | trust groups, one table each with the `sources` it covers and its `sigma0_log`, the prior standard deviation of the natural log of the kcat |
-| `sigma0_log_default` (`sigma0logDefault`) | standard deviation of the natural log of a kcat that matches no group |
+| `source_groups` (`kcatSources`) | trust groups, one table each with the `sources` it covers and its `sigma0_log`, the prior standard deviation of the natural log of the *k*{sub}`cat` |
+| `sigma0_log_default` (`sigma0logDefault`) | standard deviation of the natural log of a *k*{sub}`cat` that matches no group |
 | `max_growth_weight` (`maxGrowthWeight`) | weight `w` of the maximum-growth conditions against the flux conditions in the RMSE |
-| `prior_penalty_weight` (`priorPenaltyWeight`) | weight `p` of a penalty for moving kcats; the search minimises `rmse + p * mean(((log k - log k0) / sigma0_log)^2)`. At 0 the objective is the RMSE |
-| `tie_isozymes` (`tieIsozymes`) | isozyme copies of one reaction with the same kcat and the same group get one shared kcat |
+| `prior_penalty_weight` (`priorPenaltyWeight`) | weight `p` of a penalty for moving *k*{sub}`cat` values; the search minimises `rmse + p * mean(((log k - log k0) / sigma0_log)^2)`. At 0 the objective is the RMSE |
+| `tie_isozymes` (`tieIsozymes`) | isozyme copies of one reaction with the same *k*{sub}`cat` and the same group get one shared *k*{sub}`cat` |
 | `rmse_threshold` (`rmseThreshold`) | the search stops when the best RMSE reaches this value; a negative value never stops the search early |
 | `max_generations` (`maxGenerations`) | maximum number of CMA-ES generations |
 
-A smaller `sigma0_log` is more trust: the search moves such a kcat less, and the screen ranks it lower. A kcat belongs to a group when the origin of its `ec.source`, or the whole `ec.source`, equals one of the `sources` of the group, without regard to case (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). `brenda (wc=0, origin=1)` is in the group that lists `brenda`, `combined (sd=0.10, n=2)` in the group that lists `combined`, and a tuned kcat such as `brenda (wc=0, origin=1) | tuned=cmaes (prior=2)` stays in the group of `brenda`. An entry that ends in `*` is a prefix pattern: `okp_*` covers the origins that start with `okp_`. Exact entries are matched before patterns; [Source groups](model-adapter-parameters.md#source-groups) gives the full order. In both toolboxes the group of a kcat, in `screen.sourceGroup` (Python `source_group`) and `result.groups`, is the group name.
+A smaller `sigma0_log` is more trust: the search moves such a *k*{sub}`cat` less, and the screen ranks it lower. A *k*{sub}`cat` belongs to a group when the origin of its `ec.source`, or the whole `ec.source`, equals one of the `sources` of the group, without regard to case (see [Provenance of a *k*{sub}`cat`](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). `brenda (wc=0, origin=1)` is in the group that lists `brenda`, `combined (sd=0.10, n=2)` in the group that lists `combined`, and a tuned *k*{sub}`cat` such as `brenda (wc=0, origin=1) | tuned=cmaes (prior=2)` stays in the group of `brenda`. An entry that ends in `*` is a prefix pattern: `okp_*` covers the origins that start with `okp_`. Exact entries are matched before patterns; [Source groups](model-adapter-parameters.md#source-groups) gives the full order. In both toolboxes the group of a *k*{sub}`cat`, in `screen.sourceGroup` (Python `source_group`) and `result.groups`, is the group name.
 
-The default groups cover the origins `custom`, `brenda`, `ec_tree` and `combined` of the preset `brenda_ec_tree`; kcats with the origin `standard` take `sigma0_log_default`. Other presets and stages give other origins, such as `homologs`, `dlkcat` or `okp_<method>`. List the origins of `ec.source` (`parseKcatSource`, Python `parse_kcat_source`, returns the origin of each entry) and give each origin that needs its own trust a group. Groups in `model_adapter.toml` replace all default groups, so a file that adds one group lists the default groups it keeps as well. Kcats in no group take `sigma0_log_default`, and the tuning warns when they are more than 20 % of the tunable kcats.
+The default groups cover the origins `custom`, `brenda`, `ec_tree` and `combined` of the preset `brenda_ec_tree`; *k*{sub}`cat` values with the origin `standard` take `sigma0_log_default`. Other presets and stages give other origins, such as `homologs`, `dlkcat` or `okp_<method>`. List the origins of `ec.source` (`parseKcatSource`, Python `parse_kcat_source`, returns the origin of each entry) and give each origin that needs its own trust a group. Groups in `model_adapter.toml` replace all default groups, so a file that adds one group lists the default groups it keeps as well. *K*{sub}`cat` values in no group take `sigma0_log_default`, and the tuning warns when they are more than 20 % of the tunable *k*{sub}`cat` values.
 
-## Rank the kcats by their effect
+## Rank the *k*{sub}`cat` values by their effect
 
-`screenKcatLeverage` multiplies and divides each kcat (or each group of tied isozyme copies) by `fold` (default 2) and records the largest change of the RMSE, the leverage. The rows are sorted by leverage multiplied by the `sigma0_log` of the kcat. The screen runs one simulation per condition for each of these probes and one baseline, so on a genome-scale model it takes about as long as a tuning run.
+`screenKcatLeverage` multiplies and divides each *k*{sub}`cat` (or each group of tied isozyme copies) by `fold` (default 2) and records the largest change of the RMSE, the leverage. The rows are sorted by leverage multiplied by the `sigma0_log` of the *k*{sub}`cat`. The screen runs one simulation per condition for each of these probes and one baseline, so on a genome-scale model it takes about as long as a tuning run.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -217,11 +219,11 @@ screen.drop(columns="_positions").head(20)
 :::
 ::::
 
-The screen has one row per kcat or tied group: `rxnId` (Python `rxn_id`), `nIsozymes` (`n_isozymes`), `sourceGroup` (`source_group`), `kcat0`, `leverage`, `sigma0log` (`sigma0_log`), `rank` (leverage times `sigma0log`) and `cumLeverageShare` (`cum_leverage_share`), the sum of `rank` from the first row to this row as a fraction of the total. The column `positions` (Python `_positions`) holds the indices into `ec.rxns` of each row. The screen scores two kcat vectors for each kcat or tied group, so its time grows with the number of kcats screened; `tunableMask` (Python `tunable_mask`) restricts the screen to a subset.
+The screen has one row per *k*{sub}`cat` or tied group: `rxnId` (Python `rxn_id`), `nIsozymes` (`n_isozymes`), `sourceGroup` (`source_group`), `kcat0`, `leverage`, `sigma0log` (`sigma0_log`), `rank` (leverage times `sigma0log`) and `cumLeverageShare` (`cum_leverage_share`), the sum of `rank` from the first row to this row as a fraction of the total. The column `positions` (Python `_positions`) holds the indices into `ec.rxns` of each row. The screen scores two *k*{sub}`cat` vectors for each *k*{sub}`cat` or tied group, so its time grows with the number of *k*{sub}`cat` values screened; `tunableMask` (Python `tunable_mask`) restricts the screen to a subset.
 
-## Review the assignments of the top kcats
+## Review the assignments of the top *k*{sub}`cat` values
 
-`reviewKcatAssignment` checks each kcat for these problems: an EC number with specific-activity rows but no kcat rows in BRENDA (`no-ec-evidence`; an EC number that is not in BRENDA is not flagged), the same value in 5 or more reactions (`repeated-value`), the maximum of an EC number that is more than 3 times its median (`ec-maximum`), a value outside 0.01 to 10000 per s (`magnitude`), and a custom value that equals a BRENDA value of its EC number (`custom-duplicate`). The checks that need BRENDA statistics are skipped without `ecStats`. With the leverage of the screen the findings are sorted by leverage, and `coverage` or `top` shortens the list. Correct a wrong kcat in its source (see [Choose the kcat sources](kcat-sources.md) and [Set custom kcats](custom-kcats.md)); every model built from the same files then has the correction.
+`reviewKcatAssignment` checks each *k*{sub}`cat` for these problems: an EC number with specific-activity rows but no *k*{sub}`cat` rows in BRENDA (`no-ec-evidence`; an EC number that is not in BRENDA is not flagged), the same value in 5 or more reactions (`repeated-value`), the maximum of an EC number that is more than 3 times its median (`ec-maximum`), a value outside 0.01 to 10000 per s (`magnitude`), and a custom value that equals a BRENDA value of its EC number (`custom-duplicate`). The checks that need BRENDA statistics are skipped without `ecStats`. With the leverage of the screen the findings are sorted by leverage, and `coverage` or `top` shortens the list. Correct a wrong *k*{sub}`cat` in its source (see [Choose the *k*{sub}`cat` sources](kcat-sources.md) and [Set custom *k*{sub}`cat` values](custom-kcats.md)); every model built from the same files then has the correction.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -264,11 +266,11 @@ open("findings.tsv", "w").write(findings_tsv(findings))
 :::
 ::::
 
-Each finding has the reaction, its EC number, source, kcat and leverage, the number of isozyme copies, the number of other reactions that share an enzyme (with the option `enzymes`), the names of the checks and a `detail` in words. Tied isozyme copies are reported once. Kcats with the source `standard` are reported when `include` lists `standard-fallback`, and the check `tied-isozymes` is added when `include` lists it; the default `include` is empty.
+Each finding has the reaction, its EC number, source, *k*{sub}`cat` and leverage, the number of isozyme copies, the number of other reactions that share an enzyme (with the option `enzymes`), the names of the checks and a `detail` in words. Tied isozyme copies are reported once. *K*{sub}`cat` values with the source `standard` are reported when `include` lists `standard-fallback`, and the check `tied-isozymes` is added when `include` lists it; the default `include` is empty.
 
 ## Run evotune
 
-`cmaesKcatTuning` uses `selectTunableMask` to select the kcats to search: the top rows of the screen, up to the first row at which `cumLeverageShare` reaches `targetImpactShare` (default 0.9). With `screen` the function uses that screen; without it, the function runs a new screen. `tunableMask` (Python `tunable_mask`) gives the set of kcats directly and takes precedence over `screen`.
+`cmaesKcatTuning` uses `selectTunableMask` to select the *k*{sub}`cat` values to search: the top rows of the screen, up to the first row at which `cumLeverageShare` reaches `targetImpactShare` (default 0.9). With `screen` the function uses that screen; without it, the function runs a new screen. `tunableMask` (Python `tunable_mask`) gives the set of *k*{sub}`cat` values directly and takes precedence over `screen`.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -293,7 +295,7 @@ save_ec_model(ec_model, "ecModel_tuned.yml", adapter=adapter)
 :::
 ::::
 
-Each candidate kcat lies between `min(0.01, k0/100)` and `max(10000, 100*k0)` per s, where `k0` is the kcat before tuning. After the run, the selected kcats hold the values of the best candidate, and their enzyme constraints are applied. Python changes `ec_model` in place. `popsize` sets the number of candidates per generation (default `4 + floor(3*log(n))` for `n` free kcats). In Python, the search can also stop earlier on a convergence criterion of the `cma` package, such as `tolx`.
+Each candidate *k*{sub}`cat` lies between `min(0.01, k0/100)` and `max(10000, 100*k0)` per s, where `k0` is the *k*{sub}`cat` before tuning. After the run, the selected *k*{sub}`cat` values hold the values of the best candidate, and their enzyme constraints are applied. Python changes `ec_model` in place. `popsize` sets the number of candidates per generation (default `4 + floor(3*log(n))` for `n` free *k*{sub}`cat` values). In Python, the search can also stop earlier on a convergence criterion of the `cma` package, such as `tolx`.
 
 ### Conditions that change the model
 
@@ -301,15 +303,15 @@ A data row with oxygen uptake 0 or with a value of `Ptot` needs a function that 
 
 ## The protein pool and sigma
 
-Set the protein pool before evotune, with `setProtPoolSize` and the values of Ptot, f and $\sigma$ in the model adapter (see [Set the protein pool](protein-pool.md)). Evotune simulates each data row with the protein pool of the model; only a row with a value of `Ptot` changes it, through the protein content of the biomass (see [Conditions that change the model](#conditions-that-change-the-model)). The maximum growth rates of `maxGrowth.tsv` are part of the fit, so the tuning fits the kcats to these growth rates with that pool.
+Set the protein pool before evotune, with `setProtPoolSize` and the values of Ptot, f and $\sigma$ in the model adapter (see [Set the protein pool](protein-pool.md)). Evotune simulates each data row with the protein pool of the model; only a row with a value of `Ptot` changes it, through the protein content of the biomass (see [Conditions that change the model](#conditions-that-change-the-model)). The maximum growth rates of `maxGrowth.tsv` are part of the fit, so the tuning fits the *k*{sub}`cat` values to these growth rates with that pool.
 
-Do not run `sigmaFitter` (Python `fit_sigma`) after evotune. It changes the protein pool so that the model reaches one growth rate, which moves every simulated growth rate and flux away from the values that the tuning fitted. A $\sigma$ fitted before evotune, to an ecModel with kcats that are too low, makes the pool compensate for the kcats (see [Sigma and kcat tuning](protein-pool.md#sigma-and-kcat-tuning)), and evotune then fits the kcats to that pool.
+Do not run `sigmaFitter` (Python `fit_sigma`) after evotune. It changes the protein pool so that the model reaches one growth rate, which moves every simulated growth rate and flux away from the values that the tuning fitted. A $\sigma$ fitted before evotune, to an ecModel with *k*{sub}`cat` values that are too low, makes the pool compensate for the *k*{sub}`cat` values (see [Sigma and *k*{sub}`cat` tuning](protein-pool.md#sigma-and-kcat-tuning)), and evotune then fits the *k*{sub}`cat` values to that pool.
 
 ## Seeds, reproducibility and parallel runs
 
 `seed` makes a run reproducible. MATLAB and Python have different CMA-ES implementations, so the same seed gives different results in the two toolboxes. In Python, a run with `n_proc` above 1 gives the same result as a run with `n_proc=1` and the same seed. `nProc` has the default 1 in MATLAB; `n_proc` has the default `cobra.Configuration().processes` in Python.
 
-Different kcat vectors can fit the data equally well, so two seeds can move a kcat in different directions. Run the tuning with a second seed and compare the large changes (above two-fold): they should be in the same direction and of similar size. If they are not, increase `prior_penalty_weight`. `tunePriorPenaltyWeight` (Python `tune_prior_penalty_weight`) runs the tuning for each value of `candidates` (default 0, 0.01, 0.03 and 0.1) and each of `seeds` (default 0 and 1), on the same set of kcats, and reports per value the fit, the number of changed kcats and the agreement between seeds. It costs one tuning run per value and seed, and the model is not changed.
+Different *k*{sub}`cat` vectors can fit the data equally well, so two seeds can move a *k*{sub}`cat` in different directions. Run the tuning with a second seed and compare the large changes (above two-fold): they should be in the same direction and of similar size. If they are not, increase `prior_penalty_weight`. `tunePriorPenaltyWeight` (Python `tune_prior_penalty_weight`) runs the tuning for each value of `candidates` (default 0, 0.01, 0.03 and 0.1) and each of `seeds` (default 0 and 1), on the same set of *k*{sub}`cat` values, and reports per value the fit, the number of changed *k*{sub}`cat` values and the agreement between seeds. It costs one tuning run per value and seed, and the model is not changed.
 
 ## Read the result
 
@@ -317,16 +319,16 @@ Different kcat vectors can fit the data equally well, so two seeds can move a kc
 
 | MATLAB | Python | Meaning |
 | --- | --- | --- |
-| `rxns`, `oldKcat`, `newKcat`, `groups` | `rxns`, `old_kcat`, `new_kcat`, `groups` | the selected kcats before and after tuning, and the trust group of each; tied copies share one value |
+| `rxns`, `oldKcat`, `newKcat`, `groups` | `rxns`, `old_kcat`, `new_kcat`, `groups` | the selected *k*{sub}`cat` values before and after tuning, and the trust group of each; tied copies share one value |
 | `rmseTrace`, `objectiveTrace` | `rmse_trace`, `objective_trace` | the best RMSE and the best value of the minimised objective, per generation; the two are equal when `prior_penalty_weight` is 0 |
 | `nGenerations` | `n_generations` | number of generations that ran |
 | `converged` | `converged` | whether the best RMSE reached `rmse_threshold` |
 
-`ec.source` of every kcat that changed gets the tuning status `tuned=cmaes`, with the kcat before the first tuning as `prior` (see [Provenance of a kcat](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). `nChanged` (Python `n_changed`) counts the kcats that differ from their value before tuning by more than 2 %. A result in which most of the selected kcats changed by a small factor does not identify single kcats; a result in which a few kcats changed by large factors, mostly in groups with a large `sigma0_log`, points to these kcats. `parsimonyFrontier` (Python `parsimony_frontier`) sets each kcat that moved less than a threshold, in units of its `sigma0_log`, back to the value before tuning, and scores the result for a series of thresholds with a scoring function that the caller gives. `bestParsimonious` (Python `best_parsimonious`) returns the point with the fewest changed kcats whose RMSE is within 2 % of the best RMSE. In Python, `result.corrections(leverage=...)` returns one `Correction` per kcat that differs from its value before tuning by more than 2 %, with the fields `rxn_id`, `name`, `ec_code`, `source` (the trust group), `kcat_prior`, `kcat_tuned`, `fold_change`, `leverage`, `leverage_share` and `cumulative_share`. `leverage` has one value per entry of `result.rxns`, and `annotate_from_model` gives the `names` and `ec_codes`. The rows are sorted by leverage, so the kcats that the data barely affect, which can move furthest, come last; `cumulative_share` is the share of the total leverage from the first row to this row. `corrections_tsv` in `geckopy.kcat_tuning` writes the rows as TSV. The module `geckopy.kcat_tuning.evotune.parsimony` has three more measures: `fold_change` (the fold change of each kcat, 1 or more), `source_movement` (per trust group, the median fold change of all kcats and of the kcats that moved, and whether the kcats moved less in the more trusted groups, for an order of trust that the caller gives) and `impact_share` (the share of the summed leverage that the changed kcats account for, without the `sigma0_log` weight of `cumLeverageShare`). Check the tuned model against data that were not used in the fit: an improvement on the fitted conditions without an improvement on other data indicates overfitting (see [Check against data left out of the fit](#check-against-data-left-out-of-the-fit)). As with `sensitivityTuning`, check the large changes against the source of each kcat (see [Choose a kcat tuning](kcat-tuning.md#check-a-tuned-kcat-against-its-source)), and keep curated values in `data/kcats/custom.tsv`.
+`ec.source` of every *k*{sub}`cat` that changed gets the tuning status `tuned=cmaes`, with the *k*{sub}`cat` before the first tuning as `prior` (see [Provenance of a *k*{sub}`cat`](../gecko4-kcat-assignment.md#provenance-of-a-kcat)). `nChanged` (Python `n_changed`) counts the *k*{sub}`cat` values that differ from their value before tuning by more than 2 %. A result in which most of the selected *k*{sub}`cat` values changed by a small factor does not identify single *k*{sub}`cat` values; a result in which a few *k*{sub}`cat` values changed by large factors, mostly in groups with a large `sigma0_log`, points to these *k*{sub}`cat` values. `parsimonyFrontier` (Python `parsimony_frontier`) sets each *k*{sub}`cat` that moved less than a threshold, in units of its `sigma0_log`, back to the value before tuning, and scores the result for a series of thresholds with a scoring function that the caller gives. `bestParsimonious` (Python `best_parsimonious`) returns the point with the fewest changed *k*{sub}`cat` values whose RMSE is within 2 % of the best RMSE. In Python, `result.corrections(leverage=...)` returns one `Correction` per *k*{sub}`cat` that differs from its value before tuning by more than 2 %, with the fields `rxn_id`, `name`, `ec_code`, `source` (the trust group), `kcat_prior`, `kcat_tuned`, `fold_change`, `leverage`, `leverage_share` and `cumulative_share`. `leverage` has one value per entry of `result.rxns`, and `annotate_from_model` gives the `names` and `ec_codes`. The rows are sorted by leverage, so the *k*{sub}`cat` values that the data barely affect, which can move furthest, come last; `cumulative_share` is the share of the total leverage from the first row to this row. `corrections_tsv` in `geckopy.kcat_tuning` writes the rows as TSV. The module `geckopy.kcat_tuning.evotune.parsimony` has three more measures: `fold_change` (the fold change of each *k*{sub}`cat`, 1 or more), `source_movement` (per trust group, the median fold change of all *k*{sub}`cat` values and of the *k*{sub}`cat` values that moved, and whether the *k*{sub}`cat` values moved less in the more trusted groups, for an order of trust that the caller gives) and `impact_share` (the share of the summed leverage that the changed *k*{sub}`cat` values account for, without the `sigma0_log` weight of `cumLeverageShare`). Check the tuned model against data that were not used in the fit: an improvement on the fitted conditions without an improvement on other data indicates overfitting (see [Check against data left out of the fit](#check-against-data-left-out-of-the-fit)). As with `sensitivityTuning`, check the large changes against the source of each *k*{sub}`cat` (see [Choose a *k*{sub}`cat` tuning](kcat-tuning.md#check-a-tuned-kcat-against-its-source)), and keep curated values in `data/kcats/custom.tsv`.
 
 ## Run evotune from start to end
 
-The scripts below run the steps of this page on the project of the tutorial `full_ecModel`: they rank the kcats, tune with two seeds on the same kcats, list the large changes of both seeds and save the tuned ecModel. They start from the ecModel that the tutorial saves before its kcat tuning, with assigned kcats and a set protein pool: `ecYeastGEM_stage_untuned.yml` from `protocol.m` in GECKO, and `ecYeastGEM_stage2.yml` from `protocol.py` in geckopy. Run the tutorial first, and replace `path/to/full_ecModel` with the path of its project. The number of parallel processes is read from the variable `SLURM_CPUS_PER_TASK` of the scheduler, with 8 when it is not set.
+The scripts below run the steps of this page on the project of the tutorial `full_ecModel`: they rank the *k*{sub}`cat` values, tune with two seeds on the same *k*{sub}`cat` values, list the large changes of both seeds and save the tuned ecModel. They start from the ecModel that the tutorial saves before its *k*{sub}`cat` tuning, with assigned *k*{sub}`cat` values and a set protein pool: `ecYeastGEM_stage_untuned.yml` from `protocol.m` in GECKO, and `ecYeastGEM_stage2.yml` from `protocol.py` in geckopy. Run the tutorial first, and replace `path/to/full_ecModel` with the path of its project. The scripts use 8 parallel processes; set `nProc` (Python `n_proc`) to the number of cores of the computer.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -337,8 +339,7 @@ The scripts below run the steps of this page on the project of the tutorial `ful
 ModelAdapterManager.setDefault('path/to/full_ecModel');
 params = ModelAdapterManager.getDefault().getParameters();
 setRavenSolver('gurobi');
-nProc = str2double(getenv('SLURM_CPUS_PER_TASK'));
-if isnan(nProc), nProc = 8; end
+nProc = 8;
 outDir = fullfile(params.path, 'output');
 
 % The ecModel with assigned kcats and a set protein pool, saved by protocol.m
@@ -394,7 +395,7 @@ sys.path.insert(0, os.path.join(project, "code"))
 from anaerobic import make_anaerobic  # noqa: E402
 
 adapter = ModelAdapter.from_folder(project)
-n_proc = int(os.environ.get("SLURM_CPUS_PER_TASK", 8))
+n_proc = 8
 out_dir = os.path.join(project, "output")
 
 # The ecModel with assigned kcats and a set protein pool, saved by protocol.py
@@ -445,7 +446,7 @@ The anaerobic rows of `fluxData.tsv` need `make_anaerobic` from `code/anaerobic.
 
 ### Run time and the solver
 
-The run time grows with the number of data rows, the number of kcats in the screen, `popsize` and the number of generations: the screen solves one FBA problem per data row for two kcat vectors per kcat, and each generation of the tuning one per data row for `popsize` kcat vectors. The scripts run the screen once and the tuning twice.
+The run time grows with the number of data rows, the number of *k*{sub}`cat` values in the screen, `popsize` and the number of generations: the screen solves one FBA problem per data row for two *k*{sub}`cat` vectors per *k*{sub}`cat`, and each generation of the tuning one per data row for `popsize` *k*{sub}`cat` vectors. The scripts run the screen once and the tuning twice.
 
 Use Gurobi. MATLAB uses the solver that `setRavenSolver` sets; check it with `getpref('RAVEN', 'solver')`. Python uses the solver of cobrapy, which takes Gurobi when the package `gurobipy` can be imported and a licence is found, and otherwise GLPK without an error; GLPK makes the run many times slower. Check the solver before a long run:
 
@@ -454,34 +455,19 @@ import cobra
 print(cobra.Configuration().solver)
 ```
 
-### Run on an HPC cluster
+### Run a long tuning
 
-The screen and the tuning run in parallel over `nProc` (Python `n_proc`) processes, so a job on one node with several cores fits. An example job for the Slurm scheduler; the names of the modules and the account depend on the cluster:
+The screen and the tuning run in parallel over `nProc` (Python `n_proc`) processes, so a computer with many cores shortens a long run. MATLAB needs the Parallel Computing Toolbox for `nProc` above 1. The scripts save the tuned ecModel at the end, so a run that is stopped before it ends loses the results that the script has not yet written. Run a long job in a way that keeps it alive when the terminal closes, and set a time limit, if the computer has one, with a margin over the expected run time.
 
-```bash
-#!/usr/bin/env bash
-#SBATCH -A <account>
-#SBATCH -N 1
-#SBATCH -c 32
-#SBATCH -t 24:00:00
-#SBATCH -J evotune
-#SBATCH -o evotune.%j.out
+### Choose the number of *k*{sub}`cat` values and generations
 
-module load MATLAB Gurobi
-matlab -batch "runEvotune"
-```
+`targetImpactShare` (default 0.9) sets how many *k*{sub}`cat` values the tuning searches: the top rows of the screen up to that share of the weighted effect on the fit. The share is relative to the total of the screen, so the same value selects a comparable part of the effect on the fit in another model. Each searched *k*{sub}`cat` is a free parameter of the fit, so a higher share fits more *k*{sub}`cat` values to the same data. With few data rows, keep the share low, and compare the fit and the agreement between seeds for two or three values. In Python, `sweep_tunable_mask_size` runs the tuning for a series of values and `recommend_target_impact_share` picks one from the results.
 
-For Python, load the Python environment with geckopy and `gurobipy`, and replace the last line with `python run_evotune.py`. Set the time limit with a margin: when the scheduler stops the job, the files that the script has not yet written are lost, and the scripts save the tuned ecModel at the end. MATLAB needs the Parallel Computing Toolbox for `nProc` above 1.
-
-### Choose the number of kcats and generations
-
-`targetImpactShare` (default 0.9) sets how many kcats the tuning searches: the top rows of the screen up to that share of the weighted effect on the fit. The share is relative to the total of the screen, so the same value selects a comparable part of the effect on the fit in another model. Each searched kcat is a free parameter of the fit, so a higher share fits more kcats to the same data. With few data rows, keep the share low, and compare the fit and the agreement between seeds for two or three values. In Python, `sweep_tunable_mask_size` runs the tuning for a series of values and `recommend_target_impact_share` picks one from the results.
-
-`max_generations` is the most generations the tuning runs. Plot `rmseTrace` (Python `rmse_trace`) against the generation: when the RMSE still falls at the last generation, raise `max_generations`; when it is flat over the last part of the run, the tuning can stop earlier. `popsize` grows with the number of free kcats, so a run with more kcats costs more per generation.
+`max_generations` is the most generations the tuning runs. Plot `rmseTrace` (Python `rmse_trace`) against the generation: when the RMSE still falls at the last generation, raise `max_generations`; when it is flat over the last part of the run, the tuning can stop earlier. `popsize` grows with the number of free *k*{sub}`cat` values, so a run with more *k*{sub}`cat` values costs more per generation.
 
 ### Check against data left out of the fit
 
-A fit to the data that were used for the tuning does not show that the tuned kcats predict other conditions. Leave some conditions out of the tuning, tune on the others, and compare the RMSE of the left-out conditions before and after the tuning. The example leaves out the maximum growth rates on galactose and maltose by giving their rows the weight 0 in the tuning data. The rows stay in the data, so that their carbon sources stay closed when the other rows are simulated (see [Prepare the data files](#prepare-the-data-files)). The scripts use the names of the scripts above, with the ecModel before the tuning: in MATLAB `ecModel` is not changed by the tuning, while in Python `cmaes_kcat_tuning` changed `ec_model` in place, so the Python script loads it again.
+A fit to the data that were used for the tuning does not show that the tuned *k*{sub}`cat` values predict other conditions. Leave some conditions out of the tuning, tune on the others, and compare the RMSE of the left-out conditions before and after the tuning. The example leaves out the maximum growth rates on galactose and maltose by giving their rows the weight 0 in the tuning data. The rows stay in the data, so that their carbon sources stay closed when the other rows are simulated (see [Prepare the data files](#prepare-the-data-files)). The scripts use the names of the scripts above, with the ecModel before the tuning: in MATLAB `ecModel` is not changed by the tuning, while in Python `cmaes_kcat_tuning` changed `ec_model` in place, so the Python script loads it again.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -543,11 +529,11 @@ for when, model in [("before", ec_model), ("after", ec_train)]:
 :::
 ::::
 
-The screen of this check is run on the tuning data, so that the left-out conditions also take no part in the choice of the kcats. When the RMSE of the left-out conditions falls, the tuning improves conditions it was not fitted to. When it stays the same or rises while the RMSE of the fit falls, the tuning fits the kcats to the particular conditions: search fewer kcats, or raise `prior_penalty_weight`. Repeat the check with other left-out conditions, because one pair of conditions can be easy or hard by chance.
+The screen of this check is run on the tuning data, so that the left-out conditions also take no part in the choice of the *k*{sub}`cat` values. When the RMSE of the left-out conditions falls, the tuning improves conditions it was not fitted to. When it stays the same or rises while the RMSE of the fit falls, the tuning fits the *k*{sub}`cat` values to the particular conditions: search fewer *k*{sub}`cat` values, or raise `prior_penalty_weight`. Repeat the check with other left-out conditions, because one pair of conditions can be easy or hard by chance.
 
 ### Keep the corrections
 
-The tuned ecModel holds the tuned kcats, but the next `assignKcats` replaces them with the values of the kcat source files. `evotune_review.tsv` (MATLAB) and `evotune_corrections.tsv` (Python) list the changed kcats with the value before and after the tuning. Check each large change against the source of the kcat (see [Check a tuned kcat against its source](kcat-tuning.md#check-a-tuned-kcat-against-its-source)), and add each value you keep to `data/kcats/custom.tsv` by hand (see [Keep a curated kcat](kcat-tuning.md#keep-a-curated-kcat)), with the evidence in the column `note`. In `custom.tsv`, `rxn` is the reaction of the conventional GEM: remove the suffix `_EXP_<n>` of an isozyme copy. A row without `enzymes` applies to every isozyme of the reaction, which matches isozyme copies that the tuning tied to one kcat; for a single copy, give its enzymes. A large change that differs in direction between the seeds is not supported by the data, and is not a correction to keep.
+The tuned ecModel holds the tuned *k*{sub}`cat` values, but the next `assignKcats` replaces them with the values of the *k*{sub}`cat` source files. `evotune_review.tsv` (MATLAB) and `evotune_corrections.tsv` (Python) list the changed *k*{sub}`cat` values with the value before and after the tuning. Check each large change against the source of the *k*{sub}`cat` (see [Check a tuned *k*{sub}`cat` against its source](kcat-tuning.md#check-a-tuned-kcat-against-its-source)), and add each value you keep to `data/kcats/custom.tsv` by hand (see [Keep a curated *k*{sub}`cat`](kcat-tuning.md#keep-a-curated-kcat)), with the evidence in the column `note`. In `custom.tsv`, `rxn` is the reaction of the conventional GEM: remove the suffix `_EXP_<n>` of an isozyme copy. A row without `enzymes` applies to every isozyme of the reaction, which matches isozyme copies that the tuning tied to one *k*{sub}`cat`; for a single copy, give its enzymes. A large change that differs in direction between the seeds is not supported by the data, and is not a correction to keep.
 
 ## Troubleshooting
 
@@ -555,19 +541,19 @@ The tuned ecModel holds the tuned kcats, but the next `assignKcats` replaces the
 | --- | --- | --- |
 | The screen or the tuning runs many times longer than expected (Python) | `gurobipy` cannot be imported or finds no licence, and cobrapy uses GLPK | Check `cobra.Configuration().solver` before the run, and install `gurobipy` with a licence |
 | The RMSE still falls at the last generation | `max_generations` ends the search before it converges | Raise `max_generations` |
-| The RMSE of the fit falls, but the RMSE of left-out conditions does not | The tuning fits the kcats to the conditions of the data | Search fewer kcats (`targetImpactShare`), or raise `prior_penalty_weight` |
+| The RMSE of the fit falls, but the RMSE of left-out conditions does not | The tuning fits the *k*{sub}`cat` values to the conditions of the data | Search fewer *k*{sub}`cat` values (`targetImpactShare`), or raise `prior_penalty_weight` |
 | The anaerobic conditions fit badly (Python) | `make_anaerobic` was not given, so these rows are simulated with oxygen | Pass `make_anaerobic` to the screen and the tuning |
 | Error `evotune:noData` (MATLAB), or `ValueError` that `experiment_data` has neither `flux_data` nor `max_growth` (Python) | Neither `fluxData.tsv` nor `maxGrowth.tsv` is in `<project>/data/` | Add one of the files, or pass the loaded data |
 | Error that a carbon source cannot be matched by name with an exchange reaction | The `Condition` of a row differs from every metabolite name in the exchange column headers | Use the metabolite name of the column header as the condition |
-| Error `No tunable kcats` | No kcat is above 0, or the mask excludes every kcat | Assign kcats first, or widen the mask |
-| Error `Only 1 free parameter(s) after masking and tying` | The mask and the isozyme tying leave fewer than two free kcats | Raise `targetImpactShare`, or give a wider `tunableMask` |
-| Error `<file>: evotune.source_groups.<group> needs both sources and sigma0_log` | A group lacks `sources` or `sigma0_log` | Give each group both keys |
+| Error `No tunable kcats` | No *k*{sub}`cat` is above 0, or the mask excludes every *k*{sub}`cat` | Assign *k*{sub}`cat` values first, or widen the mask |
+| Error `Only 1 free parameter(s) after masking and tying` | The mask and the isozyme tying leave fewer than two free *k*{sub}`cat` values | Raise `targetImpactShare`, or give a wider `tunableMask` |
+| Error `GECKO:loadAdapterParams`: `<file>: evotune.source_groups.<group> needs both sources and sigma0_log` | A group lacks `sources` or `sigma0_log` | Give each group both keys |
 | Warning `<n> of <m> tunable kcats match no evotune source group and get sigma0_log_default` | The `sources` of the groups do not match the origins of `ec.source` in the model | List the origins that the warning names in the `sources` of a group, or use a pattern such as `okp_*` |
-| The large changes differ in direction between seeds | Several kcat vectors fit the data equally well | Increase `prior_penalty_weight`, and compare values with `tunePriorPenaltyWeight` |
+| The large changes differ in direction between seeds | Several *k*{sub}`cat` vectors fit the data equally well | Increase `prior_penalty_weight`, and compare values with `tunePriorPenaltyWeight` |
 
 ## See also
 
-- [Choose a kcat tuning](kcat-tuning.md), the choice between evotune and `sensitivityTuning`, and the check of a tuned kcat.
+- [Choose a *k*{sub}`cat` tuning](kcat-tuning.md), the choice between evotune and `sensitivityTuning`, and the check of a tuned *k*{sub}`cat`.
 - [Set the protein pool](protein-pool.md), Ptot, f and sigma.
 - [Files in the data folder](data-folder-files.md), every file of the `data` folder.
 - [Model adapter parameters](model-adapter-parameters.md#kcat-tuning), the `[evotune]` settings in both toolboxes.

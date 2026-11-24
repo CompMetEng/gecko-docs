@@ -81,7 +81,35 @@ flowchart TB
 
 ## Setup
 
-The examples use a full ecModel `ecModel` (Python: `ec_model`) and the model adapter parameters `params`, loaded as in the setup of [Analyse an ecModel](analysis.md#setup). `growthRate` (Python: `growth_rate`) is a growth rate in /hour at which the model is feasible, for example a measured growth rate or 99 % of the maximum.
+The examples use a full ecModel `ecModel` (Python: `ec_model`) and the model adapter parameters `params`, loaded as in the setup of [Analyse an ecModel](analysis.md#setup). `growthRate` (Python: `growth_rate`) is a growth rate in /hour at which the model is feasible, for example a measured growth rate or 99 % of the maximum. The examples take 99 % of the maximum growth rate of the ecModel of the `full_ecModel` tutorial:
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+adapter  = ModelAdapterManager.setDefault('ecMyModel');
+params   = adapter.getParameters();
+ecModel  = loadEcModel();        % models/ecModel.yml
+ecModel  = setParam(ecModel, 'obj', params.bioRxn, 1);
+sol      = solveLP(ecModel);
+growthRate = 0.99 * sol.f;
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+from geckopy import ModelAdapter, load_ec_model
+
+adapter = ModelAdapter.from_folder("ecMyModel")
+params = adapter.params
+ec_model = load_ec_model("ecModel.yml", adapter=adapter)
+ec_model.objective = params.bio_rxn
+growth_rate = 0.99 * ec_model.slim_optimize()
+```
+:::
+::::
 
 ## Choose a measure
 
@@ -101,7 +129,7 @@ An enzyme with a high usage does not have to limit the objective, and an enzyme 
 
 ## Compute the enzyme usage
 
-`getEnzymeUsage` reads the flux of each usage reaction from a flux distribution. The example fixes the growth rate, minimises the protein pool usage, and reports the enzymes:
+`getEnzymeUsage` reads the flux of each usage reaction from a flux distribution. The example fixes the growth rate, minimises the protein pool usage, and reports the enzymes. The output is the first six rows of `topAbsUsage` (Python: `top_abs_usage`) for the ecModel of the `full_ecModel` tutorial, without the reaction names. A row marked `===` gives the combined usage of an enzyme with several reactions, which the following rows list:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -113,7 +141,20 @@ ecModel = setParam(ecModel, 'obj', 'prot_pool_exchange', -1);
 sol = solveLP(ecModel);
 usageData   = getEnzymeUsage(ecModel, sol.x);
 usageReport = reportEnzymeUsage(ecModel, usageData);
-usageReport.topAbsUsage
+usageReport.topAbsUsage(1:6, 1:7)
+```
+
+```text
+ans =
+  6x7 table
+      protID        geneID       absUsage    percUsage      kcat        source            rxnID
+    __________    ___________    ________    _________    ________    ___________    ________________
+    {'P05375'}    {'YJR073C'}     3.8237      3.1214           NaN    {'==='    }    {'==='         }
+    {'P05375'}    {'YJR073C'}     1.9119      1.5607      0.046523    {'ec_tree'}    {'r_2500'      }
+    {'P05375'}    {'YJR073C'}     1.9119      1.5607      0.046523    {'ec_tree'}    {'r_2508'      }
+    {'P16120'}    {'YCR053W'}      3.607      2.9445       0.42053    {'ec_tree'}    {'r_1041'      }
+    {'P00549'}    {'YAL038W'}     3.3606      2.7434           232    {'custom' }    {'r_0962_EXP_1'}
+    {'P40009'}    {'YER005W'}     3.2601      2.6613        68.529    {'ec_tree'}    {'r_0227_EXP_3'}
 ```
 :::
 :::{tab-item} 🐍 Python
@@ -128,7 +169,17 @@ ec_model.objective_direction = "min"
 sol = ec_model.optimize()
 usage = enzyme_usage(ec_model, sol.fluxes)
 report = report_enzyme_usage(ec_model, usage)
-report.top_abs_usage
+report.top_abs_usage.iloc[:6, :7]
+```
+
+```text
+  prot_id  gene_id  abs_usage  perc_usage        kcat   source        rxn_id
+0  P05375  YJR073C   3.823706    3.121392         NaN      ===           ===
+1  P05375  YJR073C   1.911853    1.560696    0.046523  ec_tree        r_2500
+2  P05375  YJR073C   1.911853    1.560696    0.046523  ec_tree        r_2508
+3  P16120  YCR053W   3.606978    2.944472    0.420531  ec_tree        r_1041
+4  P00549  YAL038W   3.360605    2.743351  232.000000   custom  r_0962_EXP_1
+5  P40009  YER005W   3.260084    2.661293   68.529456  ec_tree  r_0227_EXP_3
 ```
 :::
 ::::
@@ -157,18 +208,18 @@ A `demandRatio` above 1 means that the solution uses more of the measured enzyme
 
 | Field (MATLAB / Python) | Content | Option, default |
 | --- | --- | --- |
-| `topAbsUsage` / `top_abs_usage` | the enzymes with the highest absolute usage, with the usage as a percentage of the upper bound of `prot_pool_exchange`, the kcat, its source and the reaction | `topAbsUsage` (Python: `top_abs_usage`), 10; 0 or `Inf` lists all enzymes |
+| `topAbsUsage` / `top_abs_usage` | the enzymes with the highest absolute usage, with the usage as a percentage of the upper bound of `prot_pool_exchange`, the *k*{sub}`cat`, its source and the reaction | `topAbsUsage` (Python: `top_abs_usage`), 10; 0 or `Inf` lists all enzymes |
 | `highCapUsage` / `high_cap_usage` | the enzymes with a capacity usage above the threshold, with the same columns and the capacity usage | `highCapUsage` (Python: `high_cap_usage`), 0.9 |
 | `totalUsageFlux` / `total_usage_flux` | the upper bound of `prot_pool_exchange`, in mg/gDCW | (none) |
 | `demandRatio`, `demandRatioActive` (Python: `demand_ratio`, `demand_ratio_active`) | copied from the usage data | (none) |
 
 An enzyme that catalyses several reactions with flux has one row with the combined usage, marked `===` in the text columns, followed by one row per reaction. In `topAbsUsage`, enzymes whose reactions carry no flux are left out after the top N are selected, so the table can have fewer than N enzymes. In `highCapUsage`, MATLAB lists such an enzyme as a `===` row without reaction rows, and Python leaves it out.
 
-The `source` column shows where the kcat of the reaction came from. An enzyme near the top of `topAbsUsage` with the source `standard` has the standard kcat, a value that GECKO gives to reactions without a kcat from any source ([Choose the kcat sources](kcat-sources.md)). The usage of that enzyme depends on a value that is not specific to it; check the reaction for a measured kcat and put it in `data/kcats/custom.tsv` ([Set custom kcats](custom-kcats.md)).
+The `source` column shows where the *k*{sub}`cat` of the reaction came from. An enzyme near the top of `topAbsUsage` with the source `standard` has the standard *k*{sub}`cat`, a value that GECKO gives to reactions without a *k*{sub}`cat` from any source ([Choose the *k*{sub}`cat` sources](kcat-sources.md)). The usage of that enzyme depends on a value that is not specific to it; check the reaction for a measured *k*{sub}`cat` and put it in `data/kcats/custom.tsv` ([Set custom *k*{sub}`cat` values](custom-kcats.md)).
 
 ## Rank the enzymes that limit the objective
 
-`getEnzymeBottlenecks` solves the model with its current objective. For each enzyme whose usage is at its upper bound (upper bound above 0 and capacity usage at least 1 - 1e-6), it multiplies that bound by `foldChange` (Python: `fold_change`, default 2, must be greater than 1), solves again, and records the rise of the objective as `objectiveGain`. The enzymes are sorted by `objectiveGain`, highest first. An enzyme that is not at its bound gets 0 without a solve, because raising a bound that does not bind cannot change the optimum.
+`getEnzymeBottlenecks` solves the model with its current objective. For each enzyme whose usage is at its upper bound (upper bound above 0 and capacity usage at least 1 - 1e-6), it multiplies that bound by `foldChange` (Python: `fold_change`, default 2, must be greater than 1), solves again, and records the rise of the objective as `objectiveGain`. The enzymes are sorted by `objectiveGain`, highest first. An enzyme that is not at its bound gets 0 without a solve, because raising a bound that does not bind cannot change the optimum. In the `full_ecModel` tutorial at the maximum growth rate, no enzyme is at its usage bound, so the function warns and every `objectiveGain` (Python: `objective_gain`) is 0:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -176,7 +227,25 @@ The `source` column shows where the kcat of the reaction came from. An enzyme ne
 
 ```matlab
 ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);
-bottlenecks = getEnzymeBottlenecks(ecModel, 'top', 10);
+bottlenecks = getEnzymeBottlenecks(ecModel, 'top', 10)
+```
+
+```text
+[Warning: getEnzymeBottlenecks: no enzyme is at its usage bound, so no single enzyme limits the objective; the protein pool exchange is at its bound. Every objectiveGain is 0 and the rows are in model order.]
+bottlenecks =
+  10x8 table
+     uniprot         gene        objectiveGain    shadowPrice       flux        capUsage     upperBound    multipleActive
+    __________    ___________    _____________    ___________    __________    __________    __________    ______________
+    {'P00401'}    {'Q0045'  }          0          -0.0033377      0.0014396    1.4396e-06       1000           true
+    {'P00856'}    {'Q0080'  }          0          -0.0033377      0.0010686    1.0686e-06       1000           true
+    {'P00854'}    {'Q0085'  }          0          -0.0033377      0.0053408    5.3408e-06       1000           true
+    {'P00163'}    {'Q0105'  }          0          -0.0033377       0.048374    4.8374e-05       1000           true
+    {'P61829'}    {'Q0130'  }          0          -0.0033377      0.0014241    1.4241e-06       1000           true
+    {'P00410'}    {'Q0250'  }          0          -0.0033377     0.00069943    6.9943e-07       1000           true
+    {'P00420'}    {'Q0275'  }          0          -0.0033377     0.00074333    7.4333e-07       1000           true
+    {'P31373'}    {'YAL012W'}          0          -0.0033377        0.12056    0.00012056       1000           true
+    {'P31381'}    {'YAL022C'}          0    ...    0             0       1000           true
+    {'P31382'}    {'YAL023C'}          0    ...    0             0       1000           true
 ```
 
 The result is a table sorted by `objectiveGain`. `bottlenecks.Properties.UserData.nResolved` is the number of enzymes that were solved again, and `UserData.activeConstraints` the number of active capacity constraints.
@@ -190,6 +259,22 @@ from geckopy import get_enzyme_bottlenecks
 ec_model.objective = params.bio_rxn
 ec_model.objective_direction = "max"
 bottlenecks = get_enzyme_bottlenecks(ec_model, top=10)
+print(bottlenecks.to_string())
+```
+
+```text
+            gene  objective_gain  shadow_price      flux     cap_usage  upper_bound  multiple_active
+uniprot
+P00401     Q0045             0.0     -0.003338  0.001440  1.439594e-06       1000.0             True
+P00856     Q0080             0.0     -0.003338  0.001069  1.068569e-06       1000.0             True
+P00854     Q0085             0.0     -0.003338  0.005341  5.340827e-06       1000.0             True
+P00163     Q0105             0.0     -0.003338  0.048374  4.837394e-05       1000.0             True
+P61829     Q0130             0.0     -0.003338  0.001424  1.424086e-06       1000.0             True
+P00410     Q0250             0.0     -0.003338  0.000699  6.994268e-07       1000.0             True
+P00420     Q0275             0.0     -0.003338  0.000743  7.433261e-07       1000.0             True
+P31373   YAL012W             0.0     -0.003338  0.120562  1.205622e-04       1000.0             True
+P31381   YAL022C             0.0 ...  0.000000  0.000000e+00       1000.0             True
+P31382   YAL023C             0.0 ...  0.000000  0.000000e+00       1000.0             True
 ```
 
 The result is a DataFrame indexed by UniProt identifier. `bottlenecks.attrs["n_resolved"]` and `bottlenecks.attrs["active_constraints"]` hold the same two numbers as in MATLAB.
@@ -220,6 +305,8 @@ When no enzyme is at its usage bound, the function gives a warning that no singl
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
+<!-- run-examples: skip -->
+
 ```matlab
 [evaluated, controlCoeffs] = getConcControlCoeffs(ecModel);
 [evaluated, controlCoeffs] = getConcControlCoeffs(ecModel, 'method', 'shadow_price');
@@ -227,6 +314,8 @@ When no enzyme is at its usage bound, the function gives a warning that no singl
 :::
 :::{tab-item} 🐍 Python
 :sync: python
+
+<!-- run-examples: skip -->
 
 ```python
 from geckopy import get_conc_control_coeffs

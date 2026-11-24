@@ -6,13 +6,25 @@
     <img class="site-logo-dark" src="_static/gecko-logo-white.png" alt="GECKO">
     <p class="site-tag">MATLAB &amp; Python</p>
   </div>
-  <p class="site-tagline">Reconstruction, simulation and analysis of enzyme-constrained metabolic models (ecModels): a MATLAB toolbox built on RAVEN, and geckopy, a Python port built on cobrapy.</p>
+  <p class="site-tagline">Reconstruction, simulation and analysis of enzyme-constrained metabolic models (ecModels), available for MATLAB and Python. This site documents both.</p>
 </div>
 
-## Install
+## Installation
 
 ::::{tab-set}
-:::{tab-item} Python (PyPI)
+:::{tab-item} MATLAB (git)
+
+```bash
+git clone --depth=1 https://github.com/CompMetEng/GECKO
+```
+
+The clone is the development version, the `develop` branch. The [tags page](https://github.com/CompMetEng/GECKO/tags) lists the releases, and `--branch <tag>` selects one. Run `GECKOInstaller.install` in MATLAB. GECKO 4 needs RAVEN 3.0.0b3 or later.
+:::
+:::{tab-item} MATLAB (Add-Ons)
+
+Home, Add-Ons, Get Add-Ons, search for "GECKO Toolbox". The Add-On installs the latest stable release, GECKO 3.2.5 (see [GECKO 3 to GECKO 4](gecko3-to-gecko4.md#staying-on-gecko-3)). GECKO 4, which this site documents, is a pre-release and is installed with git or from a ZIP archive of a tag. RAVEN 2.x, which the RAVEN Add-On installs, does not work with GECKO 4.
+:::
+:::{tab-item} Python (pip)
 
 ```bash
 pip install --pre geckopy
@@ -20,7 +32,7 @@ pip install --pre geckopy
 
 `--pre` is required: the GECKO 4 releases of geckopy and the releases of raven-toolbox that it depends on are pre-releases. Without `--pre`, pip installs geckopy 2.0.2, an earlier and unrelated package of the same name.
 :::
-:::{tab-item} Python (Git)
+:::{tab-item} Python (git)
 
 ```bash
 pip install \
@@ -28,41 +40,56 @@ pip install \
     git+https://github.com/CompMetEng/geckopy.git@develop
 ```
 
-Installs the `develop` branch of both packages, which is ahead of the latest PyPI release.
-:::
-:::{tab-item} MATLAB (git)
-
-```bash
-git clone --depth=1 https://github.com/CompMetEng/GECKO
-```
-
-Then run `GECKOInstaller.install` in MATLAB. The clone is the `develop` branch; `--branch <tag>` selects a release tag listed on the [tags page](https://github.com/CompMetEng/GECKO/tags).
-:::
-:::{tab-item} MATLAB (Add-Ons)
-
-Home → Add-Ons → Get Add-Ons → search "GECKO Toolbox". The Add-On installs a GitHub release; the latest, v3.2.5, is GECKO 3 (see [GECKO 3 to GECKO 4](gecko3-to-gecko4.md#staying-on-gecko-3)). GECKO 4 is a pre-release, installed with git or from a ZIP archive.
+The command installs the development version, the `develop` branch of both packages, which is ahead of the latest PyPI release. The tags pages of [raven-toolbox](https://github.com/CompMetEng/raven-toolbox/tags) and [geckopy](https://github.com/CompMetEng/geckopy/tags) list the releases, and `@<tag>` in place of `@develop` selects one.
 :::
 ::::
+
+[Installation](installation/index.md) lists the requirements, how to verify, upgrade and remove an installation, and how to choose a solver.
 
 ## Features
 
 ::::{grid} 1 2 3 3
 
 :::{grid-item-card} Enzyme constraints
-Convert a conventional GEM into an ecModel by bounding reaction rates with enzyme kcat and abundance.
+:link: guide/ecmodel-structure
+:link-type: doc
+
+Converts a conventional GEM into a full or a light ecModel by bounding reaction rates with enzyme *k*{sub}`cat` and abundance.
+:::
+
+:::{grid-item-card} *k*{sub}`cat` sources and tuning
+:link: guide/kcat-sources
+:link-type: doc
+
+Assigns a *k*{sub}`cat` to each reaction from source files in a set order, and tunes the *k*{sub}`cat` values that limit growth to measured data.
 :::
 
 :::{grid-item-card} Proteomics integration
-Constrain the usage of individual enzymes with absolute proteomics measurements.
+:link: guide/proteomics
+:link-type: doc
+
+Constrains the usage of individual enzymes with absolute proteomics measurements.
 :::
 
-:::{grid-item-card} Light ecModels
-A smaller, faster-simulating ecModel variant for when full proteome coverage is not needed.
+:::{grid-item-card} Enzyme usage
+:link: guide/enzyme-usage
+:link-type: doc
+
+Lists the enzymes that a solution uses and the enzymes that limit the objective.
+:::
+
+:::{grid-item-card} Context-specific ecModels
+:link: guide/context-ecmodel
+:link-type: doc
+
+Trims a generic ecModel to the reactions and genes of a tissue, cell line or strain.
 :::
 
 ::::
 
 ## Quick start
+
+The example loads the ecModel of *Saccharomyces cerevisiae* from a project folder, sets growth as the objective and runs FBA. The project folder `ecYeastGEM` is in the [ecModels repository](https://github.com/SysBioChalmers/ecModels/tree/gecko4/ecYeastGEM), and [Build an ecModel](guide/first-ecmodel.md) makes such a folder from a genome-scale model. The folder holds `model_adapter.toml`, the input data in `data/` and the ecModel in `models/ecYeastGEM.yml`.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -70,7 +97,7 @@ A smaller, faster-simulating ecModel variant for when full proteome coverage is 
 
 ```matlab
 % load a previously built ecModel from a project folder
-ModelAdapterManager.setDefault('path/to/project');
+ModelAdapterManager.setDefault('path/to/ecYeastGEM');
 model = loadEcModel('ecYeastGEM.yml');
 
 % set growth as the objective
@@ -88,15 +115,15 @@ fprintf('Growth rate: %.4f h-1\n', sol.f);
 from geckopy import ModelAdapter, load_ec_model
 
 # load a previously built ecModel from a project folder
-adapter = ModelAdapter.from_folder("path/to/project")
+adapter = ModelAdapter.from_folder("path/to/ecYeastGEM")
 model = load_ec_model("ecYeastGEM.yml", adapter)
 
 # set growth as the objective
 model.objective = "r_2111"
 
-# run FBA -- simulation comes from cobrapy, unchanged
+# run FBA; simulation comes from cobrapy
 sol = model.optimize()
-print(f"Growth rate: {sol.objective_value:.4f} h⁻¹")
+print(f"Growth rate: {sol.objective_value:.4f} h-1")
 ```
 :::
 ::::
@@ -105,70 +132,84 @@ print(f"Growth rate: {sol.objective_value:.4f} h⁻¹")
 
 ::::{grid} 1 2 2 2
 
-:::{grid-item-card} Build an ecModel
-:link: guide/first-ecmodel
-:link-type: doc
-
-A working ecModel with the default settings, from a project folder to a saved model, in MATLAB and Python.
-:::
-
-:::{grid-item-card} Workflow overview
-:link: guide/workflow
-:link-type: doc
-
-The order of the guide pages from a new project to the analysis, with the alternative paths and the functions of each page, as MATLAB and Python diagrams.
-:::
-
-:::{grid-item-card} Upgrade a GECKO 3 project
-:link: gecko3-upgrade-project
-:link-type: doc
-
-Convert a GECKO 3 project and its ecModel to project format 4 with `upgradeGECKOproject` or `geckopy upgrade`.
-:::
-
 :::{grid-item-card} Installation
 :link: installation/index
 :link-type: doc
 
-Set up GECKO in MATLAB or geckopy in Python, and a linear-programming solver.
+The requirements, the installation, the upgrade and the removal of GECKO and geckopy, and the choice of a solver.
 :::
 
-:::{grid-item-card} GECKO and geckopy
-:link: gecko-to-geckopy
+:::{grid-item-card} Build an ecModel
+:link: guide/first-ecmodel
 :link-type: doc
 
-Corresponding objects, names that differ, functions of one implementation and differences in behaviour.
+A working ecModel with the default settings, from a project folder to a saved model.
+:::
+
+:::{grid-item-card} Guide
+:link: guide/index
+:link-type: doc
+
+One page per choice, from the ecModel structure to the analysis, with MATLAB and Python tabs.
+:::
+
+:::{grid-item-card} API reference
+:link: api/index
+:link-type: doc
+
+The functions of GECKO and geckopy, generated from their sources.
+:::
+
+:::{grid-item-card} MATLAB and Python
+:link: matlab-vs-python
+:link-type: doc
+
+The name of each function in GECKO and in geckopy.
+:::
+
+:::{grid-item-card} Migration
+:link: migrate
+:link-type: doc
+
+The changes from GECKO 3 to GECKO 4, the upgrade of a project, and the differences between GECKO and geckopy.
+:::
+
+:::{grid-item-card} Release notes
+:link: release-notes/index
+:link-type: doc
+
+The changes of each release of GECKO and geckopy.
 :::
 
 ::::
 
-## Citing GECKO
+## Help
 
-Publications that use GECKO cite:
+::::{grid} 1 2 2 2
 
-> Chen, Y., Gustafsson, J., Tafur Rangel, A., Anton, M., Domenzain, I., Kittikunapong, C., Li, F., Yuan, L., Nielsen, J. & Kerkhoven, E. J. **Reconstruction, simulation and analysis of enzyme-constrained metabolic models using GECKO Toolbox 3.0.** *Nature Protocols* **19**, 629-667 (2024). <https://doi.org/10.1038/s41596-023-00931-7>
+:::{grid-item-card} {octicon}`bug` Report a bug or request a feature
+Open an issue in the repository of the implementation that it concerns.
 
-See [Citations](references.md) for the full list, including papers that have used this protocol.
+- [GECKO (MATLAB) issues](https://github.com/CompMetEng/GECKO/issues)
+- [geckopy (Python) issues](https://github.com/CompMetEng/geckopy/issues)
+:::
 
-## Source code
+:::{grid-item-card} {octicon}`comment-discussion` Ask a usage question
+Start a discussion in the repository of the implementation that it concerns.
 
-GECKO is publicly available under the MIT licence at <https://github.com/CompMetEng/GECKO>, archived at <https://doi.org/10.5281/zenodo.7699818>. geckopy, the Python port, is at <https://github.com/CompMetEng/geckopy>.
+- [GECKO (MATLAB) discussions](https://github.com/CompMetEng/GECKO/discussions)
+- [geckopy (Python) discussions](https://github.com/CompMetEng/geckopy/discussions)
+:::
 
-## Getting help
-
-Report a bug or request a feature against whichever implementation it concerns; ask a usage question in either repository's Discussions.
-
-| Implementation | Issues | Discussions |
-|---|---|---|
-| GECKO (MATLAB) | [github.com/CompMetEng/GECKO/issues](https://github.com/CompMetEng/GECKO/issues) | [github.com/CompMetEng/GECKO/discussions](https://github.com/CompMetEng/GECKO/discussions) |
-| geckopy (Python) | [github.com/CompMetEng/geckopy/issues](https://github.com/CompMetEng/geckopy/issues) | [github.com/CompMetEng/geckopy/discussions](https://github.com/CompMetEng/geckopy/discussions) |
+::::
 
 ```{toctree}
 :hidden:
 
-migrate
+installation/index
 guide/index
 api/index
+migrate
 release-notes/index
 references
 ```

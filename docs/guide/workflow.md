@@ -2,7 +2,7 @@
 
 <!-- docs-site: concept-page -->
 
-The diagram shows the order of the guide pages, from a new project to the analysis of an ecModel, with the functions of each page. The boxes with a thick outline are the steps of [Build an ecModel](first-ecmodel.md), which makes a working ecModel with the default settings; that page skips the functions marked optional, and the steps from the ecModel structure to the kcat tuning each have a decision page with the options; the diamond of the kcat tuning opens its decision page. A solid arrow connects pages that run one after another, a dotted arrow is an optional path, a diamond a choice between paths, and a dashed outline an optional page. A click on a box opens its page. The button in the corner of a diagram opens it in full screen, where the mouse wheel zooms and a drag pans. In the page, the wheel zooms with Ctrl (Cmd on macOS) held. The download icon at the top of each tab saves its diagram as a PDF.
+The diagram shows the order of the guide pages, from a new project to the analysis of an ecModel, with the functions of each page. The boxes with a thick outline are the steps of [Build an ecModel](first-ecmodel.md), which makes a working ecModel with the default settings; that page skips the functions marked optional, and the steps from the ecModel structure to the *k*{sub}`cat` tuning each have a decision page with the options; the diamond of the *k*{sub}`cat` tuning opens its decision page. A solid arrow connects pages that run one after another, a dotted arrow is an optional path, a diamond a choice between paths, and a dashed outline an optional page. A click on a box opens its page. The button in the corner of a diagram opens it in full screen, where the mouse wheel zooms and a drag pans. In the page, the wheel zooms with Ctrl (Cmd on macOS) held. The download icon at the top of each tab saves its diagram as a PDF.
 
 :::::{tab-set}
 ::::{tab-item} Ⓜ️ MATLAB
@@ -150,13 +150,13 @@ Each row is a guide page with the page it runs after and what it leaves behind. 
 | Page | Run after | Output |
 | --- | --- | --- |
 | [Build an ecModel](first-ecmodel.md) | none | a project folder with `model_adapter.toml`, and at the end a saved functional ecModel |
-| [Choose the ecModel structure](ecmodel-structure.md) | project folder | ecModel with enzymes and protein pool, without kcats |
-| [Choose the kcat sources](kcat-sources.md) | ecModel structure | `data/kcats/<source>.tsv`, and `ec.kcat` applied as enzyme constraints |
-| [Set custom kcats](custom-kcats.md) (optional) | the ecModel structure, or a kcat tuning whose result is kept; read by the first stage of every preset | `data/kcats/custom.tsv` |
-| [Set the protein pool](protein-pool.md) | applied kcats | upper bound of the protein pool exchange |
-| [Choose a kcat tuning](kcat-tuning.md) | protein pool | the choice between the two tunings; the check of a tuned kcat against its source |
-| [Tune kcats with sensitivityTuning](standard-tuning.md) | protein pool, and one maximum growth rate; changes no kcat when the growth rate reaches the target | tuned `ec.kcat`, and $\sigma$ lowered when the growth rate ended above the target |
-| [Tune kcats with evotune](evotune.md) | protein pool, and measured maximum growth rates, exchange fluxes or both, of one or more conditions; alternative to `sensitivityTuning` | tuned `ec.kcat`; $\sigma$ stays as set |
+| [Choose the ecModel structure](ecmodel-structure.md) | project folder | ecModel with enzymes and protein pool, without *k*{sub}`cat` values |
+| [Choose the *k*{sub}`cat` sources](kcat-sources.md) | ecModel structure | `data/kcats/<source>.tsv`, and `ec.kcat` applied as enzyme constraints |
+| [Set custom *k*{sub}`cat` values](custom-kcats.md) (optional) | the ecModel structure, or a *k*{sub}`cat` tuning whose result is kept; read by the first stage of every preset | `data/kcats/custom.tsv` |
+| [Set the protein pool](protein-pool.md) | applied *k*{sub}`cat` values | upper bound of the protein pool exchange |
+| [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) | protein pool | the choice between the two tunings; the check of a tuned *k*{sub}`cat` against its source |
+| [Tune *k*{sub}`cat` values with sensitivityTuning](standard-tuning.md) | protein pool, and one maximum growth rate; changes no *k*{sub}`cat` when the growth rate reaches the target | tuned `ec.kcat`, and $\sigma$ lowered when the growth rate ended above the target |
+| [Tune *k*{sub}`cat` values with evotune](evotune.md) | protein pool, and measured maximum growth rates, exchange fluxes or both, of one or more conditions; alternative to `sensitivityTuning` | tuned `ec.kcat`; $\sigma$ stays as set |
 | [Constrain enzymes with proteomics](proteomics.md) (optional) | functional full ecModel | proteomics-constrained ecModel |
 | [Relax proteomics constraints](relaxing-proteomics.md) | proteomics-constrained ecModel below the measured growth rate | relaxed ecModel |
 | [Analyse an ecModel](analysis.md), [Find engineering targets](engineering-targets.md), [Enzyme usage and bottlenecks](enzyme-usage.md) | a functional, proteomics-constrained or relaxed ecModel (enzyme usage: full ecModel only); independent of each other | results |
@@ -165,8 +165,8 @@ Each row is a guide page with the page it runs after and what it leaves behind. 
 ## Reading the paths
 
 - **Quick path:** [Build an ecModel](first-ecmodel.md) runs the boxes with a thick outline in one go, without the functions marked optional and with the default of each decision page. A decision page is needed only to change a default.
-- **Kcats:** `updateKcatSources` (Python: `update_kcat_sources`) makes the source files that the preset of `model_adapter.toml` reads, and `assignKcats` (Python: `assign_kcats`) selects one kcat per reaction from them, with the custom kcats first.
-- **Tuning:** [Choose a kcat tuning](kcat-tuning.md) compares the two tunings. `sensitivityTuning` (Python: `sensitivity_tuning`) raises kcats one at a time until one target growth rate is reached, and `sigmaFitter` (Python: `fit_sigma`) then lowers $\sigma$ when the growth rate ended above it; a kcat tuning only raises kcats. Evotune (`cmaesKcatTuning`, Python: `cmaes_kcat_tuning`) fits many kcats to measured growth rates, exchange fluxes or both, of one or more conditions, with $\sigma$ as set before the tuning.
+- ***K*{sub}`cat` values:** `updateKcatSources` (Python: `update_kcat_sources`) makes the source files that the preset of `model_adapter.toml` reads, and `assignKcats` (Python: `assign_kcats`) selects one *k*{sub}`cat` per reaction from them, with the custom *k*{sub}`cat` values first.
+- **Tuning:** [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) compares the two tunings. `sensitivityTuning` (Python: `sensitivity_tuning`) raises *k*{sub}`cat` values one at a time until one target growth rate is reached, and `sigmaFitter` (Python: `fit_sigma`) then lowers $\sigma$ when the growth rate ended above it; a *k*{sub}`cat` tuning only raises *k*{sub}`cat` values. Evotune (`cmaesKcatTuning`, Python: `cmaes_kcat_tuning`) fits many *k*{sub}`cat` values to measured growth rates, exchange fluxes or both, of one or more conditions, with $\sigma$ as set before the tuning.
 - **Relaxation:** `flexibilizeEnzConcs` is the method to start with; `relaxProteomicsGreedy` raises enzymes with a bound of 0, and `relaxEnzConcs` gives a result that does not depend on the order in which enzymes become limiting, to compare with ([Relax proteomics constraints](relaxing-proteomics.md)).
 - **Analysis:** the analysis pages do not depend on each other. Enzyme usage and proteomics need a full ecModel. A context-specific ecModel is trimmed from an ecModel without proteomics constraints, and the proteomics of the context are added afterwards; the other way builds an ecModel from the context-specific GEM with the steps of Build an ecModel.
 
