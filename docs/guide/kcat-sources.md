@@ -1,5 +1,7 @@
 # Choose the *k*{sub}`cat` sources
 
+<!-- run-examples: skip-file -->
+
 GECKO selects one *k*{sub}`cat` per enzymatic reaction from the *k*{sub}`cat` source files in `data/kcats`, in the order that `[kcat_assignment]` of `model_adapter.toml` defines. The result is a project with a preset (or its own stages) and the source files that the preset reads, and an ecModel with the assigned *k*{sub}`cat` values applied as enzyme constraints.
 
 <!-- workflow-place -->

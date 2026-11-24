@@ -1,5 +1,7 @@
 # Constrain enzymes with proteomics
 
+<!-- run-examples: skip-file -->
+
 Load the absolute proteomics data and the exchange fluxes of one experiment, bound the usage of each measured enzyme by its concentration, set the protein pool for the experiment, and constrain the exchange reactions and the growth rate. At the end, the ecModel describes the experiment, and solving it shows whether the ecModel reaches the measured growth rate. Proteomics data require a full ecModel, which has a usage reaction per enzyme; a light ecModel has none (see [Choose the ecModel structure](ecmodel-structure.md)).
 
 <!-- workflow-place -->

@@ -1,6 +1,7 @@
 # Experimental data
 
 <!-- docs-site: concept-page -->
+<!-- run-examples: skip-file -->
 
 Measured growth rates and exchange fluxes of growth conditions constrain an ecModel and test it. A project keeps them in three files of the `data` folder: `fluxData.tsv` with the flux conditions, `maxGrowth.tsv` with the maximum-growth conditions and `zeroFlux.tsv` with the reactions that carry no flux. In a **flux condition** the uptake of the carbon source is limited to its measured rate, and the growth rate and the measured exchange fluxes of the model are compared with the measurements. In a **maximum-growth condition** the uptake of the carbon source is unlimited, and only the maximal growth rate of the model is compared. GECKO (MATLAB) and geckopy (Python) read the same files. The functions that read the files, set the conditions in a model and score a model against the measurements need no enzymes, so they are part of RAVEN (MATLAB, folder `src/experiments`) and raven-toolbox (Python, package `raven_toolbox.experiments`).
 

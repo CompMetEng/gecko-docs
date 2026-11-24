@@ -1,5 +1,7 @@
 # Build an ecModel
 
+<!-- run-examples: skip-file -->
+
 These steps build an enzyme-constrained model (ecModel) from a conventional genome-scale metabolic model (GEM) with the default settings of GECKO and geckopy. At the end, the project folder holds an ecModel with *k*{sub}`cat` values and a protein pool, which reaches the growth rate of the organism, saved as a YAML file. Each step links to the page that describes the other options of that step.
 
 <!-- workflow-place -->

@@ -1,5 +1,7 @@
 # Choose the ecModel structure
 
+<!-- run-examples: skip-file -->
+
 `makeEcModel` turns a conventional genome-scale metabolic model (GEM) into an enzyme-constrained model (ecModel) without *k*{sub}`cat` values: reversible reactions are split by direction, the enzymes of each reaction are recorded in the `ec` structure, and the protein pool is added. The result is a full or a light ecModel without *k*{sub}`cat` values, a list of the genes that have no protein data, and, for an organism in the Complex Portal, the subunit stoichiometry of the enzyme complexes.
 
 <!-- workflow-place -->

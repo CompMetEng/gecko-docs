@@ -1,5 +1,7 @@
 # Tune *k*{sub}`cat` values with evotune
 
+<!-- run-examples: skip-file -->
+
 Evotune is the *k*{sub}`cat` tuning of GECKO that fits many *k*{sub}`cat` values at once to maximum growth rates and exchange fluxes, measured in one or more conditions, by minimising the root-mean-square error (RMSE) between simulated and measured values. It searches with CMA-ES (covariance matrix adaptation evolution strategy), and the trust in the source of each *k*{sub}`cat` limits how far the *k*{sub}`cat` moves. The steps are: prepare the data files, configure the tuning, rank the *k*{sub}`cat` values by their effect on the fit, review the assignment of the top *k*{sub}`cat` values, and tune. The result is an ecModel whose selected *k*{sub}`cat` values fit the data, and a list of the changed *k*{sub}`cat` values. The functions and settings carry the name: `loadEvotuneData`, `[evotune]` in `model_adapter.toml`, and in Python the module `geckopy.kcat_tuning.evotune`. [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) compares evotune with `sensitivityTuning`, which reaches one growth rate.
 
 <!-- workflow-place -->

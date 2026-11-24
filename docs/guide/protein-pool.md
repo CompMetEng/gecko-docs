@@ -1,5 +1,7 @@
 # Set the protein pool
 
+<!-- run-examples: skip-file -->
+
 The protein pool limits the total mass of enzymes that an enzyme-constrained model (ecModel) can use. The result is an ecModel whose `prot_pool_exchange` has an upper bound calculated from $P_{tot}$, $f$ and $\sigma$, with $\sigma$ fitted to the measured maximum growth rate after the *k*{sub}`cat` values are tuned.
 
 <!-- workflow-place -->

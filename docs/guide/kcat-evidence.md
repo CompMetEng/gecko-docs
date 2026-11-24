@@ -1,5 +1,7 @@
 # Compare *k*{sub}`cat` sources
 
+<!-- run-examples: skip-file -->
+
 `kcatEvidence` (Python `kcat_evidence`) shows, for selected reactions, the *k*{sub}`cat` that every *k*{sub}`cat` source file of the project gives, next to the *k*{sub}`cat` of the ecModel and, for a tuned *k*{sub}`cat`, the *k*{sub}`cat` before tuning. `kcatsForReactions` (Python `kcats_for_reactions`) does this for a few reactions, and also computes the EC-tree estimate and predicts the *k*{sub}`cat` values with one or several OpenKineticsPredictor (OKP) methods, without changing the source files of the project. The result is a table that shows how far a tuned *k*{sub}`cat` is from each source, and which source a curator can compare it with.
 
 ## Functions

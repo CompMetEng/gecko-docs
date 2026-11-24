@@ -1,5 +1,7 @@
 # Tune *k*{sub}`cat` values with sensitivityTuning
 
+<!-- run-examples: skip-file -->
+
 `sensitivityTuning` (Python `sensitivity_tuning`) raises the *k*{sub}`cat` values that limit growth, one at a time, until the ecModel reaches one target growth rate, the maximum growth rate of the organism. When the growth rate then ends above the target, `sigmaFitter` (Python `fit_sigma`) lowers the saturation factor $\sigma$ of the protein pool to match it. The result is a tuned ecModel and a list of the changed *k*{sub}`cat` values. [Choose a *k*{sub}`cat` tuning](kcat-tuning.md) compares this tuning with evotune, and describes how to check a tuned *k*{sub}`cat` against its source.
 
 <!-- workflow-place -->

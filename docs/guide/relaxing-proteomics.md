@@ -1,5 +1,7 @@
 # Relax proteomics constraints
 
+<!-- run-examples: skip-file -->
+
 Raise the usage bounds of the enzymes that keep an ecModel constrained with proteomics below the measured growth rate, until it reaches that growth rate. The result is an ecModel that reaches the growth rate, a list of the enzymes whose bounds were raised and by how much, and an indication of whether the shortfall comes from the proteomics data, the *k*{sub}`cat` values, the protein pool or the metabolic network.
 
 <!-- workflow-place -->

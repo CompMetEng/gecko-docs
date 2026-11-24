@@ -1,6 +1,7 @@
 # Model adapter parameters
 
 <!-- docs-site: concept-page -->
+<!-- run-examples: skip-file -->
 
 `model_adapter.toml` in the project folder holds the parameters of a GECKO 4 project. GECKO (MATLAB) and geckopy (Python) read the same file. The section overview is in [Project format 4](../gecko4-project-format.md). The tables give the parameters, their defaults and the MATLAB name of each parameter. The defaults are those of `src/model_adapter/adapterParameters.tsv` of GECKO, which geckopy uses as well.
 

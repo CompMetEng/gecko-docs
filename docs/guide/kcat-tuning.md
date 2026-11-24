@@ -1,5 +1,7 @@
 # Choose a *k*{sub}`cat` tuning
 
+<!-- run-examples: skip-file -->
+
 After the *k*{sub}`cat` values are assigned and the protein pool is set, an ecModel can grow more slowly than the organism. A *k*{sub}`cat` tuning changes the *k*{sub}`cat` values that limit growth so that the ecModel fits measured data. GECKO has two tunings: `sensitivityTuning` (Python `sensitivity_tuning`) reaches one maximum growth rate, and evotune (`cmaesKcatTuning`, Python `cmaes_kcat_tuning`) fits measured growth rates and exchange fluxes of one or more conditions. This page compares the two, and describes the checks that apply to the result of both: a tuned *k*{sub}`cat` against its source, and a curated value kept in `custom.tsv`. Each tuning has its own page: [Tune *k*{sub}`cat` values with sensitivityTuning](standard-tuning.md) and [Tune *k*{sub}`cat` values with evotune](evotune.md).
 
 <!-- workflow-place -->

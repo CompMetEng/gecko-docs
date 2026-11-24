@@ -1,5 +1,7 @@
 # Make a context-specific ecModel
 
+<!-- run-examples: skip-file -->
+
 A context-specific GEM describes the metabolism of one tissue, cell line or strain. It is made from a generic GEM with a method such as ftINIT (`ftINIT` in RAVEN, `ftinit` in raven-toolbox). `getSubsetEcModel` trims a generic ecModel to the reactions and genes of a context-specific GEM, and `setProtPoolSize` sets the protein pool of the context.
 
 <!-- workflow-place -->

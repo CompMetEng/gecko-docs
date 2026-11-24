@@ -1,5 +1,7 @@
 # Set custom *k*{sub}`cat` values
 
+<!-- run-examples: skip-file -->
+
 `data/kcats/custom.tsv` holds the curated *k*{sub}`cat` values of a project, for example a value from the literature or a value kept after [*k*{sub}`cat` tuning](kcat-tuning.md). The result is a `custom.tsv` that `assignKcats` reads before all other sources, and an ecModel with the custom *k*{sub}`cat` values applied.
 
 <!-- workflow-place -->
