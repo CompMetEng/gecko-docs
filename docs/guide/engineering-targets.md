@@ -70,6 +70,37 @@ The other names in the examples are placeholders for values of the project:
 | `prodTargetRxn` | `prod_target_rxn` | identifier of the production reaction, for example the exchange reaction of the product |
 | `csRxn` | `cs_rxn` | identifier of the uptake reaction of the carbon source |
 
+The examples load the ecModel of the `full_ecModel` tutorial and use ethanol (`r_1761`) as the product and glucose (`r_1714`) as the carbon source:
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+adapter  = ModelAdapterManager.setDefault('ecMyModel');
+params   = adapter.getParameters();
+ecModel  = loadEcModel();        % models/ecModel.yml
+ecModel  = setParam(ecModel, 'obj', params.bioRxn, 1);
+prodTargetRxn = 'r_1761';
+csRxn         = 'r_1714';
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+from geckopy import ModelAdapter, load_ec_model
+
+adapter = ModelAdapter.from_folder("ecMyModel")
+params = adapter.params
+ec_model = load_ec_model("ecModel.yml", adapter=adapter)
+ec_model.objective = params.bio_rxn
+prod_target_rxn = "r_1761"
+cs_rxn = "r_1714"
+```
+:::
+::::
+
 ## Target selection
 
 `ecFSEOF` first finds the production at maximum growth and the maximum production. It then fixes the production reaction at `nSteps` (Python: `n_steps`, default 16) evenly spaced values from the first to 90 % of the second. At each value it maximises growth and then minimises the total flux. A reaction is a target when the absolute Pearson correlation between its absolute flux and the enforced production is at least `corrThreshold` (Python: `correlation_threshold`, default 0.9). The scan covers the reactions with a gene rule, except those that use the standard enzyme ([Choose the *k*{sub}`cat` sources](kcat-sources.md)). The `usage_prot_*` reactions take part in the scan and are left out of the result.
@@ -88,6 +119,8 @@ When the production at maximum growth is equal to 90 % of the maximum production
 
 ## Run the scan
 
+The output is the first eight gene targets:
+
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
@@ -97,22 +130,18 @@ fseof = ecFSEOF(ecModel, prodTargetRxn, csRxn, 'nSteps', 16, 'outputFile', true)
 fseof.geneTargets(1:8, :)
 ```
 
-The first eight gene targets of the `full_ecModel` tutorial with ethanol (`r_1761`) as the product and glucose (`r_1714`) as the carbon source:
-
 ```text
 WARNING: Carbon source lower bound was set to -1000, but the uptake rate after
 model optimization is -27.8831.
 ecFSEOF results stored at:
-/tmp/ecMyModel/output
+...ecMyModel/output
 ans =
   8x5 cell array
     {'YOL086C'}    {'ADH1' }    {[1.0066]}    {'OE'}    {0x0 double }
     {'YLR044C'}    {'PDC1' }    {[0.9967]}    {'OE'}    {'essential'}
     {'YAL038W'}    {'CDC19'}    {[0.9599]}    {'OE'}    {0x0 double }
-    {'YGR254W'}    {'ENO1' }    {[0.9586]}    {'OE'}    {'essential'}
-    {'YKL152C'}    {'GPM1' }    {[0.9586]}    {'OE'}    {'essential'}
-    {'YCR012W'}    {'PGK1' }    {[0.9569]}    {'OE'}    {'essential'}
-    {'YJL052W'}    {'TDH1' }    {[0.9569]}    {'OE'}    {'essential'}
+    ...
+    ...
     {'YDR454C'}    {'GUK1' }    {[0.6004]}    {'OE'}    {'essential'}
 ```
 
@@ -128,10 +157,7 @@ result = ec_fseof(ec_model, prod_target_rxn, cs_rxn, n_steps=16)
 result.gene_targets.head(8)
 ```
 
-The first eight gene targets of the `full_ecModel` tutorial with ethanol (`r_1761`) as the product and glucose (`r_1714`) as the carbon source:
-
 ```text
-ec_fseof: carbon source 'r_1714' lower bound is -1000 but uptake at biomass-max is -27.8831; consider tightening so the scan doesn't flatten at the bound.
       gene   name     slope action essentiality     reactions
 0  YOL086C   ADH1  1.006611     OE               r_2115_EXP_2
 1  YLR044C   PDC1  0.996674     OE    essential  r_0959_EXP_2

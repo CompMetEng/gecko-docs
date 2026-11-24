@@ -15,7 +15,30 @@ Operations on bounds, the objective and flux distributions that the other guide 
 
 ## Setup
 
-A loaded model (`ecModel` in MATLAB, `ec_model` in Python) and, for the objective, the model adapter parameters `params`.
+The examples use the ecModel of the `full_ecModel` tutorial (`ecModel` in MATLAB, `ec_model` in Python) and, for the objective, the model adapter parameters `params`. The project folder is `ecMyModel`:
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+adapter  = ModelAdapterManager.setDefault('ecMyModel');
+params   = adapter.getParameters();
+ecModel  = loadEcModel();        % models/ecModel.yml
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+from geckopy import ModelAdapter, load_ec_model
+
+adapter = ModelAdapter.from_folder("ecMyModel")
+params = adapter.params
+ec_model = load_ec_model("ecModel.yml", adapter=adapter)
+```
+:::
+::::
 
 ## Set bounds and the objective
 
@@ -78,7 +101,7 @@ ec_model.objective = params.bio_rxn
 
 ## Run flux balance analysis
 
-Perform FBA, optimising the objective:
+Perform FBA, optimising the objective. The output is the growth rate (1/h) of the ecModel of the `full_ecModel` tutorial, with the bounds set above:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -88,8 +111,6 @@ Perform FBA, optimising the objective:
 sol = solveLP(ecModel);
 sol.f
 ```
-
-The growth rate (1/h) of the ecModel of the `full_ecModel` tutorial, with the bounds set above:
 
 ```text
 ans =
@@ -104,10 +125,8 @@ sol = ec_model.optimize()
 sol.objective_value
 ```
 
-The growth rate (1/h) of the ecModel of the `full_ecModel` tutorial, with the bounds set above:
-
 ```text
-0.4080842940317912
+0.408084294...
 ```
 :::
 ::::
@@ -117,6 +136,8 @@ Perform parsimonious FBA, optimising the objective and minimising the total sum 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
+
+<!-- run-examples: skip -->
 
 ```matlab
 sol = solveLP(ecModel, 1);
@@ -166,13 +187,11 @@ Inspect the nonzero fluxes:
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
-Through exchange reactions (reactions without substrates or without products, as `getExchangeRxns` defines them; the `usage_prot_<id>` reactions have the protein pool as substrate and the enzyme pseudometabolite as product, so the list contains `prot_pool_exchange` and no usage reaction):
+Through exchange reactions (reactions without substrates or without products, as `getExchangeRxns` defines them; the `usage_prot_<id>` reactions have the protein pool as substrate and the enzyme pseudometabolite as product, so the list contains `prot_pool_exchange` and no usage reaction). The output lists the exchange fluxes of the solution of `getPfbaEnzymes` for the ecModel of the `full_ecModel` tutorial, in mmol per gDCW and hour, and the flux of `prot_pool_exchange` in mg per gDCW and hour:
 
 ```matlab
 printFluxes(ecModel, sol.x)
 ```
-
-The exchange fluxes of the solution of `getPfbaEnzymes` for the ecModel of the `full_ecModel` tutorial, in mmol per gDCW and hour, and the flux of `prot_pool_exchange` in mg per gDCW and hour:
 
 ```text
 EXCHANGE FLUXES:
@@ -216,14 +235,12 @@ printFluxes(ecModel, sol.x, false)
 print(sol.fluxes[sol.fluxes != 0])
 ```
 
-Restricted to exchange reactions:
+Restricted to exchange reactions. The output lists the nonzero exchange fluxes of the solution of `pfba_enzymes` for the ecModel of the `full_ecModel` tutorial, in mmol per gDCW and hour:
 
 ```python
 exchange_ids = [r.id for r in ec_model.exchanges]
 print(sol.fluxes[exchange_ids][sol.fluxes[exchange_ids] != 0])
 ```
-
-The nonzero exchange fluxes of the solution of `pfba_enzymes` for the ecModel of the `full_ecModel` tutorial, in mmol per gDCW and hour:
 
 ```text
 r_1654    -2.686192

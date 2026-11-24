@@ -97,7 +97,7 @@ The examples use the model adapter parameters `params`, the ecModel, the convent
 :sync: matlab
 
 ```matlab
-adapter  = ModelAdapterManager.setDefault(pwd);
+adapter  = ModelAdapterManager.setDefault('ecMyModel');
 params   = adapter.getParameters();
 model    = loadConventionalGEM();
 ecModel  = loadEcModel();        % models/ecModel.yml
@@ -141,7 +141,7 @@ For flux ranges, use `ecFVA`. A [convergence study of the samplers of raven-tool
 
 ### Maximise growth
 
-The biomass reaction of the model adapter is the objective. The protein pool exchange limits growth when its flux reaches the upper bound that `setProtPoolSize` sets ([Set the protein pool](protein-pool.md)).
+The biomass reaction of the model adapter is the objective. The protein pool exchange limits growth when its flux reaches the upper bound that `setProtPoolSize` sets ([Set the protein pool](protein-pool.md)). The output is the maximum growth rate (1/h) of the ecModel of the `full_ecModel` tutorial.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -152,8 +152,6 @@ ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);
 sol = solveLP(ecModel);
 maxGrowth = sol.f
 ```
-
-The maximum growth rate (1/h) of the ecModel of the `full_ecModel` tutorial:
 
 ```text
 maxGrowth =
@@ -170,10 +168,8 @@ max_growth = sol.objective_value
 print(max_growth)
 ```
 
-The maximum growth rate (1/h) of the ecModel of the `full_ecModel` tutorial:
-
 ```text
-0.4080842940317912
+0.408084294...
 ```
 :::
 ::::
@@ -182,7 +178,7 @@ To see the effect of the protein pool constraint, solve a copy of the ecModel wi
 
 ### Minimise protein pool usage at fixed growth
 
-`prot_pool_exchange` runs forward: its flux is the protein that the solution draws from the pool, a positive number in mg/gDCW. Fix growth at a value slightly below the maximum, for example 99 %. The second problem then stays feasible within the tolerance of the solver. Then minimise the flux of `prot_pool_exchange`.
+`prot_pool_exchange` runs forward: its flux is the protein that the solution draws from the pool, a positive number in mg/gDCW. Fix growth at a value slightly below the maximum, for example 99 %. The second problem then stays feasible within the tolerance of the solver. Then minimise the flux of `prot_pool_exchange`. The output is the minimal protein pool usage (mg/gDCW) at 99 % of the maximum growth rate.
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -196,8 +192,6 @@ ecModel = setParam(ecModel, 'obj', 'prot_pool_exchange', -1);
 sol = solveLP(ecModel);
 poolUsage = -sol.f   % mg/gDCW
 ```
-
-The minimal protein pool usage (mg/gDCW) at 99 % of this growth rate:
 
 ```text
 poolUsage =
@@ -216,10 +210,8 @@ pool_usage = sol.objective_value   # mg/gDCW
 print(pool_usage)
 ```
 
-The minimal protein pool usage (mg/gDCW) at 99 % of this growth rate:
-
 ```text
-121.27734105011724
+121.277341050...
 ```
 :::
 ::::
@@ -232,11 +224,13 @@ If `prot_pool_exchange` or the `usage_prot_*` reactions carry negative flux, the
 
 `ecFVA` groups the reactions of the ecModel by identifier without the suffixes `_REV` and `_EXP_<n>`: the isozyme copies and the reverse copy of a reaction form one group. For each group it minimises and maximises the combined flux, which takes two linear problems per group, the enzyme usage reactions and `prot_pool_exchange` included. The result has the reaction order of the conventional GEM and leaves out the enzyme usage reactions; for those, run a plain FVA on the ecModel (`getAllowedBounds` in RAVEN, `cobra.flux_analysis.flux_variability_analysis` in Python). The objective of the model is not used: each reaction varies within the bounds of the model, so set the bounds that define the condition (growth rate, uptake rates) on all models first. In MATLAB, a conventional GEM that does not match the ecModel raises its error after all problems are solved.
 
-The example gives the conventional GEM and the ecModel the same exchange constraints from `fluxData` (from `loadFluxData`, Python: `load_flux_data`) and compares the ranges:
+The example gives the conventional GEM and the ecModel the same exchange constraints from `fluxData` (from `loadFluxData`, Python: `load_flux_data`) and compares the ranges. The output is the median range of the fluxes (in mmol per gDCW and hour) of the conventional GEM and of the ecModel for the first condition of the `full_ecModel` tutorial:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
+
+<!-- run-examples: skip -->
 
 ```matlab
 model   = constrainFluxData(model, fluxData, 1, 'max', 'loose');
@@ -248,17 +242,19 @@ plotEcFVA(minFlux, maxFlux);
 median(maxFlux - minFlux)
 ```
 
-The median range of the fluxes (`maxFlux - minFlux`, in mmol per gDCW and hour) of the conventional GEM (first value) and of the ecModel (second value) for the first condition of the `full_ecModel` tutorial:
-
 ```text
 ans =
     0.7183    0.4907
 ```
 
+The first value is the median range of the conventional GEM and the second value that of the ecModel.
+
 `ecFVA` runs in parallel when the Parallel Computing Toolbox is installed (option `runParallel`, default `true`). `plotEcFVA` takes one column per model, leaves out the reactions whose minimum and maximum are both 0, and plots the cumulative distribution of the ranges (`maxFlux - minFlux`) on a log scale, with the median of each model in the legend.
 :::
 :::{tab-item} 🐍 Python
 :sync: python
+
+<!-- run-examples: skip -->
 
 ```python
 from geckopy import apply_flux_data_constraints, ec_fva
@@ -275,8 +271,6 @@ ranges = (fva_ec["max_flux"] - fva_ec["min_flux"]).rename("ecModel").to_frame()
 ranges["GEM"] = fva_gem["max_flux"] - fva_gem["min_flux"]
 print(ranges.median())
 ```
-
-The median range of the fluxes (in mmol per gDCW and hour) of the ecModel and of the conventional GEM for the first condition of the `full_ecModel` tutorial:
 
 ```text
 ecModel    0.490656
@@ -304,6 +298,8 @@ FVA gives the extremes of each reaction, one reaction at a time. A sampler draws
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
+<!-- run-examples: skip -->
+
 ```matlab
 samples = randomSampling(ecModel, 1000, 'method', 'chrr', 'seed', 1);
 mappedSamples = mapRxnsToConv(ecModel, model, samples);
@@ -311,6 +307,8 @@ mappedSamples = mapRxnsToConv(ecModel, model, samples);
 :::
 :::{tab-item} 🐍 Python
 :sync: python
+
+<!-- run-examples: skip -->
 
 ```python
 from geckopy import map_rxns_to_conv

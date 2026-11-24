@@ -81,7 +81,35 @@ flowchart TB
 
 ## Setup
 
-The examples use a full ecModel `ecModel` (Python: `ec_model`) and the model adapter parameters `params`, loaded as in the setup of [Analyse an ecModel](analysis.md#setup). `growthRate` (Python: `growth_rate`) is a growth rate in /hour at which the model is feasible, for example a measured growth rate or 99 % of the maximum.
+The examples use a full ecModel `ecModel` (Python: `ec_model`) and the model adapter parameters `params`, loaded as in the setup of [Analyse an ecModel](analysis.md#setup). `growthRate` (Python: `growth_rate`) is a growth rate in /hour at which the model is feasible, for example a measured growth rate or 99 % of the maximum. The examples take 99 % of the maximum growth rate of the ecModel of the `full_ecModel` tutorial:
+
+::::{tab-set}
+:::{tab-item} Ⓜ️ MATLAB
+:sync: matlab
+
+```matlab
+adapter  = ModelAdapterManager.setDefault('ecMyModel');
+params   = adapter.getParameters();
+ecModel  = loadEcModel();        % models/ecModel.yml
+ecModel  = setParam(ecModel, 'obj', params.bioRxn, 1);
+sol      = solveLP(ecModel);
+growthRate = 0.99 * sol.f;
+```
+:::
+:::{tab-item} 🐍 Python
+:sync: python
+
+```python
+from geckopy import ModelAdapter, load_ec_model
+
+adapter = ModelAdapter.from_folder("ecMyModel")
+params = adapter.params
+ec_model = load_ec_model("ecModel.yml", adapter=adapter)
+ec_model.objective = params.bio_rxn
+growth_rate = 0.99 * ec_model.slim_optimize()
+```
+:::
+::::
 
 ## Choose a measure
 
@@ -101,7 +129,7 @@ An enzyme with a high usage does not have to limit the objective, and an enzyme 
 
 ## Compute the enzyme usage
 
-`getEnzymeUsage` reads the flux of each usage reaction from a flux distribution. The example fixes the growth rate, minimises the protein pool usage, and reports the enzymes:
+`getEnzymeUsage` reads the flux of each usage reaction from a flux distribution. The example fixes the growth rate, minimises the protein pool usage, and reports the enzymes. The output is the first six rows of `topAbsUsage` (Python: `top_abs_usage`) for the ecModel of the `full_ecModel` tutorial, without the reaction names. A row marked `===` gives the combined usage of an enzyme with several reactions, which the following rows list:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -115,8 +143,6 @@ usageData   = getEnzymeUsage(ecModel, sol.x);
 usageReport = reportEnzymeUsage(ecModel, usageData);
 usageReport.topAbsUsage(1:6, 1:7)
 ```
-
-The first six rows of `topAbsUsage` for the ecModel of the `full_ecModel` tutorial, without the reaction names. A row marked `===` gives the combined usage of an enzyme with several reactions, which the following rows list:
 
 ```text
 ans =
@@ -145,8 +171,6 @@ usage = enzyme_usage(ec_model, sol.fluxes)
 report = report_enzyme_usage(ec_model, usage)
 report.top_abs_usage.iloc[:6, :7]
 ```
-
-The first six rows of `top_abs_usage` for the ecModel of the `full_ecModel` tutorial, without the reaction names and the gene rules. A row marked `===` gives the combined usage of an enzyme with several reactions, which the following rows list:
 
 ```text
   prot_id  gene_id  abs_usage  perc_usage        kcat   source        rxn_id
@@ -195,7 +219,7 @@ The `source` column shows where the *k*{sub}`cat` of the reaction came from. An 
 
 ## Rank the enzymes that limit the objective
 
-`getEnzymeBottlenecks` solves the model with its current objective. For each enzyme whose usage is at its upper bound (upper bound above 0 and capacity usage at least 1 - 1e-6), it multiplies that bound by `foldChange` (Python: `fold_change`, default 2, must be greater than 1), solves again, and records the rise of the objective as `objectiveGain`. The enzymes are sorted by `objectiveGain`, highest first. An enzyme that is not at its bound gets 0 without a solve, because raising a bound that does not bind cannot change the optimum.
+`getEnzymeBottlenecks` solves the model with its current objective. For each enzyme whose usage is at its upper bound (upper bound above 0 and capacity usage at least 1 - 1e-6), it multiplies that bound by `foldChange` (Python: `fold_change`, default 2, must be greater than 1), solves again, and records the rise of the objective as `objectiveGain`. The enzymes are sorted by `objectiveGain`, highest first. An enzyme that is not at its bound gets 0 without a solve, because raising a bound that does not bind cannot change the optimum. In the `full_ecModel` tutorial at the maximum growth rate, no enzyme is at its usage bound, so the function warns and every `objectiveGain` (Python: `objective_gain`) is 0:
 
 ::::{tab-set}
 :::{tab-item} Ⓜ️ MATLAB
@@ -206,13 +230,8 @@ ecModel = setParam(ecModel, 'obj', params.bioRxn, 1);
 bottlenecks = getEnzymeBottlenecks(ecModel, 'top', 10)
 ```
 
-In the `full_ecModel` tutorial at the maximum growth rate, no enzyme is at its usage bound, so the function warns and every `objectiveGain` is 0:
-
 ```text
-[Warning: getEnzymeBottlenecks: no enzyme is at its usage bound, so no single
-enzyme limits the objective; the protein pool exchange is at its bound. Every
-objectiveGain is 0 and the rows are in model order.]
-[> In getEnzymeBottlenecks (line 132)]
+[Warning: getEnzymeBottlenecks: no enzyme is at its usage bound, so no single enzyme limits the objective; the protein pool exchange is at its bound. Every objectiveGain is 0 and the rows are in model order.]
 bottlenecks =
   10x8 table
      uniprot         gene        objectiveGain    shadowPrice       flux        capUsage     upperBound    multipleActive
@@ -225,8 +244,8 @@ bottlenecks =
     {'P00410'}    {'Q0250'  }          0          -0.0033377     0.00069943    6.9943e-07       1000           true
     {'P00420'}    {'Q0275'  }          0          -0.0033377     0.00074333    7.4333e-07       1000           true
     {'P31373'}    {'YAL012W'}          0          -0.0033377        0.12056    0.00012056       1000           true
-    {'P31381'}    {'YAL022C'}          0                   0              0             0       1000           true
-    {'P31382'}    {'YAL023C'}          0          -0.0033377              0             0       1000           true
+    {'P31381'}    {'YAL022C'}          0    ...    0             0       1000           true
+    {'P31382'}    {'YAL023C'}          0    ...    0             0       1000           true
 ```
 
 The result is a table sorted by `objectiveGain`. `bottlenecks.Properties.UserData.nResolved` is the number of enzymes that were solved again, and `UserData.activeConstraints` the number of active capacity constraints.
@@ -240,13 +259,10 @@ from geckopy import get_enzyme_bottlenecks
 ec_model.objective = params.bio_rxn
 ec_model.objective_direction = "max"
 bottlenecks = get_enzyme_bottlenecks(ec_model, top=10)
-print(bottlenecks)
+print(bottlenecks.to_string())
 ```
 
-In the `full_ecModel` tutorial at the maximum growth rate, no enzyme is at its usage bound, so the function warns and every `objective_gain` is 0:
-
 ```text
-get_enzyme_bottlenecks: no enzyme is at its usage bound, so no single enzyme limits the objective; the protein pool exchange is at its bound. Every objective_gain is 0 and the rows are in model order.
             gene  objective_gain  shadow_price      flux     cap_usage  upper_bound  multiple_active
 uniprot
 P00401     Q0045             0.0     -0.003338  0.001440  1.439594e-06       1000.0             True
@@ -257,8 +273,8 @@ P61829     Q0130             0.0     -0.003338  0.001424  1.424086e-06       100
 P00410     Q0250             0.0     -0.003338  0.000699  6.994268e-07       1000.0             True
 P00420     Q0275             0.0     -0.003338  0.000743  7.433261e-07       1000.0             True
 P31373   YAL012W             0.0     -0.003338  0.120562  1.205622e-04       1000.0             True
-P31381   YAL022C             0.0     -0.003338  0.000000  0.000000e+00       1000.0             True
-P31382   YAL023C             0.0     -0.003338  0.000000  0.000000e+00       1000.0             True
+P31381   YAL022C             0.0 ...  0.000000  0.000000e+00       1000.0             True
+P31382   YAL023C             0.0 ...  0.000000  0.000000e+00       1000.0             True
 ```
 
 The result is a DataFrame indexed by UniProt identifier. `bottlenecks.attrs["n_resolved"]` and `bottlenecks.attrs["active_constraints"]` hold the same two numbers as in MATLAB.
@@ -289,6 +305,8 @@ When no enzyme is at its usage bound, the function gives a warning that no singl
 :::{tab-item} Ⓜ️ MATLAB
 :sync: matlab
 
+<!-- run-examples: skip -->
+
 ```matlab
 [evaluated, controlCoeffs] = getConcControlCoeffs(ecModel);
 [evaluated, controlCoeffs] = getConcControlCoeffs(ecModel, 'method', 'shadow_price');
@@ -296,6 +314,8 @@ When no enzyme is at its usage bound, the function gives a warning that no singl
 :::
 :::{tab-item} 🐍 Python
 :sync: python
+
+<!-- run-examples: skip -->
 
 ```python
 from geckopy import get_conc_control_coeffs
