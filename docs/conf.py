@@ -56,7 +56,7 @@ def _inventory_reachable(base: str) -> bool:
 # stays plain text.
 if _inventory_reachable("https://raven-docs.readthedocs.io/en/latest/"):
     intersphinx_mapping["raven"] = ("https://raven-docs.readthedocs.io/en/latest/", None)
-suppress_warnings = ["intersphinx.external", "myst.iref_missing"]
+suppress_warnings = ["intersphinx.external"]
 
 source_suffix = {".md": "markdown"}
 root_doc = "index"

@@ -34,11 +34,7 @@ jobs:
       - name: Check the site against the standard
         run: python scripts/check_site.py .
 
-      # Not yet blocking: 121 distinct names on the guide pages resolve to neither
-      # toolbox, and scripts/known_names.txt is empty. Remove continue-on-error
-      # after the names are checked and the real ones allow-listed.
       - name: Check names on the guide pages
-        continue-on-error: true
         run: python scripts/check_names.py
 
       - name: Build with warnings as errors
