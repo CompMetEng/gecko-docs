@@ -308,14 +308,23 @@ def _exec_block(code: str, namespace: dict) -> str:
     return buffer.getvalue()
 
 
+def _seed(target: Path) -> None:
+    """Copy the files and folders of ``docs/data`` into a scratch directory."""
+    for item in DATA_DIR.iterdir():
+        if item.name == "README.md":
+            continue
+        if item.is_dir():
+            shutil.copytree(item, target / item.name, dirs_exist_ok=True)
+        else:
+            shutil.copy2(item, target / item.name)
+
+
 def run_page(result: PageResult, solver: str | None) -> None:
     """Execute a page's blocks in one namespace inside a scratch directory."""
     namespace: dict = {"__name__": "__main__"}
     workdir = Path(tempfile.mkdtemp(prefix="docs-examples-"))
     if DATA_DIR.is_dir():
-        for item in DATA_DIR.iterdir():
-            if item.is_file() and item.name != "README.md":
-                shutil.copy2(item, workdir / item.name)
+        _seed(workdir)
     previous_cwd = Path.cwd()
     try:
         os.chdir(workdir)
@@ -454,9 +463,7 @@ def prepare_matlab(results: list[PageResult], harness: Path) -> dict[str, PageRe
         page_dir.mkdir(exist_ok=True)
         page_dirs[page_dir.name] = result
         if DATA_DIR.is_dir():
-            for item in DATA_DIR.iterdir():
-                if item.is_file() and item.name != "README.md":
-                    shutil.copy2(item, page_dir / item.name)
+            _seed(page_dir)
         for example in result.examples:
             if example.skip:
                 example.status = "skipped"
@@ -499,8 +506,15 @@ _MATLAB_PARPOOL = re.compile(
 _BINARY_DOWNLOAD = re.compile(r"^Downloading .*$")
 
 
+# MATLAB writes the display of a table with bold column names and a link on the
+# word "table", whatever the hotlinks setting is. A reader of the page sees the
+# plain text, so the markup is removed and the layout stays.
+_MATLAB_MARKUP = re.compile(r"</?strong>|<a href=\"matlab:[^\"]*\"[^>]*>|</a>")
+
+
 def tidy_matlab(text: str) -> str:
     text = text.replace(chr(8), "")  # backspaces left behind by hotlink removal
+    text = _MATLAB_MARKUP.sub("", text)
     text = _MATLAB_WARNING.sub(lambda m: " ".join(m.group(0).split()), text)
     keep = [
         line
