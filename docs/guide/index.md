@@ -1,6 +1,6 @@
 # Guide
 
-The guide shows how to build an enzyme-constrained model (ecModel) from a conventional genome-scale metabolic model (GEM) with GECKO (MATLAB) or geckopy (Python), and how to analyse it. [Build an ecModel](first-ecmodel.md) makes a working ecModel with the default settings. Each step of that page links to a decision page, which describes the options of the step, what each option needs and what it changes in the model. The background pages describe the file formats and the parameters.
+The guide shows how to build an enzyme-constrained model (ecModel) from a conventional genome-scale metabolic model (GEM) with GECKO (MATLAB) or geckopy (Python), and how to analyse it. [Build an ecModel](first-ecmodel.md) makes a working ecModel with the default settings. Each step of that page links to a decision page, which describes the options of the step, what each option needs and what it changes in the model. The background pages describe the file formats and the parameters. [Executed examples](executed-examples.md) describes which examples are run again on every change and which are not.
 
 ## Start
 
@@ -52,6 +52,7 @@ The decision pages are in the order of the work.
 | [Project format 4](../gecko4-project-format.md) | the project folder, `model_adapter.toml`, the *k*{sub}`cat` source files and the ecModel format |
 | [*K*{sub}`cat` assignment](../gecko4-kcat-assignment.md) | the *k*{sub}`cat` sources, stages and presets of `collectKcats` and `assignKcats` |
 | [Basic model operations](basic-model-operations.md) | bounds, objectives, flux balance analysis, flux inspection and export, for conventional GEMs and ecModels |
+| [Executed examples](executed-examples.md) | the examples that a workflow runs again on every change, and the pages that it does not run |
 
 ## Notes
 
@@ -119,6 +120,7 @@ data-folder-files
 experimental-data
 model-adapter-parameters
 basic-model-operations
+executed-examples
 ../gecko4-project-format
 ../gecko4-kcat-assignment
 ```

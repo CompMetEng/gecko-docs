@@ -23,6 +23,7 @@ The documentation site of GECKO (MATLAB) and geckopy (Python): Sphinx with MyST 
 
 - Build and check: `git submodule update --init --recursive`, `pip install -r requirements.txt`, `sphinx-build -W -b html docs docs/_build/html`, then `python scripts/check_site.py .`. `python scripts/check_names.py` reports names that are not sorted yet (see `DESIGN.md`); it does not block.
 - `scripts/*.py` are copies of `docs-site/scripts`. Change them in CompMetEng/skills first. What is specific to this site is in `scripts/project.yml`, `scripts/curated_pairs.yml` and `scripts/known_names.txt`.
+- The guide pages in the executed set run in CI: `python scripts/run_examples.py --language python` runs their Python blocks and compares the output with the output block under each block. `docs/guide/executed-examples.md` lists the pages and the reason for each page and block that does not run. A page that is not in the set carries `<!-- run-examples: skip-file -->`.
 - `docs/api/matlab/`, `docs/api/python/` and `docs/matlab-vs-python.md` are generated at build time. Do not edit or commit them.
 - The pages contain equations; `sphinx.ext.mathjax` is enabled in `docs/conf.py`.
 - Preview: build first, then start the `gecko-docs` configuration of `.claude/launch.json`, which serves `docs/_build/html` on port 8765.
